@@ -1,0 +1,64 @@
+# Gradle files
+gradle/
+build/
+
+# Local configuration file (SDK path, etc.)
+local.properties
+
+# Built application files
+*.apk
+*.aab
+
+# Files for the Dalvik/ART VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+
+# Android Studio specific files
+idea/
+*.iml
+idea/workspace.xml
+idea/tasks.xml
+idea/libraries/
+idea/caches/
+idea/modules.xml
+
+# Keystore files (for signing)
+*.jks
+*.keystore
+
+# Google Services (e.g., Firebase)
+google-services.json
+
+# External native build folder
+externalNativeBuild/
+
+# NDK build artifacts
+obj/
+
+# Log files
+*.log
+
+# OS-specific files
+DS_Store
+Thumbs.db
+
+# Crashlytics/Fabric plugin files
+crashlytics.properties
+crashlytics-build.properties
+fabric.properties
+
+# ProGuard generated files and folders
+proguard/
+
+# Captures folder (Android Studio)
+captures/
+
+# Navigation editor temp files (Android Studio)
+navigation/
