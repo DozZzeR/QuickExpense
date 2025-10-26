@@ -83,7 +83,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private val _items = MutableStateFlow<List<ExpenseItemUi>>(emptyList())
+    private val _items = MutableStateFlow<List<ExpenseItemUi>>(    emptyList())
     val items: StateFlow<List<ExpenseItemUi>> = _items.asStateFlow()
 
     private fun formatTs(ts: Long): String {
@@ -94,6 +94,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     suspend fun currentRange(): Range {
         val periodStr = appRef.prefs.widgetPeriodFlow.first()
         val anchor = appRef.prefs.monthAnchorDayFlow.first()
+        
 
         val period = when (periodStr) {
             "day" -> Period.DAY
@@ -101,6 +102,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             "month" -> Period.MONTH
             "all" -> Period.ALL
             else  -> Period.DAY
+
         }
         return periodRange(period, anchor)
     }
