@@ -10,6 +10,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dev.keslorod.quickexpense.ui.main.MainScreen
+import dev.keslorod.quickexpense.ui.manage.ManageCategoriesScreen
+import dev.keslorod.quickexpense.ui.manage.ManageSourcesScreen
 import dev.keslorod.quickexpense.ui.settings.SettingsScreen
 
 class MainActivity : ComponentActivity() {
@@ -36,8 +38,20 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
         composable("settings") {
             SettingsScreen(
                 app = app,
-                onBack = { nav.popBackStack() }
+                onBack = { nav.popBackStack() },
+                nav = nav
             )
         }
+        composable("manage_sources") {
+            ManageSourcesScreen(
+                app = app, onBack = { nav.popBackStack() }
+            )
+        }
+        composable("manage_categories") {
+            ManageCategoriesScreen(
+                app = app, onBack = { nav.popBackStack() }
+            )
+        }
+
     }
 }

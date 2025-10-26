@@ -56,6 +56,16 @@ class QuickInputActivity : ComponentActivity() {
                                         }
                                     }
                                 }
+                            },
+                            onCancel = {
+                                lifecycleScope.launch(Dispatchers.IO) {
+                                    withContext(Dispatchers.Main) {
+                                        if (launchedFromWidget)
+                                            finishAffinity()
+                                        else
+                                            finish()
+                                    }
+                                }
                             }
                         )
                     }

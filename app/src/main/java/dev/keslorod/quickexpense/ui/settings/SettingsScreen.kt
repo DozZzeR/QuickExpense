@@ -5,6 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import dev.keslorod.quickexpense.App
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -13,7 +14,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     app: App,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    nav: NavHostController
 ) {
     val scope = rememberCoroutineScope()
 
@@ -31,6 +33,15 @@ fun SettingsScreen(
         topBar = { TopAppBar(title = { Text("Настройки") }) }
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedButton(
+                onClick = { nav.navigate("manage_sources") },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Источники") }
+
+            OutlinedButton(
+                onClick = { nav.navigate("manage_categories") },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Категории") }
 
             OutlinedTextField(
                 value = currency,

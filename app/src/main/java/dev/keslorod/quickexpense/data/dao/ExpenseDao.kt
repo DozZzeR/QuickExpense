@@ -50,4 +50,10 @@ interface ExpenseDao {
         ORDER BY createdAt ASC
     """)
     suspend fun expensesInRange(from: Long, to: Long): List<Expense>
+
+    @Query("SELECT COUNT(*) FROM expenses WHERE sourceId = :sourceId")
+    suspend fun countBySource(sourceId: String): Long
+
+    @Query("SELECT COUNT(*) FROM expenses WHERE categoryId = :categoryId")
+    suspend fun countByCategory(categoryId: String): Long
 }

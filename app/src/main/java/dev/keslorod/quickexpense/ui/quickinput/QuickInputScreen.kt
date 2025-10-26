@@ -17,6 +17,7 @@ fun QuickInputScreen(
     sourceOptions: List<Option>,
     categoryOptions: List<Option>,
     onConfirm: (cents: Long, sourceId: String, categoryId: String) -> Unit,
+    onCancel: () -> Unit
 ) {
     var amountText by remember { mutableStateOf("") }
     var source by remember { mutableStateOf(sourceOptions.firstOrNull()) }
@@ -86,6 +87,10 @@ fun QuickInputScreen(
             },
             modifier = Modifier.fillMaxWidth()
         ) { Text("OK — сохранить") }
+        Button(
+            onClick = { onCancel() },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Отмена") }
     }
 }
 
