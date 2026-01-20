@@ -1,6 +1,7 @@
 package dev.keslorod.quickexpense.ui.main
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,13 +16,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import dev.keslorod.quickexpense.domain.formatCents
 import dev.keslorod.quickexpense.export.enqueueExport
 import dev.keslorod.quickexpense.ui.quickinput.QuickInputActivity
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,8 +73,41 @@ fun MainScreen(
                             onClick = {
                                 menuOpen = false
                                 scope.launch {
-                                    val r = vm.currentRange()   // suspend
-                                    enqueueExport(ctx, r.from, r.to)
+                                    val r = vm.currentRange() // suspend
+                                    val workId = enqueueExport(ctx, r.from, r.to)
+
+                                    // наблюдаем завершение
+                                    WorkManager.getInstance(ctx.applicationContext)
+                                        .getWorkInfoByIdFlow(workId)
+                                        .first { info ->
+                                            when (info.state) {
+                                                WorkInfo.State.SUCCEEDED -> {
+                                                    val uriStr = info.outputData.getString("zip_uri")
+                                                    val name = info.outputData.getString("zip_name") ?: "export.zip"
+                                                    if (uriStr != null) {
+                                                        val uri = uriStr.toUri()
+
+                                                        // share из UI (разрешено)
+                                                        val share = Intent(Intent.ACTION_SEND).apply {
+                                                            type = "application/zip"
+                                                            putExtra(Intent.EXTRA_SUBJECT, "QuickExpense export")
+                                                            putExtra(Intent.EXTRA_STREAM, uri)
+                                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                                        }
+                                                        ctx.startActivity(
+                                                            Intent.createChooser(share, "Отправить $name")
+                                                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                        )
+                                                    }
+                                                    true
+                                                }
+                                                WorkInfo.State.FAILED -> {
+                                                    Toast.makeText(ctx, "Экспорт не удался", Toast.LENGTH_SHORT).show()
+                                                    true
+                                                }
+                                                else -> false
+                                            }
+                                        }
                                 }
                             }
                         )

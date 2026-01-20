@@ -10,10 +10,10 @@ import dev.keslorod.quickexpense.data.entities.Category
 
 @Dao
 interface CategoryDao {
-    @Query("SELECT * FROM categories ORDER BY isFavorite DESC, sort ASC, name ASC")
+    @Query("SELECT * FROM categories ORDER BY isFavorite DESC, name ASC, sort ASC")
     suspend fun all(): List<Category>
 
-    @Query("SELECT * FROM categories WHERE isFavorite = 1 ORDER BY sort ASC LIMIT 8")
+    @Query("SELECT * FROM categories WHERE isFavorite = 1 ORDER BY sort ASC, name ASC LIMIT 8")
     suspend fun favorites(): List<Category>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

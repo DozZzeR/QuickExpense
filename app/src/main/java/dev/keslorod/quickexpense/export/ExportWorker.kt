@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.core.content.FileProvider
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import dev.keslorod.quickexpense.App
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,53 +17,77 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 class ExportWorker(ctx: Context, params: WorkerParameters): CoroutineWorker(ctx, params) {
-    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        val app = applicationContext as App
+    override suspend fun doWork() = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val app = applicationContext as App
 
-        val from = inputData.getLong("from", 0L)
-        val to = inputData.getLong("to", System.currentTimeMillis())
-        // val includePhotos = inputData.getBoolean("includePhotos", false) // на будущее
+            val from = inputData.getLong("from", 0L)
+            val to = inputData.getLong("to", System.currentTimeMillis())
 
-        // подготовим папку
-        val exportDir = File(applicationContext.cacheDir, "exports").apply { mkdirs() }
-        val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(System.currentTimeMillis())
+            // папка
+            val exportDir = File(applicationContext.cacheDir, "exports").apply { mkdirs() }
+            val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(System.currentTimeMillis())
 
-        // 1) CSV
-        val csvFile = File(exportDir, "quickexpense_$stamp.csv")
-        csvFile.outputStream().buffered().writer(Charsets.UTF_8).use { w ->
-            w.appendLine("id,created_at,amount_cents,currency,source_id,category_id")
-            val items = app.db.expenses().expensesInRange(from, to)
-            val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-            items.forEach { e ->
-                val ts = fmt.format(java.util.Date(e.createdAt))
-                w.appendLine("${e.id},$ts,${e.amount},${e.currency},${e.sourceId},${e.categoryId}")
+            // 1) CSV
+            val csvFile = File(exportDir, "quickexpense_$stamp.csv")
+            try {
+                csvFile.outputStream().buffered().writer(Charsets.UTF_8).use { w ->
+                    w.appendLine("source_name,category_name,amount_cents,currency,created_at,id")
+                    val items = app.db.expenses().expensesInRangeWithNames(from, to)
+                    val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                    items.forEach { e ->
+                        val ts = fmt.format(java.util.Date(e.createdAt))
+                        val sourceName = e.sourceName ?: "Unknown"
+                        val categoryName = e.categoryName ?: "Unknown"
+                        w.appendLine("${e.id},$ts,${e.amount},${e.currency},\"$sourceName\",\"$categoryName\"")
+                    }
+                }
+            } catch (e: Exception) {
+                return@withContext Result.failure()
             }
-        }
 
-        // 2) ZIP (пока только CSV внутрь; фото чеков добавим позже)
-        val zipFile = File(exportDir, "quickexpense_$stamp.zip")
-        ZipOutputStream(FileOutputStream(zipFile)).use { zos ->
-            zos.putNextEntry(ZipEntry(csvFile.name))
-            csvFile.inputStream().use { it.copyTo(zos) }
-            zos.closeEntry()
-            // если будут фото: положим их как /receipts/<id>.jpg
-        }
+            if (!csvFile.exists()) {
+                return@withContext Result.failure()
+            }
 
-        // 3) share
-        val uri = FileProvider.getUriForFile(
-            applicationContext,
-            "${applicationContext.packageName}.fileprovider",
-            zipFile
-        )
-        val share = Intent(Intent.ACTION_SEND).apply {
-            type = "application/zip"
-            putExtra(Intent.EXTRA_SUBJECT, "QuickExpense export $stamp")
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        share.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        applicationContext.startActivity(Intent.createChooser(share, "Отправить экспорт"))
+            // 2) ZIP
+            val zipFile = File(exportDir, "quickexpense_$stamp.zip")
+            try {
+                ZipOutputStream(FileOutputStream(zipFile)).use { zos ->
+                    val entry = ZipEntry(csvFile.name)
+                    zos.putNextEntry(entry)
+                    csvFile.inputStream().buffered().use { input ->
+                        input.copyTo(zos)
+                    }
+                    zos.closeEntry()
+                    zos.finish()
+                }
+            } catch (e: Exception) {
+                csvFile.delete()
+                zipFile.delete()
+                return@withContext Result.failure()
+            }
 
-        Result.success()
+            // 3) Возвращаем URI как строку (через FileProvider)
+            val uri = try {
+                FileProvider.getUriForFile(
+                    applicationContext,
+                    "${applicationContext.packageName}.fileprovider",
+                    zipFile
+                )
+            } catch (e: Exception) {
+                csvFile.delete()
+                zipFile.delete()
+                return@withContext Result.failure()
+            }
+
+            val out = workDataOf(
+                "zip_uri" to uri.toString(),
+                "zip_name" to zipFile.name
+            )
+            Result.success(out)
+        } catch (e: Exception) {
+            Result.failure()
+        }
     }
 }
