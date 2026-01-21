@@ -14,7 +14,8 @@ suspend fun writeWidgetStateForAll(
     ctx: Context,
     sumCents: Long,
     currency: String,
-    subtitle: String
+    subtitle: String,
+    showRemainder: Boolean = false
 ) {
     val mgr = GlanceAppWidgetManager(ctx)
     val ids = mgr.getGlanceIds(QuickExpenseWidget::class.java)
@@ -26,6 +27,7 @@ suspend fun writeWidgetStateForAll(
                 this[WidgetKeys.SUM] = sumCents
                 this[WidgetKeys.CCY] = currency
                 this[WidgetKeys.SUBTITLE] = subtitle
+                this[WidgetKeys.SHOW_REMAINDER] = showRemainder
             }
         }
     }

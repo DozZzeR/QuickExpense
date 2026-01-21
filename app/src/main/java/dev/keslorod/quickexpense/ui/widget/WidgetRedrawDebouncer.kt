@@ -22,8 +22,10 @@ class WidgetRecomputeAndRedraw(
             delay(delayMs)
 
             val periodStr = app.prefs.widgetPeriodFlow.first()
-            val anchor = app.prefs.monthAnchorDayFlow.first()
             val currency = app.prefs.currencyFlow.first()
+            val limitCents = app.prefs.widgetLimitCentsFlow.first()
+            val showRemainder = app.prefs.showRemainderInsteadOfExpenseFlow.first()
+            
             val period = when (periodStr) {
                 "day" -> Period.DAY
                 "week" -> Period.WEEK
@@ -31,8 +33,16 @@ class WidgetRecomputeAndRedraw(
                 "all" -> Period.ALL
                 else  -> Period.DAY
             }
-            val range = periodRange(period, anchor)
+            val range = periodRange(period, 1)  // Якорный день всегда 1-е число месяца
             val total = app.db.expenses().sumInRange(range.from, range.to)
+            
+            // Вычисляем значение для отображения: либо расход, либо остаток
+            val displayValue = if (showRemainder && limitCents > 0) {
+                limitCents - total
+            } else {
+                total
+            }
+            
             val subtitle = when (periodStr) {
                 "day" -> "за день"
                 "week" -> "за неделю"
@@ -43,9 +53,10 @@ class WidgetRecomputeAndRedraw(
 
             writeWidgetStateForAll(
                 ctx = app,
-                sumCents = total,
+                sumCents = displayValue,
                 currency = currency,
-                subtitle = subtitle
+                subtitle = subtitle,
+                showRemainder = showRemainder
             )
             QuickExpenseWidget().updateAll(app)
         }

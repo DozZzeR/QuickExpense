@@ -36,7 +36,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) {
             val currency = appRef.prefs.currencyFlow.first()
             val periodStr = appRef.prefs.widgetPeriodFlow.first()
-            val anchor = appRef.prefs.monthAnchorDayFlow.first()
 
             val period = when (periodStr) {
                 "day" -> Period.DAY
@@ -53,7 +52,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 else -> "за день"
             }
 
-            val range = periodRange(period, anchor)
+            val range = periodRange(period, 1)  // Якорный день всегда 1-е число месяца
             val total = appRef.db.expenses().sumInRange(range.from, range.to)
 
             val list = appRef.db.expenses()
@@ -93,8 +92,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     suspend fun currentRange(): Range {
         val periodStr = appRef.prefs.widgetPeriodFlow.first()
-        val anchor = appRef.prefs.monthAnchorDayFlow.first()
-        
 
         val period = when (periodStr) {
             "day" -> Period.DAY
@@ -102,8 +99,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             "month" -> Period.MONTH
             "all" -> Period.ALL
             else  -> Period.DAY
-
         }
-        return periodRange(period, anchor)
+        return periodRange(period, 1)  // Якорный день всегда 1-е число месяца
     }
 }

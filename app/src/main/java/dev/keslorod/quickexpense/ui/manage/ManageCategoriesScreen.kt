@@ -5,15 +5,22 @@ import dev.keslorod.quickexpense.App
 import dev.keslorod.quickexpense.data.entities.Category
 
 @Composable
-fun ManageCategoriesScreen(app: App, onBack: () -> Unit) {
+fun ManageCategoriesScreen(
+    app: App,
+    onBack: () -> Unit,
+    mode: ListScreenMode = ListScreenMode.MANAGE,
+    onSelectCategory: ((Category) -> Unit)? = null
+) {
     ManageListScreen<Category>(
         title = "Категории",
         onBack = onBack,
+        mode = mode,
+        onSelect = onSelectCategory,
         getName = { it.name },
         isFavorite = { it.isFavorite },
         itemKey = { it.id },
         loadAll = { app.db.categories().all() },
-        addNew = { name -> app.db.categories().insert(Category(name = name, isFavorite = true)) },
+        addNew = { name -> app.db.categories().insert(Category(name = name, isFavorite = false)) },
         toggleFavorite = { c -> app.db.categories().update(c.copy(isFavorite = !c.isFavorite)) },
         rename = { c, newName -> app.db.categories().update(c.copy(name = newName)) },
         deleteIfUnused = { c ->

@@ -26,24 +26,17 @@ class QuickInputActivity : ComponentActivity() {
             val allCategories = app.db.categories().all()
             val currency = app.prefs.currencyFlow.first()
 
-            // Готовим быстрый выбор: избранные (до MAX_QUICK_OPTIONS) + первые остальные (если < MAX_QUICK_OPTIONS)
-            val favorites = allCategories.filter { it.isFavorite }
-            val quickCategories = if (favorites.size >= MAX_QUICK_OPTIONS) {
-                favorites.take(MAX_QUICK_OPTIONS)
-            } else {
-                favorites + allCategories.filter { !it.isFavorite }.take(MAX_QUICK_OPTIONS - favorites.size)
-            }
+            // Готовим быстрый выбор: только избранные категории
+            val quickCategories = allCategories.filter { it.isFavorite }
 
             withContext(Dispatchers.Main) {
                 setContent {
                     QuickExpenseTheme {
                         QuickInputScreen(
+                            app = app,
                             currency = currency,
                             sourceOptions = sources.map { Option(it.id, it.name) },
                             categoryQuickOptions = quickCategories.map { Option(it.id, it.name) },
-                            categoryAllOptions = allCategories
-                                .sortedWith(compareBy({ !it.isFavorite }, { it.name }))
-                                .map { Option(it.id, it.name) },
                             onConfirm = { cents, sourceId, categoryId ->
                                 lifecycleScope.launch(Dispatchers.IO) {
                                     try {

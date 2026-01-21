@@ -2,31 +2,63 @@ package dev.keslorod.quickexpense.ui.quickinput
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import dev.keslorod.quickexpense.App
+import dev.keslorod.quickexpense.data.entities.Category
+import dev.keslorod.quickexpense.ui.manage.ListScreenMode
+import dev.keslorod.quickexpense.ui.manage.ManageListScreen
+import kotlinx.coroutines.launch
+
+private const val MAX_RECENT_CATEGORIES = 3
 
 data class Option(val id: String, val label: String)
 
 @Composable
 fun QuickInputScreen(
+    app: App,
     currency: String,
     sourceOptions: List<Option>,
     categoryQuickOptions: List<Option>,
-    categoryAllOptions: List<Option>,
     onConfirm: (cents: Long, sourceId: String, categoryId: String) -> Unit,
     onCancel: () -> Unit
 ) {
     var amountText by remember { mutableStateOf("") }
-    var source by remember { mutableStateOf(sourceOptions.firstOrNull()) }
-    var category by remember { mutableStateOf(categoryQuickOptions.firstOrNull()) }
-    var showCategoryDialog by remember { mutableStateOf(false) }
+    var source by remember { mutableStateOf<Option?>(null) }
+    var category by remember { mutableStateOf<Option?>(null) }
+    var showCategorySelector by remember { mutableStateOf(false) }
+    var recentCategories by remember { mutableStateOf<List<Option>>(emptyList()) }  // недавние выборы
+    var currentFavorites by remember { mutableStateOf(categoryQuickOptions) }  // текущий список избранных
+    val categoryListState = rememberLazyListState()  // для скролла списка категорий
+    val scope = rememberCoroutineScope()  // для выполнения скролла
+
+    // Перезапрашиваем избранные при закрытии selector
+    LaunchedEffect(showCategorySelector) {
+        if (!showCategorySelector) {
+            val freshFavorites = app.db.categories().favorites()
+            currentFavorites = freshFavorites.map { Option(it.id, it.name) }
+        }
+    }
+    
+    // Скроллим в начало при выборе категории
+    LaunchedEffect(category) {
+        if (category != null) {
+            scope.launch {
+                categoryListState.animateScrollToItem(0)
+            }
+        }
+    }
 
     fun toCents(txt: String): Long {
         if (txt.isBlank()) return 0
@@ -36,22 +68,39 @@ fun QuickInputScreen(
         return (major.toLongOrNull() ?: 0L) * 100 + (minor.toLongOrNull() ?: 0L)
     }
 
-    if (showCategoryDialog) {
-        CategoryPickerDialog(
-            allOptions = categoryAllOptions,
-            selectedId = category?.id,
-            onSelect = { selected ->
-                category = selected
-                showCategoryDialog = false
+    if (showCategorySelector) {
+        ManageListScreen<Category>(
+            title = "Выбрать категорию",
+            mode = ListScreenMode.SELECT,
+            onSelect = { selectedCategory ->
+                val option = Option(selectedCategory.id, selectedCategory.name)
+                category = option
+                
+                // Добавляем в recent
+                recentCategories = (listOf(option) + recentCategories).take(MAX_RECENT_CATEGORIES)
+                showCategorySelector = false
             },
-            onDismiss = { showCategoryDialog = false }
+            onBack = { showCategorySelector = false },
+            getName = { it.name },
+            isFavorite = { it.isFavorite },
+            itemKey = { it.id },
+            loadAll = { app.db.categories().all() },
+            addNew = { name -> app.db.categories().insert(Category(name = name, isFavorite = false)) },
+            toggleFavorite = { c -> app.db.categories().update(c.copy(isFavorite = !c.isFavorite)) },
+            rename = { c, newName -> app.db.categories().update(c.copy(name = newName)) },
+            deleteIfUnused = { c ->
+                val cnt = app.db.expenses().countByCategory(c.id)
+                if (cnt == 0L) {
+                    app.db.categories().delete(c)
+                    true
+                } else false
+            }
         )
-    }
-
-    Column(
-        Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    } else {
+        Column(
+            Modifier.fillMaxSize().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
         Text("Источник", fontWeight = FontWeight.Medium)
         Spacer(Modifier.height(8.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -87,82 +136,75 @@ fun QuickInputScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("Категория", fontWeight = FontWeight.Medium)
-            IconButton(onClick = { showCategoryDialog = true }) {
+            IconButton(onClick = { showCategorySelector = true }) {
                 Icon(Icons.Default.MoreVert, contentDescription = "Все категории")
             }
         }
         Spacer(Modifier.height(8.dp))
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val displayedCategories = if (category != null && category !in categoryQuickOptions) {
-                listOf(category!!)
-            } else {
-                categoryQuickOptions
-            }
-            items(displayedCategories.size) { i ->
-                val opt = displayedCategories[i]
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            state = categoryListState
+        ) {
+            // Недавние выборы
+            items(recentCategories) { opt ->
+                val isSelected = category?.id == opt.id
                 FilterChip(
-                    selected = category?.id == opt.id,
-                    onClick = { category = opt },
-                    label = { Text(opt.label) }
+                    selected = isSelected,
+                    onClick = { 
+                        category = opt
+                    },
+                    label = { Text(opt.label) },
+                    modifier = Modifier.graphicsLayer {
+                        alpha = if (isSelected || category == null) 1f else 0.65f
+                    }
+                )
+            }
+            
+            // Большой спейс между recent и favorites (если есть оба)
+            if (recentCategories.isNotEmpty()) {
+                item {
+                    Spacer(Modifier.width(24.dp))  // х3 от стандартного 8.dp
+                }
+            }
+            
+            // Избранные (кроме тех что уже в recent)
+            val favoritesToShow = currentFavorites.filter { fav ->
+                recentCategories.none { it.id == fav.id }
+            }
+            items(favoritesToShow) { opt ->
+                val isSelected = category?.id == opt.id
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { 
+                        category = opt
+                        recentCategories = (listOf(opt) + recentCategories).take(MAX_RECENT_CATEGORIES)
+                    },
+                    label = { Text(opt.label) },
+                    modifier = Modifier.graphicsLayer {
+                        alpha = if (isSelected || category == null) 1f else 0.65f
+                    }
                 )
             }
         }
 
         Spacer(Modifier.height(24.dp))
+        val cents = toCents(amountText)
+        val isFormValid = source != null && category != null && cents > 0
         Button(
             onClick = {
-                val cents = toCents(amountText)
                 val sId = source?.id ?: return@Button
                 val cId = category?.id ?: return@Button
-                if (cents > 0) onConfirm(cents, sId, cId)
+                onConfirm(cents, sId, cId)
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = isFormValid
         ) { Text("OK — сохранить") }
         Button(
             onClick = { onCancel() },
             modifier = Modifier.fillMaxWidth()
         ) { Text("Отмена") }
-    }
-}
-
-@Composable
-private fun CategoryPickerDialog(
-    allOptions: List<Option>,
-    selectedId: String?,
-    onSelect: (Option) -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Выбрать категорию") },
-        text = {
-            LazyColumn(Modifier.fillMaxWidth()) {
-                items(allOptions.size) { i ->
-                    val opt = allOptions[i]
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = selectedId == opt.id,
-                            onClick = { onSelect(opt) }
-                        )
-                        Text(
-                            opt.label,
-                            modifier = Modifier
-                                .padding(start = 12.dp)
-                                .weight(1f)
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Закрыть") }
         }
-    )
+    }
 }
 
 @Composable

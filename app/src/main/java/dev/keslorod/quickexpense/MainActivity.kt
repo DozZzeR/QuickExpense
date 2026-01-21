@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dev.keslorod.quickexpense.ui.main.MainScreen
+import dev.keslorod.quickexpense.ui.manage.ListScreenMode
 import dev.keslorod.quickexpense.ui.manage.ManageCategoriesScreen
 import dev.keslorod.quickexpense.ui.manage.ManageSourcesScreen
 import dev.keslorod.quickexpense.ui.settings.SettingsScreen
@@ -50,6 +51,30 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
         composable("manage_categories") {
             ManageCategoriesScreen(
                 app = app, onBack = { nav.popBackStack() }
+            )
+        }
+        composable("select_category") {
+            ManageCategoriesScreen(
+                app = app,
+                mode = ListScreenMode.SELECT,
+                onSelectCategory = { category ->
+                    // Возвращаем в QuickInputActivity
+                    nav.previousBackStackEntry?.savedStateHandle?.set("selected_category", category.id)
+                    nav.popBackStack()
+                },
+                onBack = { nav.popBackStack() }
+            )
+        }
+        composable("select_source") {
+            ManageSourcesScreen(
+                app = app,
+                mode = ListScreenMode.SELECT,
+                onSelectSource = { source ->
+                    // Возвращаем в QuickInputActivity
+                    nav.previousBackStackEntry?.savedStateHandle?.set("selected_source", source.id)
+                    nav.popBackStack()
+                },
+                onBack = { nav.popBackStack() }
             )
         }
 

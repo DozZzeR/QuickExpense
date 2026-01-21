@@ -1,5 +1,7 @@
 package dev.keslorod.quickexpense.ui.manage
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,17 +15,25 @@ import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+enum class ListScreenMode {
+    SELECT,   // Выбор элемента (из добавления траты)
+    MANAGE    // Управление (из настроек)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> ManageListScreen(
     title: String,
     onBack: () -> Unit,
+    mode: ListScreenMode = ListScreenMode.MANAGE,
+    onSelect: ((T) -> Unit)? = null, // вызывается при тапе на элемент в SELECT mode
     // извлечение полей
     getName: (T) -> String,
     isFavorite: (T) -> Boolean,
@@ -37,6 +47,7 @@ fun <T> ManageListScreen(
 ) {
     val scope = rememberCoroutineScope()
     var items by remember { mutableStateOf<List<T>>(emptyList()) }
+    var selectedItemId by remember { mutableStateOf<Any?>(null) }
 
     // Диалоги
     var showAdd by remember { mutableStateOf(false) }
@@ -84,7 +95,7 @@ fun <T> ManageListScreen(
                     editingText = ""
                     showAdd = true
                 }
-            ) { Text("Добавить") }
+            ) { Text(if (mode == ListScreenMode.SELECT) "➕ Добавить" else "Добавить") }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { pad ->
@@ -94,13 +105,27 @@ fun <T> ManageListScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            LazyColumn {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(items, key = itemKey) { item ->
+                    val isSelected = itemKey(item) == selectedItemId
+                    val itemColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                    
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .background(
+                                color = itemColor,
+                                shape = MaterialTheme.shapes.medium
+                            )
+                            .padding(12.dp)
+                            .clickable(enabled = mode == ListScreenMode.SELECT) {
+                                if (mode == ListScreenMode.SELECT) {
+                                    selectedItemId = itemKey(item)
+                                    onSelect?.invoke(item)
+                                }
+                            },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             getName(item),
@@ -108,43 +133,74 @@ fun <T> ManageListScreen(
                             modifier = Modifier.weight(1f)
                         )
                         Row {
-                            IconButton(onClick = {
-                                editingItem = item
-                                editingText = getName(item)
-                            }) {
-                                Icon(Icons.Filled.Edit, contentDescription = "Переименовать")
-                            }
-                            IconButton(onClick = {
-                                scope.launch(Dispatchers.IO) {
-                                    toggleFavorite(item)
-                                    reload()
+                            // В SELECT режиме кнопка редактирования компактнее
+                            if (mode == ListScreenMode.SELECT) {
+                                IconButton(
+                                    onClick = {
+                                        editingItem = item
+                                        editingText = getName(item)
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(Icons.Filled.Edit, contentDescription = "Редактировать", modifier = Modifier.size(18.dp))
                                 }
-                            }) {
-                                if (isFavorite(item))
-                                    Icon(Icons.Filled.Star, contentDescription = "Убрать из избранного")
-                                else
-                                    Icon(Icons.Outlined.StarBorder, contentDescription = "В избранное")
-                            }
-                            IconButton(onClick = {
-                                scope.launch(Dispatchers.IO) {
-                                    val deleted = deleteIfUnused(item)
-                                    if (deleted) {
+                            } else {
+                                // В MANAGE режиме все кнопки
+                                IconButton(onClick = {
+                                    editingItem = item
+                                    editingText = getName(item)
+                                }) {
+                                    Icon(Icons.Filled.Edit, contentDescription = "Переименовать")
+                                }
+                                IconButton(onClick = {
+                                    scope.launch(Dispatchers.IO) {
+                                        toggleFavorite(item)
                                         reload()
-                                    } else {
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                "Нельзя удалить: есть операции с этой записью",
-                                                withDismissAction = true
-                                            )
+                                    }
+                                }) {
+                                    if (isFavorite(item))
+                                        Icon(Icons.Filled.Star, contentDescription = "Убрать из избранного")
+                                    else
+                                        Icon(Icons.Outlined.StarBorder, contentDescription = "В избранное")
+                                }
+                                IconButton(onClick = {
+                                    scope.launch(Dispatchers.IO) {
+                                        val deleted = deleteIfUnused(item)
+                                        if (deleted) {
+                                            reload()
+                                        } else {
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar(
+                                                    "Нельзя удалить: есть операции с этой записью",
+                                                    withDismissAction = true
+                                                )
+                                            }
                                         }
                                     }
+                                }) {
+                                    Icon(Icons.Filled.Delete, contentDescription = "Удалить")
                                 }
-                            }) {
-                                Icon(Icons.Filled.Delete, contentDescription = "Удалить")
+                            }
+                            
+                            // В SELECT режиме звезда всегда видна справа
+                            if (mode == ListScreenMode.SELECT) {
+                                IconButton(
+                                    onClick = {
+                                        scope.launch(Dispatchers.IO) {
+                                            toggleFavorite(item)
+                                            reload()
+                                        }
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    if (isFavorite(item))
+                                        Icon(Icons.Filled.Star, contentDescription = "Убрать из избранного", modifier = Modifier.size(18.dp))
+                                    else
+                                        Icon(Icons.Outlined.StarBorder, contentDescription = "В избранное", modifier = Modifier.size(18.dp))
+                                }
                             }
                         }
                     }
-                    HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
                 }
             }
         }

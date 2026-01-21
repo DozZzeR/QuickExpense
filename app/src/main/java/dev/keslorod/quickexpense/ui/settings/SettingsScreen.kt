@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -25,13 +26,14 @@ fun SettingsScreen(
 
     var currency by remember { mutableStateOf("RSD") }
     var period by remember { mutableStateOf("day") } // day/week/month/all
-    var anchor by remember { mutableStateOf(1) }
-    val ctx = LocalContext.current
+    var limitCents by remember { mutableStateOf(0L) }
+    var showRemainder by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         currency = app.prefs.currencyFlow.first()
         period = app.prefs.widgetPeriodFlow.first()
-        anchor = app.prefs.monthAnchorDayFlow.first()
+        limitCents = app.prefs.widgetLimitCentsFlow.first()
+        showRemainder = app.prefs.showRemainderInsteadOfExpenseFlow.first()
     }
 
     Scaffold(
@@ -78,13 +80,29 @@ fun SettingsScreen(
                 }
             }
 
-            // Якорный день
-            Text("Якорный день месяца: $anchor")
-            Slider(
-                value = anchor.toFloat(),
-                onValueChange = { anchor = it.toInt().coerceIn(1, 28) },
-                valueRange = 1f..28f
+            // Лимит трат
+            Text("Лимит трат (в центах, 0 = без лимита)")
+            OutlinedTextField(
+                value = if (limitCents == 0L) "" else (limitCents / 100).toString(),
+                onValueChange = { 
+                    limitCents = (it.toLongOrNull() ?: 0L) * 100
+                },
+                label = { Text("Лимит") },
+                singleLine = true
             )
+
+            // Переключатель остатка
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Показывать остаток вместо расхода")
+                Checkbox(
+                    checked = showRemainder,
+                    onCheckedChange = { showRemainder = it }
+                )
+            }
 
             Spacer(Modifier.height(12.dp))
             Button(
@@ -92,7 +110,8 @@ fun SettingsScreen(
                     scope.launch {
                         app.prefs.setCurrency(currency)
                         app.prefs.setWidgetPeriod(period)
-                        app.prefs.setMonthAnchorDay(anchor)
+                        app.prefs.setWidgetLimitCents(limitCents)
+                        app.prefs.setShowRemainderInsteadOfExpense(showRemainder)
 
                         // Попросим обновить виджет коалесированно
                         app.widgetRefresher.schedule()

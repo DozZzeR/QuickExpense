@@ -39,6 +39,7 @@ class QuickExpenseWidget : GlanceAppWidget() {
         val sum = prefs[WidgetKeys.SUM] ?: 0L
         val currency = prefs[WidgetKeys.CCY] ?: "RSD"
         val subtitle = prefs[WidgetKeys.SUBTITLE].orEmpty()
+        val showRemainder = prefs[WidgetKeys.SHOW_REMAINDER] ?: false
 
         Log.d("My debug WidgetContent", prefs.toString())
         val ctx = androidx.glance.LocalContext.current
@@ -47,13 +48,15 @@ class QuickExpenseWidget : GlanceAppWidget() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
 
+        val label = if (showRemainder) "Остаток" else "Расходы"
+        
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
                 .padding(8.dp)
                 .clickable(onClick = actionStartActivity(openIntent))
         ) {
-            Text(text = "Расходы: ${format(sum)} $currency")
+            Text(text = "$label: ${format(sum)} $currency")
             if (subtitle.isNotEmpty()) {
                 Spacer(modifier = GlanceModifier.height(4.dp))
                 Text(text = subtitle)
