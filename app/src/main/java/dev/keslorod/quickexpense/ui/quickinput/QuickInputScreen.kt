@@ -2,6 +2,9 @@ package dev.keslorod.quickexpense.ui.quickinput
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,13 +18,15 @@ data class Option(val id: String, val label: String)
 fun QuickInputScreen(
     currency: String,
     sourceOptions: List<Option>,
-    categoryOptions: List<Option>,
+    categoryQuickOptions: List<Option>,
+    categoryAllOptions: List<Option>,
     onConfirm: (cents: Long, sourceId: String, categoryId: String) -> Unit,
     onCancel: () -> Unit
 ) {
     var amountText by remember { mutableStateOf("") }
     var source by remember { mutableStateOf(sourceOptions.firstOrNull()) }
-    var category by remember { mutableStateOf(categoryOptions.firstOrNull()) }
+    var category by remember { mutableStateOf(categoryQuickOptions.firstOrNull()) }
+    var showCategoryDialog by remember { mutableStateOf(false) }
 
     fun toCents(txt: String): Long {
         if (txt.isBlank()) return 0
@@ -29,6 +34,18 @@ fun QuickInputScreen(
         val major = parts[0].ifBlank { "0" }
         val minor = (parts.getOrNull(1) ?: "").padEnd(2, '0').take(2)
         return (major.toLongOrNull() ?: 0L) * 100 + (minor.toLongOrNull() ?: 0L)
+    }
+
+    if (showCategoryDialog) {
+        CategoryPickerDialog(
+            allOptions = categoryAllOptions,
+            selectedId = category?.id,
+            onSelect = { selected ->
+                category = selected
+                showCategoryDialog = false
+            },
+            onDismiss = { showCategoryDialog = false }
+        )
     }
 
     Column(
@@ -64,11 +81,25 @@ fun QuickInputScreen(
         )
 
         Spacer(Modifier.height(16.dp))
-        Text("Категория", fontWeight = FontWeight.Medium)
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Категория", fontWeight = FontWeight.Medium)
+            IconButton(onClick = { showCategoryDialog = true }) {
+                Icon(Icons.Default.MoreVert, contentDescription = "Все категории")
+            }
+        }
         Spacer(Modifier.height(8.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(categoryOptions.size) { i ->
-                val opt = categoryOptions[i]
+            val displayedCategories = if (category != null && category !in categoryQuickOptions) {
+                listOf(category!!)
+            } else {
+                categoryQuickOptions
+            }
+            items(displayedCategories.size) { i ->
+                val opt = displayedCategories[i]
                 FilterChip(
                     selected = category?.id == opt.id,
                     onClick = { category = opt },
@@ -92,6 +123,46 @@ fun QuickInputScreen(
             modifier = Modifier.fillMaxWidth()
         ) { Text("Отмена") }
     }
+}
+
+@Composable
+private fun CategoryPickerDialog(
+    allOptions: List<Option>,
+    selectedId: String?,
+    onSelect: (Option) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Выбрать категорию") },
+        text = {
+            LazyColumn(Modifier.fillMaxWidth()) {
+                items(allOptions.size) { i ->
+                    val opt = allOptions[i]
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = selectedId == opt.id,
+                            onClick = { onSelect(opt) }
+                        )
+                        Text(
+                            opt.label,
+                            modifier = Modifier
+                                .padding(start = 12.dp)
+                                .weight(1f)
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Закрыть") }
+        }
+    )
 }
 
 @Composable
@@ -120,3 +191,4 @@ private fun NumberPad(
         }
     }
 }
+

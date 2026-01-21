@@ -8,12 +8,14 @@ import androidx.room.Query
 import androidx.room.Update
 import dev.keslorod.quickexpense.data.entities.Category
 
+const val MAX_QUICK_OPTIONS = 8
+
 @Dao
 interface CategoryDao {
     @Query("SELECT * FROM categories ORDER BY isFavorite DESC, name ASC, sort ASC")
     suspend fun all(): List<Category>
 
-    @Query("SELECT * FROM categories WHERE isFavorite = 1 ORDER BY sort ASC, name ASC LIMIT 8")
+    @Query("SELECT * FROM categories WHERE isFavorite = 1 ORDER BY sort ASC, name ASC LIMIT $MAX_QUICK_OPTIONS")
     suspend fun favorites(): List<Category>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

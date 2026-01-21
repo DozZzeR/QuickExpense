@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.lifecycleScope
 import dev.keslorod.quickexpense.App
+import dev.keslorod.quickexpense.data.dao.MAX_QUICK_OPTIONS
 import dev.keslorod.quickexpense.data.entities.Expense
 import dev.keslorod.quickexpense.ui.theme.QuickExpenseTheme
 import kotlinx.coroutines.Dispatchers
@@ -22,8 +23,16 @@ class QuickInputActivity : ComponentActivity() {
         // Грузим фавориты/валюту в IO, затем рисуем UI
         lifecycleScope.launch(Dispatchers.IO) {
             val sources = app.db.sources().favorites()
-            val categories = app.db.categories().favorites()
+            val allCategories = app.db.categories().all()
             val currency = app.prefs.currencyFlow.first()
+
+            // Готовим быстрый выбор: избранные (до MAX_QUICK_OPTIONS) + первые остальные (если < MAX_QUICK_OPTIONS)
+            val favorites = allCategories.filter { it.isFavorite }
+            val quickCategories = if (favorites.size >= MAX_QUICK_OPTIONS) {
+                favorites.take(MAX_QUICK_OPTIONS)
+            } else {
+                favorites + allCategories.filter { !it.isFavorite }.take(MAX_QUICK_OPTIONS - favorites.size)
+            }
 
             withContext(Dispatchers.Main) {
                 setContent {
@@ -31,7 +40,10 @@ class QuickInputActivity : ComponentActivity() {
                         QuickInputScreen(
                             currency = currency,
                             sourceOptions = sources.map { Option(it.id, it.name) },
-                            categoryOptions = categories.map { Option(it.id, it.name) },
+                            categoryQuickOptions = quickCategories.map { Option(it.id, it.name) },
+                            categoryAllOptions = allCategories
+                                .sortedWith(compareBy({ !it.isFavorite }, { it.name }))
+                                .map { Option(it.id, it.name) },
                             onConfirm = { cents, sourceId, categoryId ->
                                 lifecycleScope.launch(Dispatchers.IO) {
                                     try {
