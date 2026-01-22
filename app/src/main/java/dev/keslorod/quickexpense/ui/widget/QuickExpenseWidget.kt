@@ -48,7 +48,8 @@ class QuickExpenseWidget : GlanceAppWidget() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
 
-        val label = if (showRemainder) "Остаток" else "Расходы"
+        val labelRes = if (showRemainder) dev.keslorod.quickexpense.R.string.widget_balance else dev.keslorod.quickexpense.R.string.widget_expenses
+        val label = ctx.getString(labelRes)
         
         Column(
             modifier = GlanceModifier

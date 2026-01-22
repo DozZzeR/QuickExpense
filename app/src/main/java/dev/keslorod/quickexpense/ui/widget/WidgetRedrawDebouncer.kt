@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.glance.appwidget.updateAll
 import dev.keslorod.quickexpense.App
 import dev.keslorod.quickexpense.domain.Period
+import dev.keslorod.quickexpense.domain.getWidgetSubtitle
 import dev.keslorod.quickexpense.domain.periodRange
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
@@ -33,7 +34,7 @@ class WidgetRecomputeAndRedraw(
                 "all" -> Period.ALL
                 else  -> Period.DAY
             }
-            val range = periodRange(period, 1)  // Якорный день всегда 1-е число месяца
+            val range = periodRange(period, 1)
             val total = app.db.expenses().sumInRange(range.from, range.to)
             
             // Вычисляем значение для отображения: либо расход, либо остаток
@@ -43,13 +44,7 @@ class WidgetRecomputeAndRedraw(
                 total
             }
             
-            val subtitle = when (periodStr) {
-                "day" -> "за день"
-                "week" -> "за неделю"
-                "month" -> "за месяц"
-                "all" -> "за всё время"
-                else -> "за день"
-            }
+            val subtitle = period.getWidgetSubtitle(app)
 
             writeWidgetStateForAll(
                 ctx = app,

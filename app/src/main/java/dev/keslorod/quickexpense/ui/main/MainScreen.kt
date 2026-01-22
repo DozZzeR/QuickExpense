@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
@@ -23,6 +24,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.domain.formatCents
 import dev.keslorod.quickexpense.export.enqueueExport
 import dev.keslorod.quickexpense.ui.quickinput.QuickInputActivity
@@ -61,14 +63,14 @@ fun MainScreen(
                 title = { Text("QuickExpense") },
                 actions = {
                     IconButton(onClick = { menuOpen = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Меню")
+                        Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.menu))
                     }
                     DropdownMenu(
                         expanded = menuOpen,
                         onDismissRequest = { menuOpen = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Экспорт CSV/ZIP") },
+                            text = { Text(stringResource(R.string.export_csv_zip)) },
                             leadingIcon = { Icon(Icons.Default.Download, contentDescription = null) },
                             onClick = {
                                 menuOpen = false
@@ -95,14 +97,14 @@ fun MainScreen(
                                                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                                         }
                                                         ctx.startActivity(
-                                                            Intent.createChooser(share, "Отправить $name")
+                                                            Intent.createChooser(share, ctx.getString(R.string.send_export, name))
                                                                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                                         )
                                                     }
                                                     true
                                                 }
                                                 WorkInfo.State.FAILED -> {
-                                                    Toast.makeText(ctx, "Экспорт не удался", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(ctx, ctx.getString(R.string.export_failed), Toast.LENGTH_SHORT).show()
                                                     true
                                                 }
                                                 else -> false
@@ -112,7 +114,7 @@ fun MainScreen(
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Настройки") },
+                            text = { Text(stringResource(R.string.settings)) },
                             leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) },
                             onClick = {
                                 menuOpen = false
@@ -127,11 +129,11 @@ fun MainScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { ctx.startActivity(Intent(ctx, QuickInputActivity::class.java)) }
-            ) { Icon(Icons.Default.Add, contentDescription = "Добавить") }
+            ) { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add)) }
         }
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize().padding(16.dp)) {
-            Text("Сводка", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.summary), style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(6.dp))
             Text(
                 "${formatCents(state.totalCents)} ${state.currency}",
@@ -142,11 +144,11 @@ fun MainScreen(
             }
 
             Spacer(Modifier.height(16.dp))
-            Text("Последние операции", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.recent_transactions), style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(6.dp))
             if (items.isEmpty()) {
                 Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
-                    Text("Пока нет")
+                    Text(stringResource(R.string.no_transactions))
                 }
             } else {
                 LazyColumn(Modifier.fillMaxWidth().weight(1f)) {

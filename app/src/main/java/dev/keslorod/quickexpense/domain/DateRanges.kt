@@ -1,8 +1,30 @@
 package dev.keslorod.quickexpense.domain
 
+import android.content.Context
+import dev.keslorod.quickexpense.R
 import java.util.Calendar
 
 enum class Period { NONE, DAY, WEEK, MONTH, ALL }
+
+fun Period.toLabelRes(): Int = when (this) {
+    Period.ALL    -> R.string.period_all_time
+    Period.MONTH  -> R.string.period_month
+    Period.WEEK   -> R.string.period_week
+    Period.DAY    -> R.string.period_day
+    Period.NONE   -> R.string.period_all_time
+}
+
+fun Period.getLabel(context: Context): String = context.getString(toLabelRes())
+
+fun Period.toWidgetSubtitleRes(): Int = when (this) {
+    Period.ALL    -> R.string.widget_subtitle_all_time
+    Period.MONTH  -> R.string.widget_subtitle_month
+    Period.WEEK   -> R.string.widget_subtitle_week
+    Period.DAY    -> R.string.widget_subtitle_day
+    Period.NONE   -> R.string.widget_subtitle_all_time
+}
+
+fun Period.getWidgetSubtitle(context: Context): String = context.getString(toWidgetSubtitleRes())
 
 data class Range(val from: Long, val to: Long)
 

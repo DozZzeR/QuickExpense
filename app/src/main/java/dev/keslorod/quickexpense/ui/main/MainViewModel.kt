@@ -7,6 +7,7 @@ import dev.keslorod.quickexpense.App
 import dev.keslorod.quickexpense.data.entities.Expense
 import dev.keslorod.quickexpense.domain.Period
 import dev.keslorod.quickexpense.domain.Range
+import dev.keslorod.quickexpense.domain.getWidgetSubtitle
 import dev.keslorod.quickexpense.domain.periodRange
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -44,15 +45,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 "all" -> Period.ALL
                 else  -> Period.DAY
             }
-            val subtitlePeriod = when (periodStr) {
-                "day" -> "за день"
-                "week" -> "за неделю"
-                "month" -> "за месяц"
-                "all" -> "за всё время"
-                else -> "за день"
-            }
 
-            val range = periodRange(period, 1)  // Якорный день всегда 1-е число месяца
+            val range = periodRange(period, 1)
             val total = appRef.db.expenses().sumInRange(range.from, range.to)
 
             val list = appRef.db.expenses()
@@ -74,7 +68,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             _state.update {
                 it.copy(
                     currency = currency,
-                    subtitle = subtitlePeriod,
+                    subtitle = period.getWidgetSubtitle(appRef),
                     totalCents = total
                 )
             }

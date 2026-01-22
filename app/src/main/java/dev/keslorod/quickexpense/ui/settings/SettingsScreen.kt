@@ -8,9 +8,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import dev.keslorod.quickexpense.App
+import dev.keslorod.quickexpense.R
+import dev.keslorod.quickexpense.domain.Period
+import dev.keslorod.quickexpense.domain.getLabel
 import dev.keslorod.quickexpense.ui.widget.hasAnyQuickExpenseWidget
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -39,10 +43,10 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Настройки") },
+                title = { Text(stringResource(R.string.settings)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ChevronLeft, contentDescription = "Назад")
+                        Icon(Icons.Filled.ChevronLeft, contentDescription = stringResource(R.string.back))
                     }
                 })
             }
@@ -54,24 +58,31 @@ fun SettingsScreen(
             Button(
                 onClick = { nav.navigate("manage_sources") },
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("Источники") }
+            ) { Text(stringResource(R.string.sources)) }
 
             Button(
                 onClick = { nav.navigate("manage_categories") },
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("Категории") }
+            ) { Text(stringResource(R.string.categories)) }
 
             OutlinedTextField(
                 value = currency,
                 onValueChange = { currency = it.take(3).uppercase() },
-                label = { Text("Валюта (код)") },
+                label = { Text(stringResource(R.string.currency_label)) },
                 singleLine = true
             )
 
             // Период
-            Text("Период виджета")
+            Text(stringResource(R.string.widget_period))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("day" to "День", "week" to "Неделя", "month" to "Месяц", "all" to "Всё").forEach { (v, label) ->
+                val ctx = LocalContext.current
+                val periodOptions = listOf(
+                    "day" to Period.DAY.getLabel(ctx),
+                    "week" to Period.WEEK.getLabel(ctx),
+                    "month" to Period.MONTH.getLabel(ctx),
+                    "all" to Period.ALL.getLabel(ctx)
+                )
+                periodOptions.forEach { (v, label) ->
                     FilterChip(
                         selected = period == v,
                         onClick = { period = v },
@@ -81,13 +92,13 @@ fun SettingsScreen(
             }
 
             // Лимит трат
-            Text("Лимит трат (в центах, 0 = без лимита)")
+            Text(stringResource(R.string.widget_limit))
             OutlinedTextField(
                 value = if (limitCents == 0L) "" else (limitCents / 100).toString(),
                 onValueChange = { 
                     limitCents = (it.toLongOrNull() ?: 0L) * 100
                 },
-                label = { Text("Лимит") },
+                label = { Text(stringResource(R.string.limit_label)) },
                 singleLine = true
             )
 
@@ -97,7 +108,7 @@ fun SettingsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Показывать остаток вместо расхода")
+                Text(stringResource(R.string.show_balance_instead))
                 Checkbox(
                     checked = showRemainder,
                     onCheckedChange = { showRemainder = it }
@@ -120,7 +131,7 @@ fun SettingsScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("Сохранить") }
+            ) { Text(stringResource(R.string.save)) }
 
             WidgetControls(app)
         }
@@ -164,7 +175,7 @@ fun WidgetControls(app: App) {
                 }
             },
             modifier = Modifier.fillMaxWidth()
-        ) { Text("Добавить виджет на рабочий стол") }
+        ) { Text(stringResource(R.string.add_widget)) }
     } else {
         // Если виджет уже есть — вместо «Добавить» покажем полезную кнопку
         OutlinedButton(
@@ -174,6 +185,6 @@ fun WidgetControls(app: App) {
                 android.widget.Toast.makeText(ctx, "Обновляю виджет…", android.widget.Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier.fillMaxWidth()
-        ) { Text("Обновить виджет сейчас") }
+        ) { Text(stringResource(R.string.update_widget)) }
     }
 }

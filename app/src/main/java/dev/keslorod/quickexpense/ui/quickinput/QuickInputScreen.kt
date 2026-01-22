@@ -2,10 +2,8 @@ package dev.keslorod.quickexpense.ui.quickinput
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -14,9 +12,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.keslorod.quickexpense.App
+import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.data.entities.Category
 import dev.keslorod.quickexpense.data.entities.Source
 import dev.keslorod.quickexpense.ui.manage.ListScreenMode
@@ -94,7 +94,7 @@ fun QuickInputScreen(
 
     if (showCategorySelector) {
         ManageListScreen<Category>(
-            title = "Выбрать категорию",
+            title = stringResource(R.string.select_category),
             mode = ListScreenMode.SELECT,
             onSelect = { selectedCategory ->
                 val option = Option(selectedCategory.id, selectedCategory.name)
@@ -122,7 +122,7 @@ fun QuickInputScreen(
         )
     } else if (showSourceSelector) {
         ManageListScreen<Source>(
-            title = "Выбрать источник",
+            title = stringResource(R.string.select_source),
             mode = ListScreenMode.SELECT,
             onSelect = { selectedSource ->
                 val option = Option(selectedSource.id, selectedSource.name)
@@ -158,9 +158,9 @@ fun QuickInputScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Источник", fontWeight = FontWeight.Medium)
+                Text(stringResource(R.string.source), fontWeight = FontWeight.Medium)
                 IconButton(onClick = { showSourceSelector = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Все источники")
+                    Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.all_sources))
                 }
             }
             Spacer(Modifier.height(8.dp))
@@ -231,9 +231,9 @@ fun QuickInputScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Категория", fontWeight = FontWeight.Medium)
+                Text(stringResource(R.string.category), fontWeight = FontWeight.Medium)
                 IconButton(onClick = { showCategorySelector = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Все категории")
+                    Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.all_categories))
                 }
             }
             Spacer(Modifier.height(8.dp))
@@ -294,11 +294,11 @@ fun QuickInputScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = isFormValid
-            ) { Text("OK — сохранить") }
+            ) { Text(stringResource(R.string.ok_save)) }
             OutlinedButton(
                 onClick = { onCancel() },
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("Отмена") }
+            ) { Text(stringResource(R.string.cancel)) }
         }
     }
 }

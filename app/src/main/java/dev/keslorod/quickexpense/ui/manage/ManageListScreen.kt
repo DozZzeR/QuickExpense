@@ -13,12 +13,13 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import dev.keslorod.quickexpense.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -64,15 +65,19 @@ fun <T> ManageListScreen(
         items.map { getName(it).trim().lowercase() }.toSet()
     }
 
+    // Вычисляем строки ошибок один раз в Composable контексте
+    val errorNameEmpty = stringResource(R.string.error_name_empty)
+    val errorNameExists = stringResource(R.string.error_name_exists)
+
     // Валидатор имени: возвращает строку-ошибку или null, если всё ок
     val validateName: (proposed: String, originalName: String?) -> String? = { proposed, originalName ->
         val p = proposed.trim()
         when {
-            p.isEmpty() -> "Введите название"
+            p.isEmpty() -> errorNameEmpty
             // если редактирование и имя не меняется — ок
             originalName != null && p.equals(originalName.trim(), ignoreCase = true) -> null
             // иначе проверяем, что такого имени нет среди существующих
-            existingNames.contains(p.lowercase()) -> "Такое имя уже есть"
+            existingNames.contains(p.lowercase()) -> errorNameExists
             else -> null
         }
     }
@@ -83,7 +88,7 @@ fun <T> ManageListScreen(
                 title = { Text(title) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ChevronLeft, contentDescription = "Назад")
+                        Icon(Icons.Filled.ChevronLeft, contentDescription = stringResource(R.string.back))
                     }
                 }
             )
@@ -95,7 +100,7 @@ fun <T> ManageListScreen(
                     editingText = ""
                     showAdd = true
                 }
-            ) { Text(if (mode == ListScreenMode.SELECT) "➕ Добавить" else "Добавить") }
+            ) { Text(if (mode == ListScreenMode.SELECT) stringResource(R.string.add_item) else stringResource(R.string.add_item_short)) }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { pad ->
@@ -142,7 +147,7 @@ fun <T> ManageListScreen(
                                     },
                                     modifier = Modifier.size(32.dp)
                                 ) {
-                                    Icon(Icons.Filled.Edit, contentDescription = "Редактировать", modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.rename), modifier = Modifier.size(18.dp))
                                 }
                             } else {
                                 // В MANAGE режиме все кнопки
@@ -150,7 +155,7 @@ fun <T> ManageListScreen(
                                     editingItem = item
                                     editingText = getName(item)
                                 }) {
-                                    Icon(Icons.Filled.Edit, contentDescription = "Переименовать")
+                                    Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.rename))
                                 }
                                 IconButton(onClick = {
                                     scope.launch(Dispatchers.IO) {
@@ -159,9 +164,9 @@ fun <T> ManageListScreen(
                                     }
                                 }) {
                                     if (isFavorite(item))
-                                        Icon(Icons.Filled.Star, contentDescription = "Убрать из избранного")
+                                        Icon(Icons.Filled.Star, contentDescription = stringResource(R.string.remove_from_favorites))
                                     else
-                                        Icon(Icons.Outlined.StarBorder, contentDescription = "В избранное")
+                                        Icon(Icons.Outlined.StarBorder, contentDescription = stringResource(R.string.add_to_favorites))
                                 }
                                 IconButton(onClick = {
                                     scope.launch(Dispatchers.IO) {
@@ -178,7 +183,7 @@ fun <T> ManageListScreen(
                                         }
                                     }
                                 }) {
-                                    Icon(Icons.Filled.Delete, contentDescription = "Удалить")
+                                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete))
                                 }
                             }
                             
@@ -194,9 +199,9 @@ fun <T> ManageListScreen(
                                     modifier = Modifier.size(32.dp)
                                 ) {
                                     if (isFavorite(item))
-                                        Icon(Icons.Filled.Star, contentDescription = "Убрать из избранного", modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Filled.Star, contentDescription = stringResource(R.string.remove_from_favorites), modifier = Modifier.size(18.dp))
                                     else
-                                        Icon(Icons.Outlined.StarBorder, contentDescription = "В избранное", modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Outlined.StarBorder, contentDescription = stringResource(R.string.add_to_favorites), modifier = Modifier.size(18.dp))
                                 }
                             }
                         }
@@ -209,9 +214,9 @@ fun <T> ManageListScreen(
     // Диалог: Добавить
     if (showAdd) {
         NameDialog(
-            title = "Добавить",
+            title = stringResource(R.string.dialog_add_title),
             initial = "",
-            confirmText = "Создать",
+            confirmText = stringResource(R.string.dialog_add_confirm),
             validator = { name -> validateName(name, null) },
             onCancel = { showAdd = false },
             onConfirm = { name ->
@@ -229,9 +234,9 @@ fun <T> ManageListScreen(
     editingItem?.let { item ->
         val originalName = getName(item)
         NameDialog(
-            title = "Переименовать",
+            title = stringResource(R.string.dialog_rename_title),
             initial = editingText,
-            confirmText = "Сохранить",
+            confirmText = stringResource(R.string.dialog_rename_confirm),
             validator = { name -> validateName(name, originalName) },
             onCancel = { editingItem = null },
             onConfirm = { newName ->
@@ -268,7 +273,7 @@ private fun NameDialog(
                     value = text,
                     onValueChange = { text = it },
                     singleLine = true,
-                    placeholder = { Text("Название") },
+                    placeholder = { Text(stringResource(R.string.error_name_empty)) },
                     isError = error != null,
                     supportingText = { if (error != null) Text(error) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -286,7 +291,7 @@ private fun NameDialog(
             ) { Text(confirmText) }
         },
         dismissButton = {
-            TextButton(onClick = onCancel) { Text("Отмена") }
+            TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) }
         }
     )
 }
