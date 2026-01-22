@@ -51,12 +51,12 @@ fun SettingsScreen(
             .padding(pad)
             .fillMaxSize()
             .padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(
+            Button(
                 onClick = { nav.navigate("manage_sources") },
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Источники") }
 
-            OutlinedButton(
+            Button(
                 onClick = { nav.navigate("manage_categories") },
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Категории") }

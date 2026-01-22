@@ -20,14 +20,16 @@ class QuickInputActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Грузим фавориты/валюту в IO, затем рисуем UI
+        // Грузим фаворты/валюту в IO, затем рисуем UI
         lifecycleScope.launch(Dispatchers.IO) {
             val sources = app.db.sources().favorites()
             val allCategories = app.db.categories().all()
             val currency = app.prefs.currencyFlow.first()
 
-            // Готовим быстрый выбор: только избранные категории
+            // Готовим быстрый выбор: только избранные категории и источники
             val quickCategories = allCategories.filter { it.isFavorite }
+            val sourceOptions = sources.map { Option(it.id, it.name) }
+            val categoryOptions = quickCategories.map { Option(it.id, it.name) }
 
             withContext(Dispatchers.Main) {
                 setContent {
@@ -35,8 +37,8 @@ class QuickInputActivity : ComponentActivity() {
                         QuickInputScreen(
                             app = app,
                             currency = currency,
-                            sourceOptions = sources.map { Option(it.id, it.name) },
-                            categoryQuickOptions = quickCategories.map { Option(it.id, it.name) },
+                            sourceOptions = sourceOptions,
+                            categoryQuickOptions = categoryOptions,
                             onConfirm = { cents, sourceId, categoryId ->
                                 lifecycleScope.launch(Dispatchers.IO) {
                                     try {

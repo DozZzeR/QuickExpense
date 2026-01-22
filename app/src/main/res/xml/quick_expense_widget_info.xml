@@ -4,5 +4,5 @@
     android:minHeight="60dp"
     android:updatePeriodMillis="0"
     android:resizeMode="horizontal|vertical"
-    android:initialLayout="@layout/widget_initial_placeholder"
+    android:initialLayout="@layout/widget_expense"
     android:widgetCategory="home_screen" />

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Мягкая краевая виньетка (имитация blur по краям) -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="18dp" />
+            <gradient
+                android:type="radial"
+                android:gradientRadius="520dp"
+                android:centerX="50%"
+                android:centerY="50%"
+                android:startColor="#00000000"
+                android:endColor="#22000000" />
+        </shape>
+    </item>
+
+    <!-- Светлая внутренняя глубина -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="18dp" />
+            <gradient
+                android:type="radial"
+                android:gradientRadius="420dp"
+                android:centerX="30%"
+                android:centerY="25%"
+                android:startColor="#22FFFFFF"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+
+    <!-- Основной тёмный градиент -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="18dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="#E0151720"
+                android:endColor="#E01F2F45" />
+        </shape>
+    </item>
+
+    <!-- Стеклянная обводка -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="18dp" />
+            <stroke
+                android:width="1dp"
+                android:color="#1AFFFFFF" />
+        </shape>
+    </item>
+
+</layer-list>
