@@ -28,7 +28,6 @@ class AppPrefs(private val context: Context) {
 
     val currencyFlow = data.map { it[PrefKeys.currency] ?: "RSD" }
     val widgetPeriodFlow = data.map { it[PrefKeys.widgetPeriod] ?: "day" }
-    val monthAnchorDayFlow = data.map { it[PrefKeys.monthAnchorDay] ?: 1 }
     val widgetLimitCentsFlow = data.map { it[PrefKeys.widgetLimitCents] ?: 0L }
     val showRemainderInsteadOfExpenseFlow = data.map { it[PrefKeys.showRemainderInsteadOfExpense] ?: false }
     val languageCodeFlow = data.map { it[PrefKeys.languageCode] ?: "" }  // пусто = системный язык
@@ -36,7 +35,6 @@ class AppPrefs(private val context: Context) {
 
     suspend fun setCurrency(code: String) = context.dataStore.edit { it[PrefKeys.currency] = code }
     suspend fun setWidgetPeriod(mode: String) = context.dataStore.edit { it[PrefKeys.widgetPeriod] = mode }
-    suspend fun setMonthAnchorDay(day: Int) = context.dataStore.edit { it[PrefKeys.monthAnchorDay] = day.coerceIn(1,31) }
     suspend fun setWidgetLimitCents(cents: Long) = context.dataStore.edit { it[PrefKeys.widgetLimitCents] = cents.coerceAtLeast(0) }
     suspend fun setShowRemainderInsteadOfExpense(v: Boolean) = context.dataStore.edit { it[PrefKeys.showRemainderInsteadOfExpense] = v }
     suspend fun setLanguageCode(code: String) {

@@ -15,7 +15,6 @@ import dev.keslorod.quickexpense.ui.manage.ListScreenMode
 import dev.keslorod.quickexpense.ui.manage.ManageCategoriesScreen
 import dev.keslorod.quickexpense.ui.manage.ManageSourcesScreen
 import dev.keslorod.quickexpense.ui.settings.SettingsScreen
-import kotlin.collections.get
 
 class MainActivity : ComponentActivity() {
     private val app by lazy { application as App }
