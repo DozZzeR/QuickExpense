@@ -12,10 +12,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.QuickExpense">
+        <meta-data
+            android:name="android.app.locale_config"
+            android:resource="@xml/locales_config" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.QuickExpense">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

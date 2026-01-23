@@ -1,6 +1,7 @@
 package dev.keslorod.quickexpense.ui.main
 
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -45,7 +46,6 @@ fun MainScreen(
 
     val ctx = LocalContext.current
     var menuOpen by remember { mutableStateOf(false) }
-
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->

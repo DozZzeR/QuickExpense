@@ -1,6 +1,7 @@
 package dev.keslorod.quickexpense.data.prefs
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -18,6 +19,7 @@ object PrefKeys {
     val monthAnchorDay = intPreferencesKey("month_anchor")    // 1..31
     val widgetLimitCents = longPreferencesKey("widget_limit_cents")  // лимит трат в центах, или 0 если не установлен
     val showRemainderInsteadOfExpense = booleanPreferencesKey("show_remainder")  // показывать остаток вместо расхода
+    val languageCode = stringPreferencesKey("language_code")  // "en" / "ru" / "sr"
     val seeded = booleanPreferencesKey("seeded")
 }
 
@@ -29,6 +31,7 @@ class AppPrefs(private val context: Context) {
     val monthAnchorDayFlow = data.map { it[PrefKeys.monthAnchorDay] ?: 1 }
     val widgetLimitCentsFlow = data.map { it[PrefKeys.widgetLimitCents] ?: 0L }
     val showRemainderInsteadOfExpenseFlow = data.map { it[PrefKeys.showRemainderInsteadOfExpense] ?: false }
+    val languageCodeFlow = data.map { it[PrefKeys.languageCode] ?: "" }  // пусто = системный язык
     val seededFlow = data.map { it[PrefKeys.seeded] ?: false }
 
     suspend fun setCurrency(code: String) = context.dataStore.edit { it[PrefKeys.currency] = code }
@@ -36,5 +39,10 @@ class AppPrefs(private val context: Context) {
     suspend fun setMonthAnchorDay(day: Int) = context.dataStore.edit { it[PrefKeys.monthAnchorDay] = day.coerceIn(1,31) }
     suspend fun setWidgetLimitCents(cents: Long) = context.dataStore.edit { it[PrefKeys.widgetLimitCents] = cents.coerceAtLeast(0) }
     suspend fun setShowRemainderInsteadOfExpense(v: Boolean) = context.dataStore.edit { it[PrefKeys.showRemainderInsteadOfExpense] = v }
+    suspend fun setLanguageCode(code: String) {
+        Log.d("AppPrefs.setLanguageCode", "Setting language code to: '$code'")
+        context.dataStore.edit { it[PrefKeys.languageCode] = code }
+        Log.d("AppPrefs.setLanguageCode", "Language code saved to DataStore")
+    }
     suspend fun setSeeded(v: Boolean) = context.dataStore.edit { it[PrefKeys.seeded] = v }
 }

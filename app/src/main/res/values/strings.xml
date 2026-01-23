@@ -53,9 +53,23 @@
     <string name="widget_limit">Widget limit (in cents, 0 = no limit)</string>
     <string name="limit_label">Limit</string>
     <string name="show_balance_instead">Show balance instead of expenses</string>
+    <string name="language">Language</string>
+    <string name="language_system">System</string>
+    <string name="language_english">English</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_serbian">Српски</string>
     <string name="save">Save</string>
     <string name="add_widget">Add widget to home screen</string>
     <string name="update_widget">Update widget now</string>
+
+    <!-- Default sources -->
+    <string name="default_source_cash">Cash</string>
+    <string name="default_source_card">Card</string>
+
+    <!-- Default categories -->
+    <string name="default_category_groceries">Groceries</string>
+    <string name="default_category_home">Home</string>
+    <string name="default_category_car">Car</string>
 
     <!-- Main Screen -->
     <string name="menu">Menu</string>

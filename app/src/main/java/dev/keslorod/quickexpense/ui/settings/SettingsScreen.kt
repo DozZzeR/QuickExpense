@@ -1,6 +1,10 @@
 package dev.keslorod.quickexpense.ui.settings
 
+import android.util.Log
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material3.*
@@ -18,6 +22,8 @@ import dev.keslorod.quickexpense.domain.getLabel
 import dev.keslorod.quickexpense.ui.widget.hasAnyQuickExpenseWidget
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,17 +33,22 @@ fun SettingsScreen(
     nav: NavHostController
 ) {
     val scope = rememberCoroutineScope()
+    val ctx = LocalContext.current
 
     var currency by remember { mutableStateOf("RSD") }
     var period by remember { mutableStateOf("day") } // day/week/month/all
     var limitCents by remember { mutableStateOf(0L) }
     var showRemainder by remember { mutableStateOf(false) }
+    var languageCode by remember { mutableStateOf("") }
+    var previousLanguageCode by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         currency = app.prefs.currencyFlow.first()
         period = app.prefs.widgetPeriodFlow.first()
         limitCents = app.prefs.widgetLimitCentsFlow.first()
         showRemainder = app.prefs.showRemainderInsteadOfExpenseFlow.first()
+        languageCode = app.prefs.languageCodeFlow.first()
+        previousLanguageCode =languageCode
     }
 
     Scaffold(
@@ -49,7 +60,7 @@ fun SettingsScreen(
                         Icon(Icons.Filled.ChevronLeft, contentDescription = stringResource(R.string.back))
                     }
                 })
-            }
+        }
     ) { pad ->
         Column(Modifier
             .padding(pad)
@@ -74,7 +85,10 @@ fun SettingsScreen(
 
             // Период
             Text(stringResource(R.string.widget_period))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 val ctx = LocalContext.current
                 val periodOptions = listOf(
                     "day" to Period.DAY.getLabel(ctx),
@@ -95,7 +109,7 @@ fun SettingsScreen(
             Text(stringResource(R.string.widget_limit))
             OutlinedTextField(
                 value = if (limitCents == 0L) "" else (limitCents / 100).toString(),
-                onValueChange = { 
+                onValueChange = {
                     limitCents = (it.toLongOrNull() ?: 0L) * 100
                 },
                 label = { Text(stringResource(R.string.limit_label)) },
@@ -116,6 +130,25 @@ fun SettingsScreen(
             }
 
             Spacer(Modifier.height(12.dp))
+
+            // Язык
+            Text(stringResource(R.string.language))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                val languageOptions = listOf(
+                    "" to stringResource(R.string.language_system),
+                    "en" to stringResource(R.string.language_english),
+                    "ru" to stringResource(R.string.language_russian),
+                    "sr" to stringResource(R.string.language_serbian)
+                )
+                languageOptions.forEach { (code, label) ->
+                    FilterChip(
+                        selected = languageCode == code,
+                        onClick = { languageCode = code },
+                        label = { Text(label) }
+                    )
+                }
+            }
+            Spacer(Modifier.height(12.dp))
             Button(
                 onClick = {
                     scope.launch {
@@ -127,7 +160,37 @@ fun SettingsScreen(
                         // Попросим обновить виджет коалесированно
                         app.widgetRefresher.schedule()
 
-                        onBack()
+                        val languageChanged = languageCode != previousLanguageCode
+
+                        if (languageChanged) {
+                            Log.d("SettingsScreen", "Language changed: '$previousLanguageCode' -> '$languageCode'")
+                            app.prefs.setLanguageCode(languageCode)
+
+                            // Применяем язык в Main потоке (на UI потоке)
+                            kotlinx.coroutines.withContext(Dispatchers.Main) {
+                                Log.d("SettingsScreen", "Applying locale: '$languageCode'")
+                                app.applyLanguage(languageCode)
+                                Log.d("SettingsScreen", "Locale applied")
+
+                                // Перезагружаем Activity чтобы stringResource() перечитал строки на новом языке
+                                val activity = ctx as? androidx.activity.ComponentActivity
+                                activity?.recreate()
+                            }
+                        } else {
+                            Log.d("SettingsScreen", "Language not changed, just updating other settings")
+                            app.prefs.setLanguageCode(languageCode)
+                        }
+
+                        Log.d("SettingsScreen", "Settings saved")
+
+                        // Попросим обновить виджет коалесированно
+                        app.widgetRefresher.schedule()
+
+                        // Закрываем экран только если язык не менялся
+                        // (при смене языка Activity пересоздаётся и экран закроется сам)
+                        if (!languageChanged) {
+                            onBack()
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth()

@@ -1,6 +1,7 @@
 package dev.keslorod.quickexpense
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import dev.keslorod.quickexpense.ui.theme.QuickExpenseTheme
@@ -14,6 +15,7 @@ import dev.keslorod.quickexpense.ui.manage.ListScreenMode
 import dev.keslorod.quickexpense.ui.manage.ManageCategoriesScreen
 import dev.keslorod.quickexpense.ui.manage.ManageSourcesScreen
 import dev.keslorod.quickexpense.ui.settings.SettingsScreen
+import kotlin.collections.get
 
 class MainActivity : ComponentActivity() {
     private val app by lazy { application as App }
@@ -25,6 +27,8 @@ class MainActivity : ComponentActivity() {
                 AppNav(app)
             }
         }
+        Log.d("language main screen", resources.configuration.locales[0].toLanguageTag())
+
     }
 }
 
