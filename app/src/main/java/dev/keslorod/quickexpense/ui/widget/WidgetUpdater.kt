@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.state.PreferencesGlanceStateDefinition
+import dev.keslorod.quickexpense.BuildConfig
 
 /**
  * Записать готовые данные в state всех инстансов виджета.
@@ -20,7 +21,7 @@ suspend fun writeWidgetStateForAll(
     val mgr = GlanceAppWidgetManager(ctx)
     val ids = mgr.getGlanceIds(QuickExpenseWidget::class.java)
     if (ids.isEmpty()) return
-    Log.d("My debug writeWidgetStateForAll", ctx.toString())
+    if (BuildConfig.DEBUG) Log.d("My debug writeWidgetStateForAll", ctx.toString())
     ids.forEach { id ->
         updateAppWidgetState(ctx, PreferencesGlanceStateDefinition, id) { prefs ->
             prefs.toMutablePreferences().apply {

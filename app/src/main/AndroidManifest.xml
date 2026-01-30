@@ -4,7 +4,7 @@
 
     <application
         android:name=".App"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -27,12 +27,8 @@
         </activity>
         <activity
             android:name=".ui.quickinput.QuickInputActivity"
-            android:exported="true"
+            android:exported="false"
             android:theme="@style/Theme.QuickExpense">
-            <intent-filter> <!-- временно, чтобы открыть напрямую -->
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
         </activity>
         <receiver
             android:name=".ui.widget.QuickExpenseWidgetReceiver"

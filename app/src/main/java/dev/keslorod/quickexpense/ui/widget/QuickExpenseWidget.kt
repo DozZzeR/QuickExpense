@@ -21,6 +21,7 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.text.Text
+import dev.keslorod.quickexpense.BuildConfig
 import dev.keslorod.quickexpense.ui.quickinput.QuickInputActivity
 import kotlin.math.abs
 
@@ -41,7 +42,7 @@ class QuickExpenseWidget : GlanceAppWidget() {
         val subtitle = prefs[WidgetKeys.SUBTITLE].orEmpty()
         val showRemainder = prefs[WidgetKeys.SHOW_REMAINDER] ?: false
 
-        Log.d("My debug WidgetContent", prefs.toString())
+        if (BuildConfig.DEBUG) Log.d("My debug WidgetContent", prefs.toString())
         val ctx = androidx.glance.LocalContext.current
         val openIntent = Intent(ctx, QuickInputActivity::class.java).apply {
             putExtra("from_widget", true)

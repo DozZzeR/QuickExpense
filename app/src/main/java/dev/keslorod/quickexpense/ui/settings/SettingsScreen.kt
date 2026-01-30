@@ -13,6 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import dev.keslorod.quickexpense.App
+import dev.keslorod.quickexpense.BuildConfig
 import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.domain.Period
 import dev.keslorod.quickexpense.domain.getLabel
@@ -159,25 +160,31 @@ fun SettingsScreen(
                         val languageChanged = languageCode != previousLanguageCode
 
                         if (languageChanged) {
-                            Log.d("SettingsScreen", "Language changed: '$previousLanguageCode' -> '$languageCode'")
+                            if (BuildConfig.DEBUG) {
+                                Log.d("SettingsScreen", "Language changed: '$previousLanguageCode' -> '$languageCode'")
+                            }
                             app.prefs.setLanguageCode(languageCode)
 
                             // Применяем язык в Main потоке (на UI потоке)
                             kotlinx.coroutines.withContext(Dispatchers.Main) {
-                                Log.d("SettingsScreen", "Applying locale: '$languageCode'")
+                                if (BuildConfig.DEBUG) {
+                                    Log.d("SettingsScreen", "Applying locale: '$languageCode'")
+                                }
                                 app.applyLanguage(languageCode)
-                                Log.d("SettingsScreen", "Locale applied")
+                                if (BuildConfig.DEBUG) Log.d("SettingsScreen", "Locale applied")
 
                                 // Перезагружаем Activity чтобы stringResource() перечитал строки на новом языке
                                 val activity = ctx as? androidx.activity.ComponentActivity
                                 activity?.recreate()
                             }
                         } else {
-                            Log.d("SettingsScreen", "Language not changed, just updating other settings")
+                            if (BuildConfig.DEBUG) {
+                                Log.d("SettingsScreen", "Language not changed, just updating other settings")
+                            }
                             app.prefs.setLanguageCode(languageCode)
                         }
 
-                        Log.d("SettingsScreen", "Settings saved")
+                        if (BuildConfig.DEBUG) Log.d("SettingsScreen", "Settings saved")
 
                         // Попросим обновить виджет коалесированно
                         app.widgetRefresher.schedule()

@@ -32,14 +32,23 @@ class ExportWorker(ctx: Context, params: WorkerParameters): CoroutineWorker(ctx,
             val csvFile = File(exportDir, "quickexpense_$stamp.csv")
             try {
                 csvFile.outputStream().buffered().writer(Charsets.UTF_8).use { w ->
-                    w.appendLine("source_name,category_name,amount_cents,currency,created_at,id")
+                    w.appendLine("id,created_at,amount_cents,currency,source_name,category_name")
                     val items = app.db.expenses().expensesInRangeWithNames(from, to)
                     val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
                     items.forEach { e ->
                         val ts = fmt.format(java.util.Date(e.createdAt))
                         val sourceName = e.sourceName ?: "Unknown"
                         val categoryName = e.categoryName ?: "Unknown"
-                        w.appendLine("${e.id},$ts,${e.amount},${e.currency},\"$sourceName\",\"$categoryName\"")
+                        w.appendLine(
+                            listOf(
+                                e.id.toString(),
+                                ts,
+                                e.amount.toString(),
+                                e.currency,
+                                sourceName,
+                                categoryName
+                            ).joinToString(",") { it.toSafeCsv() }
+                        )
                     }
                 }
             } catch (e: Exception) {
@@ -90,4 +99,13 @@ class ExportWorker(ctx: Context, params: WorkerParameters): CoroutineWorker(ctx,
             Result.failure()
         }
     }
+}
+
+private fun String.toSafeCsv(): String {
+    if (isEmpty()) return ""
+    val needsFormulaEscape = first() in listOf('=', '+', '-', '@') || first() == '\t'
+    val safe = if (needsFormulaEscape) "'$this" else this
+    val needsQuotes = safe.any { it == ',' || it == '"' || it == '\n' || it == '\r' }
+    val escaped = safe.replace("\"", "\"\"")
+    return if (needsQuotes) "\"$escaped\"" else escaped
 }

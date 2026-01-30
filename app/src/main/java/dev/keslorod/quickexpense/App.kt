@@ -15,7 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 class App : Application() {
     // Ленивая инициализация — доступ из любой точки через (application as App)
@@ -45,20 +45,25 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         
-        Log.d("App.onCreate", "Starting...")
+        if (BuildConfig.DEBUG) Log.d("App.onCreate", "Starting...")
         
-        // Применяем сохранённый язык при запуске
-        try {
-            Log.d("App.onCreate", "Reading language from DataStore...")
-            val languageCode = runBlocking {
-                prefs.languageCodeFlow.first()
+        // Применяем сохранённый язык при запуске (без блокировки главного потока)
+        appScope.launch {
+            try {
+                if (BuildConfig.DEBUG) Log.d("App.onCreate", "Reading language from DataStore...")
+                val languageCode = prefs.languageCodeFlow.first()
+                if (BuildConfig.DEBUG) Log.d(
+                    "App.onCreate",
+                    "Loaded language code: '$languageCode' (length: ${languageCode.length}, blank: ${languageCode.isBlank()})"
+                )
+
+                withContext(Dispatchers.Main) {
+                    applyLanguage(languageCode)
+                }
+                if (BuildConfig.DEBUG) Log.d("App.onCreate", "Locales applied successfully")
+            } catch (e: Exception) {
+                Log.e("App.onCreate", "Error applying locales: ${e.message}", e)
             }
-            Log.d("App.onCreate", "Loaded language code: '$languageCode' (length: ${languageCode.length}, blank: ${languageCode.isBlank()})")
-            
-            applyLanguage(languageCode)
-            Log.d("App.onCreate", "Locales applied successfully")
-        } catch (e: Exception) {
-            Log.e("App.onCreate", "Error applying locales: ${e.message}", e)
         }
         
         // Инициализируем БД если нужно
@@ -81,8 +86,16 @@ class App : Application() {
             }
             localeManager.applicationLocales = localeList
             
-            Log.d("language", "LocaleManager.applicationLocales = ${localeManager.applicationLocales.toLanguageTags()}")
-            Log.d("language", "Resources.configuration.locales = ${resources.configuration.locales[0].toLanguageTag()}")
+            if (BuildConfig.DEBUG) {
+                Log.d(
+                    "language",
+                    "LocaleManager.applicationLocales = ${localeManager.applicationLocales.toLanguageTags()}"
+                )
+                Log.d(
+                    "language",
+                    "Resources.configuration.locales = ${resources.configuration.locales[0].toLanguageTag()}"
+                )
+            }
         } else {
             // fallback для старых API (minSdk 26)
             AppCompatDelegate.setApplicationLocales(

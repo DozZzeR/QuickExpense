@@ -26,7 +26,9 @@ class MainActivity : ComponentActivity() {
                 AppNav(app)
             }
         }
-        Log.d("language main screen", resources.configuration.locales[0].toLanguageTag())
+        if (BuildConfig.DEBUG) {
+            Log.d("language main screen", resources.configuration.locales[0].toLanguageTag())
+        }
 
     }
 }

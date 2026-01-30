@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import dev.keslorod.quickexpense.BuildConfig
 import kotlinx.coroutines.flow.map
 
 private const val STORE_NAME = "quickexpense_prefs"
@@ -38,9 +39,9 @@ class AppPrefs(private val context: Context) {
     suspend fun setWidgetLimitCents(cents: Long) = context.dataStore.edit { it[PrefKeys.widgetLimitCents] = cents.coerceAtLeast(0) }
     suspend fun setShowRemainderInsteadOfExpense(v: Boolean) = context.dataStore.edit { it[PrefKeys.showRemainderInsteadOfExpense] = v }
     suspend fun setLanguageCode(code: String) {
-        Log.d("AppPrefs.setLanguageCode", "Setting language code to: '$code'")
+        if (BuildConfig.DEBUG) Log.d("AppPrefs.setLanguageCode", "Setting language code to: '$code'")
         context.dataStore.edit { it[PrefKeys.languageCode] = code }
-        Log.d("AppPrefs.setLanguageCode", "Language code saved to DataStore")
+        if (BuildConfig.DEBUG) Log.d("AppPrefs.setLanguageCode", "Language code saved to DataStore")
     }
     suspend fun setSeeded(v: Boolean) = context.dataStore.edit { it[PrefKeys.seeded] = v }
 }
