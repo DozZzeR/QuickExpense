@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">QuickExpense</string>
+    <!-- Widget -->
+    <string name="widget_balance">Остаток</string>
+    <string name="widget_expenses">Расходы</string>
+    <string name="widget_all_time">за всё время</string>    <string name="widget_subtitle_day">за день</string>
+    <string name="widget_subtitle_week">за неделю</string>
+    <string name="widget_subtitle_month">за месяц</string>
+    <string name="widget_subtitle_all_time">за всё время</string>
+    <!-- Periods -->
+    <string name="period_all_time">весь период</string>
+    <string name="period_month">месяц</string>
+    <string name="period_week">неделя</string>
+    <string name="period_day">день</string>
+
+    <!-- Quick Input Screen -->
+    <string name="source">Источник</string>
+    <string name="category">Категория</string>
+    <string name="select_source">Выбрать источник</string>
+    <string name="select_category">Выбрать категорию</string>
+    <string name="all_sources">Все источники</string>
+    <string name="all_categories">Все категории</string>
+    <string name="ok_save">OK — сохранить</string>
+    <string name="cancel">Отмена</string>
+    <string name="back">Назад</string>
+
+    <!-- Manage List Screen -->
+    <string name="add_item">➕ Добавить</string>
+    <string name="add_item_short">Добавить</string>
+    <string name="rename">Переименовать</string>
+    <string name="add_to_favorites">В избранное</string>
+    <string name="remove_from_favorites">Убрать из избранного</string>
+    <string name="delete">Удалить</string>
+    <string name="error_name_empty">Введите название</string>
+    <string name="error_name_exists">Такое имя уже есть</string>
+    <string name="error_cannot_delete">Нельзя удалить: есть операции с этой записью</string>
+
+    <!-- Dialog -->
+    <string name="dialog_add_title">Добавить</string>
+    <string name="dialog_add_confirm">Создать</string>
+    <string name="dialog_rename_title">Переименовать</string>
+    <string name="dialog_rename_confirm">Сохранить</string>
+
+    <!-- Settings Screen -->
+    <string name="settings">Настройки</string>
+    <string name="sources">Источники</string>
+    <string name="categories">Категории</string>
+    <string name="currency_label">Валюта (код)</string>
+    <string name="widget_period">Период виджета</string>
+    <string name="widget_limit">Лимит трат (в центах, 0 = без лимита)</string>
+    <string name="limit_label">Лимит</string>
+    <string name="show_balance_instead">Показывать остаток вместо расхода</string>
+    <string name="language">Язык</string>
+    <string name="language_system">Системный</string>
+    <string name="language_english">English</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_serbian">Српски</string>
+    <string name="save">Сохранить</string>
+    <string name="add_widget">Добавить виджет на рабочий стол</string>
+    <string name="update_widget">Обновить виджет сейчас</string>
+
+    <!-- Default sources -->
+    <string name="default_source_cash">Наличка</string>
+    <string name="default_source_card">Карта</string>
+
+    <!-- Default categories -->
+    <string name="default_category_groceries">Продукты</string>
+    <string name="default_category_home">Дом</string>
+    <string name="default_category_car">Машина</string>
+
+    <!-- Main Screen -->
+    <string name="menu">Меню</string>
+    <string name="export_csv_zip">Экспорт CSV/ZIP</string>
+    <string name="add">Добавить</string>
+    <string name="summary">Сводка</string>
+    <string name="recent_transactions">Последние операции</string>
+    <string name="no_transactions">Пока нет</string>
+    <string name="export_failed">Экспорт не удался</string>
+    <string name="send_export">Отправить %s</string>
+</resources>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">QuickExpense</string>
+    <!-- Widget -->
+    <string name="widget_balance">Остатак</string>
+    <string name="widget_expenses">Трошкови</string>
+    <string name="widget_all_time">укупно</string>
+    <string name="widget_subtitle_day">по дану</string>
+    <string name="widget_subtitle_week">по недељи</string>
+    <string name="widget_subtitle_month">по месецу</string>
+    <string name="widget_subtitle_all_time">укупно</string>
+
+    <!-- Periods -->
+    <string name="period_all_time">укупно</string>
+    <string name="period_month">месец</string>
+    <string name="period_week">недеља</string>
+    <string name="period_day">данас</string>
+
+    <!-- Quick Input Screen -->
+    <string name="source">Извор</string>
+    <string name="category">Категорија</string>
+    <string name="select_source">Изабери извор</string>
+    <string name="select_category">Изабери категорију</string>
+    <string name="all_sources">Сви извори</string>
+    <string name="all_categories">Све категорије</string>
+    <string name="ok_save">OK — сачувај</string>
+    <string name="cancel">Отказ</string>
+    <string name="back">Назад</string>
+
+    <!-- Manage List Screen -->
+    <string name="add_item">➕ Додај</string>
+    <string name="add_item_short">Додај</string>
+    <string name="rename">Преименуј</string>
+    <string name="add_to_favorites">У омиљене</string>
+    <string name="remove_from_favorites">Уклони из омиљених</string>
+    <string name="delete">Обриши</string>
+    <string name="error_name_empty">Унесите назив</string>
+    <string name="error_name_exists">Назив већ постоји</string>
+    <string name="error_cannot_delete">Немогуће обрисати: постоје трансакције са овом ставком</string>
+
+    <!-- Dialog -->
+    <string name="dialog_add_title">Додај</string>
+    <string name="dialog_add_confirm">Прави</string>
+    <string name="dialog_rename_title">Преименуј</string>
+    <string name="dialog_rename_confirm">Сачувај</string>
+
+    <!-- Settings Screen -->
+    <string name="settings">Подешавања</string>
+    <string name="sources">Извори</string>
+    <string name="categories">Категорије</string>
+    <string name="currency_label">Валута (код)</string>
+    <string name="widget_period">Период виџета</string>
+    <string name="widget_limit">Лимит трошкова (у центима, 0 = без лимита)</string>
+    <string name="limit_label">Лимит</string>
+    <string name="show_balance_instead">Прикажи остатак уместо трошкова</string>
+    <string name="language">Језик</string>
+    <string name="language_system">Системски</string>
+    <string name="language_english">English</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_serbian">Српски</string>
+    <string name="save">Сачувај</string>
+    <string name="add_widget">Додај виџет на почетну екран</string>
+    <string name="update_widget">Ажурирај виџет сада</string>
+
+    <!-- Main Screen -->
+    <string name="menu">Мени</string>
+    <string name="export_csv_zip">Извоз CSV/ZIP</string>
+    <string name="add">Додај</string>
+    <string name="summary">Сажетак</string>
+    <string name="recent_transactions">Недавне трансакције</string>
+    <string name="no_transactions">Нема трансакција</string>
+    <string name="export_failed">Извоз неуспешан</string>
+    <string name="send_export">Пошаљи %s</string>
+</resources>
