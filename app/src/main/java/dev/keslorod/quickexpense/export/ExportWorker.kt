@@ -1,12 +1,13 @@
 package dev.keslorod.quickexpense.export
 
 import android.content.Context
-import android.content.Intent
+import android.util.Log
 import androidx.core.content.FileProvider
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import dev.keslorod.quickexpense.App
+import dev.keslorod.quickexpense.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -41,7 +42,7 @@ class ExportWorker(ctx: Context, params: WorkerParameters): CoroutineWorker(ctx,
                         val categoryName = e.categoryName ?: "Unknown"
                         w.appendLine(
                             listOf(
-                                e.id.toString(),
+                                e.id,
                                 ts,
                                 e.amount.toString(),
                                 e.currency,
@@ -52,6 +53,7 @@ class ExportWorker(ctx: Context, params: WorkerParameters): CoroutineWorker(ctx,
                     }
                 }
             } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.d("Export.worker.create", e.message.toString())
                 return@withContext Result.failure()
             }
 
@@ -72,6 +74,7 @@ class ExportWorker(ctx: Context, params: WorkerParameters): CoroutineWorker(ctx,
                     zos.finish()
                 }
             } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.d("Export.worker.save", e.message.toString())
                 csvFile.delete()
                 zipFile.delete()
                 return@withContext Result.failure()
@@ -85,6 +88,7 @@ class ExportWorker(ctx: Context, params: WorkerParameters): CoroutineWorker(ctx,
                     zipFile
                 )
             } catch (e: Exception) {
+                if (BuildConfig.DEBUG) Log.d("Export.worker.uri", e.message.toString())
                 csvFile.delete()
                 zipFile.delete()
                 return@withContext Result.failure()
@@ -96,6 +100,7 @@ class ExportWorker(ctx: Context, params: WorkerParameters): CoroutineWorker(ctx,
             )
             Result.success(out)
         } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.d("Export.worker.failed", e.message.toString())
             Result.failure()
         }
     }

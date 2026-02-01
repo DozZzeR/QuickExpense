@@ -106,5 +106,4 @@ class App : Application() {
             )
         }
     }
-
 }

@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.appcompat)
+    implementation(libs.camera.view)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -90,6 +91,13 @@ dependencies {
 
     // ----- DataStore (настройки)
     implementation(libs.androidx.datastore.preferences)
+
+    // ----- CameraX (receipt capture)
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
 
     // ----- Coil (картинки чеков — позже пригодится)
     implementation(libs.coil.compose)

@@ -12,15 +12,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import dev.keslorod.quickexpense.App
 import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.data.entities.Category
 import dev.keslorod.quickexpense.data.entities.Source
 import dev.keslorod.quickexpense.ui.manage.ListScreenMode
 import dev.keslorod.quickexpense.ui.manage.ManageListScreen
+import dev.keslorod.quickexpense.receipt.LocalReceiptScanner
+import dev.keslorod.quickexpense.receipt.ReceiptScanResult
 import kotlinx.coroutines.launch
 
 private const val MAX_RECENT_CATEGORIES = 3
@@ -49,6 +56,14 @@ fun QuickInputScreen(
     val categoryListState = rememberLazyListState()  // для скролла списка категорий
     val sourceListState = rememberLazyListState()  // для скролла списка источников
     val scope = rememberCoroutineScope()  // для выполнения скролла
+    val ctx = LocalContext.current
+    var lastScan by remember { mutableStateOf<ReceiptScanResult?>(null) }
+    var showGallery by remember { mutableStateOf(false) }
+    
+    val receiptScanner = LocalReceiptScanner.current
+    val receiptScannerHandle = receiptScanner.rememberLauncher { result ->
+        lastScan = result
+    }
 
     // Перезапрашиваем избранные категории при закрытии selector
     LaunchedEffect(showCategorySelector) {
@@ -150,7 +165,10 @@ fun QuickInputScreen(
         )
     } else {
         Column(
-            Modifier.fillMaxSize().padding(16.dp),
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -284,6 +302,25 @@ fun QuickInputScreen(
             }
 
             Spacer(Modifier.height(24.dp))
+            OutlinedButton(
+                onClick = { receiptScannerHandle.start() },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(stringResource(R.string.scan_receipt)) }
+
+            if (lastScan != null) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = stringResource(R.string.scan_receipt_pages, lastScan!!.files.size),
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = { showGallery = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text(stringResource(R.string.open_receipt_gallery)) }
+            }
+
+            Spacer(Modifier.height(12.dp))
             val cents = toCents(amountText)
             val isFormValid = source != null && category != null && cents > 0
             Button(
@@ -299,9 +336,39 @@ fun QuickInputScreen(
                 onClick = { onCancel() },
                 modifier = Modifier.fillMaxWidth()
             ) { Text(stringResource(R.string.cancel)) }
+
+        }
+
+        if (showGallery && lastScan != null) {
+            AlertDialog(
+                onDismissRequest = { showGallery = false },
+                confirmButton = {
+                    TextButton(onClick = { showGallery = false }) {
+                        Text(stringResource(R.string.close))
+                    }
+                },
+                title = { Text(stringResource(R.string.receipt_gallery_title)) },
+                text = {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(lastScan!!.files) { file ->
+                            AsyncImage(
+                                model = file,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(180.dp)
+                            )
+                        }
+                    }
+                }
+            )
         }
     }
 }
+
 
 @Composable
 private fun NumberPad(

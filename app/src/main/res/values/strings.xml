@@ -26,6 +26,11 @@
     <string name="ok_save">OK — Save</string>
     <string name="cancel">Cancel</string>
     <string name="back">Back</string>
+    <string name="scan_receipt">Scan receipt</string>
+    <string name="scan_receipt_pages">Receipt pages: %d</string>
+    <string name="open_receipt_gallery">Open receipt gallery</string>
+    <string name="receipt_gallery_title">Receipt pages</string>
+    <string name="close">Close</string>
 
     <!-- Manage List Screen -->
     <string name="add_item">➕ Add</string>

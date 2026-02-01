@@ -17,7 +17,6 @@ val Context.dataStore by preferencesDataStore(name = STORE_NAME)
 object PrefKeys {
     val currency = stringPreferencesKey("currency")           // "RSD" / "EUR" ...
     val widgetPeriod = stringPreferencesKey("widget_period")  // "none/day/week/month/all"
-    val monthAnchorDay = intPreferencesKey("month_anchor")    // 1..31
     val widgetLimitCents = longPreferencesKey("widget_limit_cents")  // лимит трат в центах, или 0 если не установлен
     val showRemainderInsteadOfExpense = booleanPreferencesKey("show_remainder")  // показывать остаток вместо расхода
     val languageCode = stringPreferencesKey("language_code")  // "en" / "ru" / "sr"

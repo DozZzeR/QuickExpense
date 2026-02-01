@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <application
         android:name=".App"
         android:allowBackup="false"
@@ -30,6 +32,10 @@
             android:exported="false"
             android:theme="@style/Theme.QuickExpense">
         </activity>
+        <activity
+            android:name=".receipt.ReceiptScanActivity"
+            android:exported="false"
+            android:theme="@style/Theme.QuickExpense" />
         <receiver
             android:name=".ui.widget.QuickExpenseWidgetReceiver"
             android:exported="true">
