@@ -18,22 +18,24 @@ interface ExpenseDao {
     suspend fun lastExpenses(limit: Int = 50): List<Expense>
 
     @Query("""
-        SELECT e.id, e.amount, e.currency, e.createdAt, e.categoryId, e.sourceId,
-               c.name AS categoryName, s.name AS sourceName
+         SELECT e.id, e.amount, e.currency, e.createdAt, e.categoryId, e.sourceId, e.merchantId, e.photoPaths,
+             c.name AS categoryName, s.name AS sourceName, m.name AS merchantName
         FROM expenses e
         LEFT JOIN categories c ON c.id = e.categoryId
         LEFT JOIN sources    s ON s.id = e.sourceId
+         LEFT JOIN merchants  m ON m.id = e.merchantId
         ORDER BY e.createdAt DESC
         LIMIT :limit
     """)
     suspend fun lastExpensesWithNames(limit: Int = 50): List<ExpenseWithNames>
 
     @Query("""
-        SELECT e.id, e.amount, e.currency, e.createdAt, e.categoryId, e.sourceId,
-               c.name AS categoryName, s.name AS sourceName
+         SELECT e.id, e.amount, e.currency, e.createdAt, e.categoryId, e.sourceId, e.merchantId, e.photoPaths,
+             c.name AS categoryName, s.name AS sourceName, m.name AS merchantName
         FROM expenses e
         LEFT JOIN categories c ON c.id = e.categoryId
         LEFT JOIN sources    s ON s.id = e.sourceId
+         LEFT JOIN merchants  m ON m.id = e.merchantId
         WHERE e.createdAt BETWEEN :from AND :to
         ORDER BY e.createdAt DESC
         LIMIT :limit
@@ -56,4 +58,7 @@ interface ExpenseDao {
 
     @Query("SELECT COUNT(*) FROM expenses WHERE categoryId = :categoryId")
     suspend fun countByCategory(categoryId: String): Long
+
+    @Query("SELECT COUNT(*) FROM expenses WHERE merchantId = :merchantId")
+    suspend fun countByMerchant(merchantId: String): Long
 }

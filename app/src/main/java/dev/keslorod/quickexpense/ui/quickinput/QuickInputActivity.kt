@@ -24,12 +24,14 @@ class QuickInputActivity : ComponentActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             val sources = app.db.sources().favorites()
             val allCategories = app.db.categories().all()
+            val merchants = app.db.merchants().favorites()
             val currency = app.prefs.currencyFlow.first()
 
             // Готовим быстрый выбор: только избранные категории и источники
             val quickCategories = allCategories.filter { it.isFavorite }
             val sourceOptions = sources.map { Option(it.id, it.name) }
             val categoryOptions = quickCategories.map { Option(it.id, it.name) }
+            val merchantOptions = merchants.map { Option(it.id, it.name) }
 
             withContext(Dispatchers.Main) {
                 setContent {
@@ -39,7 +41,8 @@ class QuickInputActivity : ComponentActivity() {
                             currency = currency,
                             sourceOptions = sourceOptions,
                             categoryQuickOptions = categoryOptions,
-                            onConfirm = { cents, sourceId, categoryId ->
+                            merchantOptions = merchantOptions,
+                            onConfirm = { cents, sourceId, categoryId, merchantId, receiptPaths ->
                                 lifecycleScope.launch(Dispatchers.IO) {
                                     try {
                                         app.db.expenses().insert(
@@ -47,7 +50,9 @@ class QuickInputActivity : ComponentActivity() {
                                                 amount = cents,
                                                 currency = currency,
                                                 sourceId = sourceId,
-                                                categoryId = categoryId
+                                                categoryId = categoryId,
+                                                merchantId = merchantId,
+                                                photoPaths = if (receiptPaths.isEmpty()) null else receiptPaths.joinToString("|")
                                             )
                                         )
 
