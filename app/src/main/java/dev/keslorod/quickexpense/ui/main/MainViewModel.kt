@@ -58,6 +58,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         subtitle = buildString {
                             append("Источник: ")
                             append(e.sourceName ?: "—")
+                            if (!e.merchantName.isNullOrBlank()) {
+                                append(" • ")
+                                append(e.merchantName)
+                            }
                             append(" • ")
                             append(formatTs(e.createdAt))
                         },

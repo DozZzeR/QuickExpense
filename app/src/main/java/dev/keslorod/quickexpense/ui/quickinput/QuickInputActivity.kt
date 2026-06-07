@@ -5,8 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.lifecycleScope
 import dev.keslorod.quickexpense.App
-import dev.keslorod.quickexpense.data.dao.MAX_QUICK_OPTIONS
 import dev.keslorod.quickexpense.data.entities.Expense
+import dev.keslorod.quickexpense.data.entities.SplitNodeTag
 import dev.keslorod.quickexpense.ui.theme.QuickExpenseTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -36,32 +36,42 @@ class QuickInputActivity : ComponentActivity() {
             withContext(Dispatchers.Main) {
                 setContent {
                     QuickExpenseTheme {
-                        QuickInputScreen(
+                        QuickAddScreen(
                             app = app,
                             currency = currency,
                             sourceOptions = sourceOptions,
-                            categoryQuickOptions = categoryOptions,
+                            categoryOptions = categoryOptions,
                             merchantOptions = merchantOptions,
-                            onConfirm = { cents, sourceId, categoryId, merchantId, receiptPaths ->
+                            onConfirm = { cents, sourceId, merchantId, categoryId, date, receiptPaths, splitNodes, nodeTags ->
                                 lifecycleScope.launch(Dispatchers.IO) {
                                     try {
-                                        app.db.expenses().insert(
-                                            Expense(
-                                                amount = cents,
-                                                currency = currency,
-                                                sourceId = sourceId,
-                                                categoryId = categoryId,
-                                                merchantId = merchantId,
-                                                photoPaths = if (receiptPaths.isEmpty()) null else receiptPaths.joinToString("|")
-                                            )
+                                        val expense = Expense(
+                                            amount = cents,
+                                            currency = currency,
+                                            sourceId = sourceId,
+                                            categoryId = categoryId ?: "unsorted",
+                                            merchantId = merchantId,
+                                            photoPaths = if (receiptPaths.isEmpty()) null else receiptPaths.joinToString("|"),
+                                            createdAt = date
                                         )
+                                        app.db.expenses().insert(expense)
+
+                                        // Сохраняем сплиты
+                                        splitNodes.forEach { node ->
+                                            val nodeToSave = node.copy(expenseId = expense.id)
+                                            app.db.splitNodes().insert(nodeToSave)
+                                            
+                                            // Сохраняем метки для этого узла
+                                            nodeTags[node.id]?.forEach { tag ->
+                                                app.db.splitNodeTags().insert(SplitNodeTag(nodeToSave.id, tag.id))
+                                            }
+                                        }
 
                                         app.widgetRefresher.schedule()
 
                                     } finally {
                                         withContext(Dispatchers.Main) {
                                             if (launchedFromWidget)
-                                                // finishAndRemoveTask()
                                                 finishAffinity()
                                             else
                                                 finish()
@@ -70,14 +80,10 @@ class QuickInputActivity : ComponentActivity() {
                                 }
                             },
                             onCancel = {
-                                lifecycleScope.launch(Dispatchers.IO) {
-                                    withContext(Dispatchers.Main) {
-                                        if (launchedFromWidget)
-                                            finishAffinity()
-                                        else
-                                            finish()
-                                    }
-                                }
+                                if (launchedFromWidget)
+                                    finishAffinity()
+                                else
+                                    finish()
                             }
                         )
                     }

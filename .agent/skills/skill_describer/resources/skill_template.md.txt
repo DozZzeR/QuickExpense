@@ -1,0 +1,23 @@
+# Skill Template
+
+---
+name: skill_name
+description: A concise description of the skill's purpose.
+---
+
+# Skill Name
+
+## Mission
+[A one-sentence mission statement for the skill]
+
+## Usage Instructions
+[Detailed steps on how an agent should use this skill, including any tool calls or scripts]
+
+## Scripts (if applicable)
+[List of scripts available in the scripts/ folder and their purpose]
+
+## Examples
+[Reference the examples/ folder]
+
+## Best Practices
+[Dos and Don'ts for using this skill]

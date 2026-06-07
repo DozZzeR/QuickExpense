@@ -19,11 +19,18 @@
     <!-- Quick Input Screen -->
     <string name="source">Извор</string>
     <string name="category">Категорија</string>
+    <string name="merchant">Прималац</string>
+    <string name="tag">Ознака</string>
     <string name="select_source">Изабери извор</string>
     <string name="select_category">Изабери категорију</string>
+    <string name="select_merchant">Изабери примаоца</string>
+    <string name="select_tag">Изабери ознаку</string>
     <string name="all_sources">Сви извори</string>
     <string name="all_categories">Све категорије</string>
     <string name="ok_save">OK — сачувај</string>
+    <string name="confirm">Потврди</string>
+    <string name="search">Претрага…</string>
+    <string name="add_item_named">Додај „%s“</string>
     <string name="cancel">Отказ</string>
     <string name="back">Назад</string>
 
@@ -48,6 +55,8 @@
     <string name="settings">Подешавања</string>
     <string name="sources">Извори</string>
     <string name="categories">Категорије</string>
+    <string name="merchants">Примаоци</string>
+    <string name="tags">Ознаке</string>
     <string name="currency_label">Валута (код)</string>
     <string name="widget_period">Период виџета</string>
     <string name="widget_limit">Лимит трошкова (у центима, 0 = без лимита)</string>

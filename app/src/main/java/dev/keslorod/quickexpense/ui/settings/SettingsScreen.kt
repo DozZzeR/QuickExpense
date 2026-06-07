@@ -73,6 +73,16 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) { Text(stringResource(R.string.categories)) }
 
+            Button(
+                onClick = { nav.navigate("manage_merchants") },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(stringResource(R.string.merchants)) }
+
+            Button(
+                onClick = { nav.navigate("manage_tags") },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(stringResource(R.string.tags)) }
+
             OutlinedTextField(
                 value = currency,
                 onValueChange = { currency = it.take(3).uppercase() },

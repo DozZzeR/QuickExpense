@@ -32,8 +32,6 @@ import dev.keslorod.quickexpense.ui.manage.ManageListScreen
 private const val MAX_RECENTS = 5
 private const val MAX_FAVORITES = 16
 
-data class Option(val id: String, val label: String)
-
 private enum class QuickPickType { SOURCE, CATEGORY, MERCHANT }
 
 @Composable

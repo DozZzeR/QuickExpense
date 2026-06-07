@@ -56,9 +56,15 @@ fun <T> ManageListScreen(
     var editingText by remember { mutableStateOf("") }
 
     val snackbarHostState = remember { SnackbarHostState() }
+    var searchQuery by remember { mutableStateOf("") }
 
     fun reload() = scope.launch(Dispatchers.IO) { items = loadAll() }
     LaunchedEffect(Unit) { reload() }
+
+    val filteredItems = remember(items, searchQuery) {
+        if (searchQuery.isBlank()) items
+        else items.filter { getName(it).contains(searchQuery, ignoreCase = true) }
+    }
 
     // Набор имён для валидации дублей (trim+lowercase)
     val existingNames = remember(items) {
@@ -108,10 +114,45 @@ fun <T> ManageListScreen(
             Modifier
                 .padding(pad)
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
         ) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(items, key = itemKey) { item ->
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                placeholder = { Text(stringResource(R.string.search)) },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Filled.Delete, contentDescription = null)
+                        }
+                    }
+                },
+                singleLine = true
+            )
+
+            if (searchQuery.isNotEmpty() && filteredItems.none { getName(it).equals(searchQuery.trim(), ignoreCase = true) }) {
+                Button(
+                    onClick = {
+                        scope.launch(Dispatchers.IO) {
+                            addNew(searchQuery.trim())
+                            searchQuery = ""
+                            reload()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                ) {
+                    Icon(Icons.Filled.Edit, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.add_item_named, searchQuery))
+                }
+            }
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.weight(1f).padding(vertical = 8.dp)
+            ) {
+                items(filteredItems, key = itemKey) { item ->
                     val isSelected = itemKey(item) == selectedItemId
                     val itemColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
                     

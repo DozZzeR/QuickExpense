@@ -17,11 +17,18 @@
     <!-- Quick Input Screen -->
     <string name="source">Источник</string>
     <string name="category">Категория</string>
+    <string name="merchant">Получатель</string>
+    <string name="tag">Метка</string>
     <string name="select_source">Выбрать источник</string>
     <string name="select_category">Выбрать категорию</string>
+    <string name="select_merchant">Выбрать получателя</string>
+    <string name="select_tag">Выбрать метку</string>
     <string name="all_sources">Все источники</string>
     <string name="all_categories">Все категории</string>
     <string name="ok_save">OK — сохранить</string>
+    <string name="confirm">Подтвердить</string>
+    <string name="search">Поиск…</string>
+    <string name="add_item_named">Добавить «%s»</string>
     <string name="cancel">Отмена</string>
     <string name="back">Назад</string>
 
@@ -46,6 +53,8 @@
     <string name="settings">Настройки</string>
     <string name="sources">Источники</string>
     <string name="categories">Категории</string>
+    <string name="merchants">Получатели</string>
+    <string name="tags">Метки</string>
     <string name="currency_label">Валюта (код)</string>
     <string name="widget_period">Период виджета</string>
     <string name="widget_limit">Лимит трат (в центах, 0 = без лимита)</string>

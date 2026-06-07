@@ -19,11 +19,42 @@
     <!-- Quick Input Screen -->
     <string name="source">Source</string>
     <string name="category">Category</string>
+    <string name="expense">Expense</string>
+    <string name="income">Income</string>
+    <string name="transfer">Transfer</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="today">Today</string>
+    <string name="calendar">Calendar</string>
+    <string name="to_where">To / Where</string>
+    <string name="choose_source">Choose source</string>
+    <string name="choose_or_add">Choose or add</string>
+    <string name="optional">Optional</string>
+    <string name="quick_choice_to_where">Quick choice: To / Where</string>
+    <string name="templates_expense">Templates: Expense</string>
+    <string name="all_dots">All…</string>
+    <string name="create_new">+ Create</string>
+    <string name="manage_dots">Manage…</string>
+    <string name="split_transaction">Split transaction</string>
+    <string name="total_label">Total: %s</string>
+    <string name="remaining_label">Remaining: %s</string>
+    <string name="add_row">+ Add row</string>
+    <string name="fill_remaining">Fill remaining…</string>
+    <string name="done">Done</string>
     <string name="select_source">Select source</string>
     <string name="select_category">Select category</string>
+    <string name="select_merchant">Select merchant</string>
+    <string name="select_tag">Select tag</string>
+    <string name="tag">Tag</string>
     <string name="all_sources">All sources</string>
     <string name="all_categories">All categories</string>
+    <string name="merchant">Merchant</string>
+    <string name="select_item">Select…</string>
+    <string name="quick_pick_empty">No favorites yet. Tap “All” to choose or add.</string>
+    <string name="all">All</string>
     <string name="ok_save">OK — Save</string>
+    <string name="confirm">Confirm</string>
+    <string name="search">Search…</string>
+    <string name="add_item_named">Add “%s”</string>
     <string name="cancel">Cancel</string>
     <string name="back">Back</string>
     <string name="scan_receipt">Scan receipt</string>
@@ -53,6 +84,8 @@
     <string name="settings">Settings</string>
     <string name="sources">Sources</string>
     <string name="categories">Categories</string>
+    <string name="merchants">Merchants</string>
+    <string name="tags">Tags</string>
     <string name="currency_label">Currency (code)</string>
     <string name="widget_period">Widget period</string>
     <string name="widget_limit">Widget limit (in cents, 0 = no limit)</string>
@@ -75,6 +108,7 @@
     <string name="default_category_groceries">Groceries</string>
     <string name="default_category_home">Home</string>
     <string name="default_category_car">Car</string>
+    <string name="default_category_unsorted">Unsorted</string>
 
     <!-- Main Screen -->
     <string name="menu">Menu</string>

@@ -33,13 +33,14 @@ class ExportWorker(ctx: Context, params: WorkerParameters): CoroutineWorker(ctx,
             val csvFile = File(exportDir, "quickexpense_$stamp.csv")
             try {
                 csvFile.outputStream().buffered().writer(Charsets.UTF_8).use { w ->
-                    w.appendLine("id,created_at,amount_cents,currency,source_name,category_name")
+                        w.appendLine("id,created_at,amount_cents,currency,source_name,category_name,merchant_name")
                     val items = app.db.expenses().expensesInRangeWithNames(from, to)
                     val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
                     items.forEach { e ->
                         val ts = fmt.format(java.util.Date(e.createdAt))
                         val sourceName = e.sourceName ?: "Unknown"
                         val categoryName = e.categoryName ?: "Unknown"
+                            val merchantName = e.merchantName ?: ""
                         w.appendLine(
                             listOf(
                                 e.id,
@@ -47,7 +48,8 @@ class ExportWorker(ctx: Context, params: WorkerParameters): CoroutineWorker(ctx,
                                 e.amount.toString(),
                                 e.currency,
                                 sourceName,
-                                categoryName
+                                    categoryName,
+                                    merchantName
                             ).joinToString(",") { it.toSafeCsv() }
                         )
                     }

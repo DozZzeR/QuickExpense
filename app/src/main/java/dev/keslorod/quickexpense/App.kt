@@ -38,6 +38,7 @@ class App : Application() {
             dev.keslorod.quickexpense.data.entities.Category(name = getString(R.string.default_category_groceries)),
             dev.keslorod.quickexpense.data.entities.Category(name = getString(R.string.default_category_home)),
             dev.keslorod.quickexpense.data.entities.Category(name = getString(R.string.default_category_car)),
+            dev.keslorod.quickexpense.data.entities.Category(id = "unsorted", name = getString(R.string.default_category_unsorted)),
         )
         db.categories().upsertAll(cats)
     }

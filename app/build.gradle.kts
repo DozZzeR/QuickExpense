@@ -40,9 +40,6 @@ android {
         compose = true
         buildConfig = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14" // ок для Compose BOM 2024+
-    }
 
     packaging {
         resources {
@@ -66,8 +63,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.foundation)
-    implementation(libs.appcompat)
-    implementation(libs.camera.view)
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -99,6 +95,6 @@ dependencies {
     implementation(libs.androidx.camera.view)
 
 
-    // ----- Coil (картинки чеков — позже пригодится)
+    // ----- Coil (картинки чеков)
     implementation(libs.coil.compose)
 }

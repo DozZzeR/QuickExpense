@@ -2,6 +2,7 @@ package dev.keslorod.quickexpense.ui.main
 
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,7 +35,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onOpenSplit: (expenseId: String) -> Unit
 ) {
     val vm: MainViewModel = viewModel()
     val state by vm.state.collectAsState()
@@ -152,7 +154,7 @@ fun MainScreen(
             } else {
                 LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
                     items(items) { item ->
-                        ExpenseRow(item, state.currency)
+                        ExpenseRow(item, state.currency, onClick = { onOpenSplit(item.id) })
                     }
                 }
             }
@@ -161,10 +163,11 @@ fun MainScreen(
 }
 
 @Composable
-private fun ExpenseRow(item: ExpenseItemUi, currency: String) {
+private fun ExpenseRow(item: ExpenseItemUi, currency: String, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
