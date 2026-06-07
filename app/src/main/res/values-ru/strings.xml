@@ -87,4 +87,37 @@
     <string name="no_transactions">Пока нет</string>
     <string name="export_failed">Экспорт не удался</string>
     <string name="send_export">Отправить %s</string>
+
+    <!-- Statistics -->
+    <string name="statistics">Статистика</string>
+    <string name="analytics">Аналитика</string>
+    <string name="this_month">Этот месяц</string>
+    <string name="this_week">Эта неделя</string>
+    <string name="this_year">Этот год</string>
+    <string name="last_7_days">Последние 7 дней</string>
+    <string name="last_30_days">Последние 30 дней</string>
+    <string name="custom_range">Произвольный период</string>
+    <string name="all_time">Всё время</string>
+    <string name="total_spent">Всего потрачено</string>
+    <string name="previous_period">Прошлый период</string>
+    <string name="vs_previous_period">к прошлому периоду</string>
+    <string name="new_spending">новые траты</string>
+    <string name="comparison_unavailable">Сравнение недоступно</string>
+    <string name="tag_totals_overlap_note">Суммы по меткам могут пересекаться</string>
+    <string name="view_all">Показать все</string>
+    <string name="items">Позиции</string>
+    <string name="transactions">Транзакции</string>
+    <string name="avg_transaction">Средний чек</string>
+    <string name="uncategorized">Без категории</string>
+    <string name="unknown_merchant">Без получателя</string>
+    <string name="no_tags">Без меток</string>
+    <string name="places_of_spending">Места трат</string>
+    <string name="advanced_search">Расширенный поиск</string>
+    <string name="search_results">Результаты поиска</string>
+    <string name="found">Найдено</string>
+    <string name="open_purchase">Открыть покупку</string>
+    <string name="edit_purchase">Редактировать покупку</string>
+    <string name="edit_split">Редактировать разбивку</string>
+    <string name="no_data_period">За этот период расходов нет</string>
+    <string name="no_data_period_hint">Выберите другой период или добавьте первую трату.</string>
 </resources>

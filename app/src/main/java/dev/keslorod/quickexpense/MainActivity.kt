@@ -12,9 +12,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import dev.keslorod.quickexpense.ui.main.MainScreen
 import dev.keslorod.quickexpense.ui.manage.ListScreenMode
@@ -22,6 +27,7 @@ import dev.keslorod.quickexpense.ui.manage.ManageCategoriesScreen
 import dev.keslorod.quickexpense.ui.manage.ManageMerchantsScreen
 import dev.keslorod.quickexpense.ui.manage.ManageSourcesScreen
 import dev.keslorod.quickexpense.ui.manage.ManageTagsScreen
+import dev.keslorod.quickexpense.ui.statistics.StatisticsRoutes
 import dev.keslorod.quickexpense.ui.split.SplitEditorScreen
 import dev.keslorod.quickexpense.ui.settings.SettingsScreen
 import kotlinx.coroutines.launch
@@ -50,7 +56,8 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
         composable("main") {
             MainScreen(
                 onOpenSettings = { nav.navigate("settings") },
-                onOpenSplit = { expenseId -> nav.navigate("split_editor/$expenseId") }
+                onOpenSplit = { expenseId -> nav.navigate("split_editor/$expenseId") },
+                onOpenStatistics = { nav.navigate("statistics") }
             )
         }
         composable("settings") {
@@ -79,6 +86,140 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
             ManageTagsScreen(
                 app = app, onBack = { nav.popBackStack() }
             )
+        }
+        navigation(startDestination = StatisticsRoutes.DASHBOARD, route = StatisticsRoutes.ROOT) {
+            composable(StatisticsRoutes.DASHBOARD) { backStackEntry ->
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                
+                dev.keslorod.quickexpense.ui.statistics.StatisticsDashboardScreen(
+                    filterViewModel = filterViewModel,
+                    onBack = { nav.popBackStack() },
+                    onViewMerchants = { nav.navigate(StatisticsRoutes.MERCHANTS) },
+                    onViewCategories = { nav.navigate(StatisticsRoutes.CATEGORIES) },
+                    onViewTags = { nav.navigate(StatisticsRoutes.TAGS) },
+                    onAdvancedSearch = { nav.navigate(StatisticsRoutes.SEARCH) },
+                    onMerchantClick = { nav.navigate("statistics/merchants/$it") },
+                    onCategoryClick = { nav.navigate("statistics/categories/$it") },
+                    onTagClick = { nav.navigate("statistics/tags/$it") }
+                )
+            }
+            composable(StatisticsRoutes.MERCHANTS) {
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                val listViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModel = viewModel(factory = dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModelFactory(
+                    application = app,
+                    filterViewModel = filterViewModel,
+                    type = dev.keslorod.quickexpense.ui.statistics.StatsListType.MERCHANTS
+                ))
+                val items by listViewModel.items.collectAsState()
+                val currency by listViewModel.currency.collectAsState()
+                
+                dev.keslorod.quickexpense.ui.statistics.StatisticsListScreen(
+                    title = stringResource(R.string.merchants),
+                    filterViewModel = filterViewModel,
+                    items = items,
+                    currency = currency,
+                    onBack = { nav.popBackStack() },
+                    onItemClick = { nav.navigate("statistics/merchants/$it") }
+                )
+            }
+            composable(StatisticsRoutes.CATEGORIES) {
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                val listViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModel = viewModel(factory = dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModelFactory(
+                    application = app,
+                    filterViewModel = filterViewModel,
+                    type = dev.keslorod.quickexpense.ui.statistics.StatsListType.CATEGORIES
+                ))
+                val items by listViewModel.items.collectAsState()
+                val currency by listViewModel.currency.collectAsState()
+                
+                dev.keslorod.quickexpense.ui.statistics.StatisticsListScreen(
+                    title = stringResource(R.string.categories),
+                    filterViewModel = filterViewModel,
+                    items = items,
+                    currency = currency,
+                    onBack = { nav.popBackStack() },
+                    onItemClick = { nav.navigate("statistics/categories/$it") }
+                )
+            }
+            composable(StatisticsRoutes.TAGS) {
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                val listViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModel = viewModel(factory = dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModelFactory(
+                    application = app,
+                    filterViewModel = filterViewModel,
+                    type = dev.keslorod.quickexpense.ui.statistics.StatsListType.TAGS
+                ))
+                val items by listViewModel.items.collectAsState()
+                val currency by listViewModel.currency.collectAsState()
+                
+                dev.keslorod.quickexpense.ui.statistics.StatisticsListScreen(
+                    title = stringResource(R.string.tags),
+                    filterViewModel = filterViewModel,
+                    items = items,
+                    currency = currency,
+                    showPercent = false,
+                    onBack = { nav.popBackStack() },
+                    onItemClick = { nav.navigate("statistics/tags/$it") }
+                )
+            }
+            composable(StatisticsRoutes.MERCHANT_DETAILS) { backStackEntry ->
+                val merchantId = backStackEntry.arguments?.getString("merchantId") ?: return@composable
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                
+                dev.keslorod.quickexpense.ui.statistics.MerchantDetailsScreen(
+                    merchantId = merchantId,
+                    filterViewModel = filterViewModel,
+                    onBack = { nav.popBackStack() },
+                    onTransactionClick = { nav.navigate("statistics/transactions/$it") }
+                )
+            }
+            composable(StatisticsRoutes.CATEGORY_DETAILS) { backStackEntry ->
+                val categoryId = backStackEntry.arguments?.getString("categoryId") ?: return@composable
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                
+                dev.keslorod.quickexpense.ui.statistics.CategoryDetailsScreen(
+                    categoryId = categoryId,
+                    filterViewModel = filterViewModel,
+                    onBack = { nav.popBackStack() },
+                    onTransactionClick = { nav.navigate("statistics/transactions/$it") }
+                )
+            }
+            composable(StatisticsRoutes.TAG_DETAILS) { backStackEntry ->
+                val tagId = backStackEntry.arguments?.getString("tagId") ?: return@composable
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                
+                dev.keslorod.quickexpense.ui.statistics.TagDetailsScreen(
+                    tagId = tagId,
+                    filterViewModel = filterViewModel,
+                    onBack = { nav.popBackStack() },
+                    onTransactionClick = { nav.navigate("statistics/transactions/$it") }
+                )
+            }
+            composable(StatisticsRoutes.SEARCH) {
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                
+                dev.keslorod.quickexpense.ui.statistics.AdvancedSearchScreen(
+                    filterViewModel = filterViewModel,
+                    onBack = { nav.popBackStack() },
+                    onSearch = { nav.navigate(StatisticsRoutes.SEARCH_RESULTS) }
+                )
+            }
+            composable(StatisticsRoutes.TRANSACTION_DETAILS) { backStackEntry ->
+                val expenseId = backStackEntry.arguments?.getString("expenseId") ?: return@composable
+                dev.keslorod.quickexpense.ui.statistics.TransactionDetailsScreen(
+                    expenseId = expenseId,
+                    onBack = { nav.popBackStack() },
+                    onEditTransaction = { /* TODO */ },
+                    onEditSplit = { nav.navigate("split_editor/$it") }
+                )
+            }
         }
         composable("split_editor/{expenseId}") { backStackEntry ->
             val expenseId = backStackEntry.arguments?.getString("expenseId") ?: return@composable
@@ -126,6 +267,122 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
                             nav.popBackStack()
                         }
                     }
+                )
+            }
+            composable(StatisticsRoutes.MERCHANTS) {
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                val listViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModel = viewModel(factory = dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModelFactory(
+                    application = app,
+                    filterViewModel = filterViewModel,
+                    type = dev.keslorod.quickexpense.ui.statistics.StatsListType.MERCHANTS
+                ))
+                val items by listViewModel.items.collectAsState()
+                val currency by listViewModel.currency.collectAsState()
+                
+                dev.keslorod.quickexpense.ui.statistics.StatisticsListScreen(
+                    title = stringResource(R.string.merchants),
+                    filterViewModel = filterViewModel,
+                    items = items,
+                    currency = currency,
+                    onBack = { nav.popBackStack() },
+                    onItemClick = { nav.navigate("statistics/merchants/$it") }
+                )
+            }
+            composable(StatisticsRoutes.CATEGORIES) {
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                val listViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModel = viewModel(factory = dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModelFactory(
+                    application = app,
+                    filterViewModel = filterViewModel,
+                    type = dev.keslorod.quickexpense.ui.statistics.StatsListType.CATEGORIES
+                ))
+                val items by listViewModel.items.collectAsState()
+                val currency by listViewModel.currency.collectAsState()
+                
+                dev.keslorod.quickexpense.ui.statistics.StatisticsListScreen(
+                    title = stringResource(R.string.categories),
+                    filterViewModel = filterViewModel,
+                    items = items,
+                    currency = currency,
+                    onBack = { nav.popBackStack() },
+                    onItemClick = { nav.navigate("statistics/categories/$it") }
+                )
+            }
+            composable(StatisticsRoutes.TAGS) {
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                val listViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModel = viewModel(factory = dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModelFactory(
+                    application = app,
+                    filterViewModel = filterViewModel,
+                    type = dev.keslorod.quickexpense.ui.statistics.StatsListType.TAGS
+                ))
+                val items by listViewModel.items.collectAsState()
+                val currency by listViewModel.currency.collectAsState()
+                
+                dev.keslorod.quickexpense.ui.statistics.StatisticsListScreen(
+                    title = stringResource(R.string.tags),
+                    filterViewModel = filterViewModel,
+                    items = items,
+                    currency = currency,
+                    showPercent = false,
+                    onBack = { nav.popBackStack() },
+                    onItemClick = { nav.navigate("statistics/tags/$it") }
+                )
+            }
+            composable(StatisticsRoutes.MERCHANT_DETAILS) { backStackEntry ->
+                val merchantId = backStackEntry.arguments?.getString("merchantId") ?: return@composable
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                
+                dev.keslorod.quickexpense.ui.statistics.MerchantDetailsScreen(
+                    merchantId = merchantId,
+                    filterViewModel = filterViewModel,
+                    onBack = { nav.popBackStack() },
+                    onTransactionClick = { nav.navigate("statistics/transactions/$it") }
+                )
+            }
+            composable(StatisticsRoutes.CATEGORY_DETAILS) { backStackEntry ->
+                val categoryId = backStackEntry.arguments?.getString("categoryId") ?: return@composable
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                
+                dev.keslorod.quickexpense.ui.statistics.CategoryDetailsScreen(
+                    categoryId = categoryId,
+                    filterViewModel = filterViewModel,
+                    onBack = { nav.popBackStack() },
+                    onTransactionClick = { nav.navigate("statistics/transactions/$it") }
+                )
+            }
+            composable(StatisticsRoutes.TAG_DETAILS) { backStackEntry ->
+                val tagId = backStackEntry.arguments?.getString("tagId") ?: return@composable
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                
+                dev.keslorod.quickexpense.ui.statistics.TagDetailsScreen(
+                    tagId = tagId,
+                    filterViewModel = filterViewModel,
+                    onBack = { nav.popBackStack() },
+                    onTransactionClick = { nav.navigate("statistics/transactions/$it") }
+                )
+            }
+            composable(StatisticsRoutes.SEARCH) {
+                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
+                
+                dev.keslorod.quickexpense.ui.statistics.AdvancedSearchScreen(
+                    filterViewModel = filterViewModel,
+                    onBack = { nav.popBackStack() },
+                    onSearch = { nav.navigate(StatisticsRoutes.SEARCH_RESULTS) }
+                )
+            }
+            composable(StatisticsRoutes.TRANSACTION_DETAILS) { backStackEntry ->
+                val expenseId = backStackEntry.arguments?.getString("expenseId") ?: return@composable
+                dev.keslorod.quickexpense.ui.statistics.TransactionDetailsScreen(
+                    expenseId = expenseId,
+                    onBack = { nav.popBackStack() },
+                    onEditTransaction = { /* TODO */ },
+                    onEditSplit = { nav.navigate("split_editor/$it") }
                 )
             }
         }

@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,7 +38,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainScreen(
     onOpenSettings: () -> Unit,
-    onOpenSplit: (expenseId: String) -> Unit
+    onOpenSplit: (expenseId: String) -> Unit,
+    onOpenStatistics: () -> Unit
 ) {
     val vm: MainViewModel = viewModel()
     val state by vm.state.collectAsState()
@@ -63,6 +66,9 @@ fun MainScreen(
             TopAppBar(
                 title = { Text("QuickExpense") },
                 actions = {
+                    IconButton(onClick = onOpenStatistics) {
+                        Icon(Icons.Default.TrendingUp, contentDescription = "Статистика")
+                    }
                     IconButton(onClick = { menuOpen = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.menu))
                     }

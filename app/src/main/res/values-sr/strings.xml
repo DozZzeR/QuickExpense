@@ -80,4 +80,37 @@
     <string name="no_transactions">Нема трансакција</string>
     <string name="export_failed">Извоз неуспешан</string>
     <string name="send_export">Пошаљи %s</string>
+
+    <!-- Statistics -->
+    <string name="statistics">Статистика</string>
+    <string name="analytics">Аналитика</string>
+    <string name="this_month">Овај месец</string>
+    <string name="this_week">Ова недеља</string>
+    <string name="this_year">Ова година</string>
+    <string name="last_7_days">Последњих 7 дана</string>
+    <string name="last_30_days">Последњих 30 дана</string>
+    <string name="custom_range">Прилагођени период</string>
+    <string name="all_time">Укупно</string>
+    <string name="total_spent">Укупно потрошено</string>
+    <string name="previous_period">Претходни период</string>
+    <string name="vs_previous_period">у односу на претходни</string>
+    <string name="new_spending">нова потрошња</string>
+    <string name="comparison_unavailable">Поређење недоступно</string>
+    <string name="tag_totals_overlap_note">Суме по ознакама се могу преклапати</string>
+    <string name="view_all">Види све</string>
+    <string name="items">Ставке</string>
+    <string name="transactions">Трансакције</string>
+    <string name="avg_transaction">Просечна трансакција</string>
+    <string name="uncategorized">Без категорије</string>
+    <string name="unknown_merchant">Непознат прималац</string>
+    <string name="no_tags">Без ознака</string>
+    <string name="places_of_spending">Места потрошње</string>
+    <string name="advanced_search">Напредна претрага</string>
+    <string name="search_results">Резултати претраге</string>
+    <string name="found">Пронађено</string>
+    <string name="open_purchase">Отвори куповину</string>
+    <string name="edit_purchase">Измени куповину</string>
+    <string name="edit_split">Измени поделу</string>
+    <string name="no_data_period">Нема података за овај период</string>
+    <string name="no_data_period_hint">Покушајте са другим периодом или додајте први трошак.</string>
 </resources>

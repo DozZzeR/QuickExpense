@@ -119,4 +119,37 @@
     <string name="no_transactions">No transactions yet</string>
     <string name="export_failed">Export failed</string>
     <string name="send_export">Send %s</string>
+
+    <!-- Statistics -->
+    <string name="statistics">Statistics</string>
+    <string name="analytics">Analytics</string>
+    <string name="this_month">This month</string>
+    <string name="this_week">This week</string>
+    <string name="this_year">This year</string>
+    <string name="last_7_days">Last 7 days</string>
+    <string name="last_30_days">Last 30 days</string>
+    <string name="custom_range">Custom range</string>
+    <string name="all_time">All time</string>
+    <string name="total_spent">Total spent</string>
+    <string name="previous_period">Previous period</string>
+    <string name="vs_previous_period">vs previous period</string>
+    <string name="new_spending">new spending</string>
+    <string name="comparison_unavailable">Comparison unavailable</string>
+    <string name="tag_totals_overlap_note">Tag totals may overlap</string>
+    <string name="view_all">View all</string>
+    <string name="items">Items</string>
+    <string name="transactions">Transactions</string>
+    <string name="avg_transaction">Avg. transaction</string>
+    <string name="uncategorized">Uncategorized</string>
+    <string name="unknown_merchant">Unknown merchant</string>
+    <string name="no_tags">No tags</string>
+    <string name="places_of_spending">Places of spending</string>
+    <string name="advanced_search">Advanced search</string>
+    <string name="search_results">Search results</string>
+    <string name="found">Found</string>
+    <string name="open_purchase">Open purchase</string>
+    <string name="edit_purchase">Edit purchase</string>
+    <string name="edit_split">Edit split</string>
+    <string name="no_data_period">No data for this period</string>
+    <string name="no_data_period_hint">Try another date range or add your first expense.</string>
 </resources>
