@@ -152,4 +152,13 @@
     <string name="edit_split">Edit split</string>
     <string name="no_data_period">No data for this period</string>
     <string name="no_data_period_hint">Try another date range or add your first expense.</string>
+    <string name="change_filters">Change filters</string>
+    <string name="set_filters_and_search">Set filters and press search</string>
+    <string name="nothing_found">Nothing found</string>
+    <string name="search_by_name_or_note">Search by name or note</string>
+    <string name="find_btn">Find</string>
+    <string name="breakdown">Breakdown</string>
+    <string name="note_label">Note</string>
+    <string name="categories_in_merchant">Categories in this merchant</string>
+    <string name="txs_and_positions">Transactions and positions</string>
 </resources>

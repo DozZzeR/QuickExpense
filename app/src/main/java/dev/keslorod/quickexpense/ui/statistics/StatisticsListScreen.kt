@@ -47,19 +47,35 @@ fun StatisticsListScreen(
                 onPresetSelected = { filterViewModel.setPreset(it) }
             )
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(items) { item ->
-                    StatsRelativeBarRow(
-                        item = item,
-                        currency = currency,
-                        showPercent = showPercent,
-                        onClick = { onItemClick(item.id) },
-                        formatAmount = { formatCents(it) }
-                    )
+            if (items.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                    Text(stringResource(R.string.no_data_period), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (!showPercent) { // Assuming this is for tags
+                        item {
+                            Text(
+                                text = stringResource(R.string.tag_totals_overlap_note),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                        }
+                    }
+                    items(items) { item ->
+                        StatsRelativeBarRow(
+                            item = item,
+                            currency = currency,
+                            showPercent = showPercent,
+                            onClick = { onItemClick(item.id) },
+                            formatAmount = { formatCents(it) }
+                        )
+                    }
                 }
             }
         }

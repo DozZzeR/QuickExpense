@@ -113,4 +113,13 @@
     <string name="edit_split">Измени поделу</string>
     <string name="no_data_period">Нема података за овај период</string>
     <string name="no_data_period_hint">Покушајте са другим периодом или додајте први трошак.</string>
+    <string name="change_filters">Промени филтере</string>
+    <string name="set_filters_and_search">Подесите филтере и притисните претрагу</string>
+    <string name="nothing_found">Ништа није пронађено</string>
+    <string name="search_by_name_or_note">Претрага по називу или напомени</string>
+    <string name="find_btn">Пронађи</string>
+    <string name="breakdown">Подела</string>
+    <string name="note_label">Напомена</string>
+    <string name="categories_in_merchant">Категорије код овог примаоца</string>
+    <string name="txs_and_positions">Трансакције и ставке</string>
 </resources>

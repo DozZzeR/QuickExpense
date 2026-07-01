@@ -120,4 +120,13 @@
     <string name="edit_split">Редактировать разбивку</string>
     <string name="no_data_period">За этот период расходов нет</string>
     <string name="no_data_period_hint">Выберите другой период или добавьте первую трату.</string>
+    <string name="change_filters">Изменить фильтры</string>
+    <string name="set_filters_and_search">Настройте фильтры и нажмите поиск</string>
+    <string name="nothing_found">Ничего не найдено</string>
+    <string name="search_by_name_or_note">Поиск по названию или заметке</string>
+    <string name="find_btn">Найти</string>
+    <string name="breakdown">Разбивка</string>
+    <string name="note_label">Заметка</string>
+    <string name="categories_in_merchant">Категории в этом магазине</string>
+    <string name="txs_and_positions">Транзакции и позиции</string>
 </resources>
