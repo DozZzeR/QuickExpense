@@ -122,4 +122,21 @@
     <string name="note_label">Напомена</string>
     <string name="categories_in_merchant">Категорије код овог примаоца</string>
     <string name="txs_and_positions">Трансакције и ставке</string>
+    <string name="transaction_default">Трансакција</string>
+    <string name="position_default">Ставка</string>
+
+    <!-- Split editor -->
+    <string name="split_remaining_fmt">Преостало: %1$s %2$s</string>
+    <string name="split_add">Додај</string>
+    <string name="split_fill_rest">Попуни остатак</string>
+    <string name="split_rest">Остатак</string>
+    <string name="split_unallocated">Нераспоређено</string>
+    <string name="split_untitled">Без назива</string>
+    <string name="split_add_item">Додај ставку</string>
+    <string name="split_edit_item">Измени ставку</string>
+    <string name="split_amount">Износ</string>
+    <string name="split_name">Назив</string>
+    <string name="split_category_not_selected">Није изабрано</string>
+    <string name="split_add_tag">+ Ознака</string>
+    <string name="split_exceeds_fmt">Износ прелази доступни остатак за %1$s %2$s</string>
 </resources>

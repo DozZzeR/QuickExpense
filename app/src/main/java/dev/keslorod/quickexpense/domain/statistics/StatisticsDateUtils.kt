@@ -8,6 +8,13 @@ import java.time.temporal.TemporalAdjusters
 
 object StatisticsDateUtils {
 
+    /**
+     * Safe lower bound for the "All time" preset. LocalDate.MIN cannot be converted
+     * to epoch millis (Instant.toEpochMilli() overflows Long and throws), so we anchor
+     * "all time" at the Unix epoch — no expense timestamp can predate it.
+     */
+    val ALL_TIME_START: LocalDate = LocalDate.of(1970, 1, 1)
+
     fun localDateToMillis(date: LocalDate, endOfDay: Boolean = false): Long {
         val dateTime = if (endOfDay) {
             date.atTime(23, 59, 59, 999_999_999)
@@ -38,7 +45,7 @@ object StatisticsDateUtils {
             }
             StatisticsDatePreset.LAST_7_DAYS -> today.minusDays(6) to today
             StatisticsDatePreset.LAST_30_DAYS -> today.minusDays(29) to today
-            StatisticsDatePreset.ALL_TIME -> LocalDate.MIN to today
+            StatisticsDatePreset.ALL_TIME -> ALL_TIME_START to today
             StatisticsDatePreset.CUSTOM -> today to today // Placeholder, should be handled by caller
         }
     }

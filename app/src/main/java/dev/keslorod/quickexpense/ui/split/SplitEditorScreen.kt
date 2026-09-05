@@ -53,7 +53,7 @@ fun SplitEditorScreen(
     currency: String,
     initialNodes: List<SplitNode> = emptyList(),
     initialTags: Map<String, List<Tag>> = emptyMap(),
-    initialLabel: String = "Транзакция",
+    initialLabel: String = "Transaction",
     onDone: (List<SplitNode>, Map<String, List<Tag>>) -> Unit,
     onBack: () -> Unit
 ) {
@@ -101,6 +101,9 @@ fun SplitEditorScreen(
     var editingNode by remember { mutableStateOf<SplitNode?>(null) }
     var showEditor by remember { mutableStateOf(false) }
 
+    // Строки, нужные внутри не-composable лямбд
+    val restLabel = stringResource(R.string.split_rest)
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -108,7 +111,7 @@ fun SplitEditorScreen(
                     Column {
                         Text(currentLabel, style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "Осталось: ${formatCents(remainingAmount)} $currency",
+                            stringResource(R.string.split_remaining_fmt, formatCents(remainingAmount), currency),
                             style = MaterialTheme.typography.bodySmall,
                             color = if (remainingAmount < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -124,7 +127,7 @@ fun SplitEditorScreen(
                 },
                 actions = {
                     TextButton(onClick = { onDone(allNodes, nodeTags) }) {
-                        Text("Готово")
+                        Text(stringResource(R.string.done))
                     }
                 }
             )
@@ -147,7 +150,7 @@ fun SplitEditorScreen(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("Добавить")
+                        Text(stringResource(R.string.split_add))
                     }
                     
                     if (remainingAmount > 0) {
@@ -157,14 +160,14 @@ fun SplitEditorScreen(
                                     expenseId = "", 
                                     parentId = currentParentId,
                                     amount = remainingAmount,
-                                    label = "Остаток",
+                                    label = restLabel,
                                     depth = (currentParent?.depth ?: 0) + 1
                                 )
                                 allNodes = allNodes + newNode
                             },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Добить")
+                            Text(stringResource(R.string.split_fill_rest))
                         }
                     }
                 }
@@ -222,8 +225,11 @@ fun SplitEditorScreen(
                 showEditor = false
             },
             onDelete = { node ->
-                allNodes = allNodes.filter { it.id != node.id && it.parentId != node.id }
-                nodeTags = nodeTags - node.id
+                // Delete the node together with its whole subtree, otherwise
+                // grandchildren stay behind pointing at a parentId that no longer exists.
+                val toRemove = collectSubtreeIds(node.id, allNodes)
+                allNodes = allNodes.filter { it.id !in toRemove }
+                nodeTags = nodeTags - toRemove
                 showEditor = false
             }
         )
@@ -250,7 +256,7 @@ fun SplitNodeItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(Modifier.weight(1f)) {
-                Text(node.label ?: "Без названия", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                Text(node.label ?: stringResource(R.string.split_untitled), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
                 if (tags.isNotEmpty()) {
                     Text(
                         tags.joinToString(" ") { "#${it.name}" },
@@ -284,7 +290,7 @@ fun UnallocatedItem(amount: Long, currency: String) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Нераспределено", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.split_unallocated), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text("${formatCents(amount)} $currency", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
         }
     }
@@ -353,13 +359,13 @@ fun SplitItemEditorSheet(
                 .padding(16.dp)
                 .navigationBarsPadding()
         ) {
-            Text(if (initialNode == null) "Добавить элемент" else "Редактировать элемент", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(if (initialNode == null) R.string.split_add_item else R.string.split_edit_item), style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(16.dp))
             
             OutlinedTextField(
                 value = amountText,
                 onValueChange = { amountText = it },
-                label = { Text("Сумма") },
+                label = { Text(stringResource(R.string.split_amount)) },
                 modifier = Modifier.fillMaxWidth(),
                 suffix = { Text(currency) },
                 singleLine = true
@@ -370,7 +376,7 @@ fun SplitItemEditorSheet(
             OutlinedTextField(
                 value = label,
                 onValueChange = { label = it },
-                label = { Text("Название") },
+                label = { Text(stringResource(R.string.split_name)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -386,14 +392,14 @@ fun SplitItemEditorSheet(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Категория", style = MaterialTheme.typography.bodyMedium)
-                    Text(categoryName ?: "Не выбрана", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.category), style = MaterialTheme.typography.bodyMedium)
+                    Text(categoryName ?: stringResource(R.string.split_category_not_selected), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
                 }
             }
             
             Spacer(Modifier.height(12.dp))
             
-            Text("Метки", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.tags), style = MaterialTheme.typography.labelLarge)
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -408,7 +414,7 @@ fun SplitItemEditorSheet(
                 }
                 AssistChip(
                     onClick = { showTagPicker = true },
-                    label = { Text("+ Метка") }
+                    label = { Text(stringResource(R.string.split_add_tag)) }
                 )
             }
             
@@ -423,7 +429,7 @@ fun SplitItemEditorSheet(
                     ) {
                         Icon(Icons.Default.Delete, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("Удалить")
+                        Text(stringResource(R.string.delete))
                     }
                 }
                 
@@ -442,12 +448,12 @@ fun SplitItemEditorSheet(
                     modifier = Modifier.weight(1f),
                     enabled = canSave
                 ) {
-                    Text("Сохранить")
+                    Text(stringResource(R.string.save))
                 }
             }
             if (parseAmount(amountText) > maxAmount) {
                 Text(
-                    "Сумма превышает доступный остаток на ${formatCents(parseAmount(amountText) - maxAmount)} $currency",
+                    stringResource(R.string.split_exceeds_fmt, formatCents(parseAmount(amountText) - maxAmount), currency),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 8.dp)
@@ -456,6 +462,22 @@ fun SplitItemEditorSheet(
             Spacer(Modifier.height(16.dp))
         }
     }
+}
+
+/**
+ * Returns the id of [rootId] plus the ids of all its descendants (transitively),
+ * so a whole split subtree can be removed at once.
+ */
+fun collectSubtreeIds(rootId: String, nodes: List<SplitNode>): Set<String> {
+    val childrenByParent = nodes.groupBy { it.parentId }
+    val result = mutableSetOf<String>()
+    val stack = ArrayDeque<String>().apply { add(rootId) }
+    while (stack.isNotEmpty()) {
+        val id = stack.removeLast()
+        if (!result.add(id)) continue
+        childrenByParent[id]?.forEach { stack.add(it.id) }
+    }
+    return result
 }
 
 fun parseAmount(txt: String): Long {

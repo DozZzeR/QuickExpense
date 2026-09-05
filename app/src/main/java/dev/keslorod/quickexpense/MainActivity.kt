@@ -20,6 +20,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.room.withTransaction
 import dev.keslorod.quickexpense.ui.main.MainScreen
 import dev.keslorod.quickexpense.ui.manage.ListScreenMode
 import dev.keslorod.quickexpense.ui.manage.ManageCategoriesScreen
@@ -231,7 +232,7 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
                     if (expense != null) {
                         amount.value = expense.amount
                         currency.value = expense.currency
-                        label.value = "Транзакция"
+                        label.value = app.getString(R.string.transaction_default)
                     }
                 }
             }
@@ -242,24 +243,23 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
                     expenseId = expenseId,
                     totalAmount = amount.value!!,
                     currency = currency.value!!,
-                    initialLabel = label.value ?: "Транзакция",
+                    initialLabel = label.value ?: app.getString(R.string.transaction_default),
                     onBack = { nav.popBackStack() },
                     onDone = { nodes, tags ->
                         scope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                            val exp = app.db.expenses().getById(expenseId)
-                            if (exp != null) {
-                                val anyChildHasCategory = nodes.any { it.parentId == null && it.categoryId != null }
-                                if (anyChildHasCategory) {
-                                    app.db.expenses().update(exp.copy(categoryId = "unsorted"))
-                                }
-                            }
-
-                            app.db.splitNodes().deleteByExpenseId(expenseId)
-                            nodes.forEach { node ->
-                                val toSave = node.copy(expenseId = expenseId)
-                                app.db.splitNodes().insert(toSave)
-                                tags[node.id]?.forEach { tag ->
-                                    app.db.splitNodeTags().insert(dev.keslorod.quickexpense.data.entities.SplitNodeTag(toSave.id, tag.id))
+                            // Persist the whole split tree atomically. Inserting parents before
+                            // children keeps the self-referencing parentId foreign key satisfied
+                            // (SQLite checks it immediately, not at commit).
+                            app.db.withTransaction {
+                                app.db.splitNodes().deleteByExpenseId(expenseId)
+                                nodes.sortedBy { it.depth }.forEach { node ->
+                                    val toSave = node.copy(expenseId = expenseId)
+                                    app.db.splitNodes().insert(toSave)
+                                    tags[node.id]?.forEach { tag ->
+                                        app.db.splitNodeTags().insert(
+                                            dev.keslorod.quickexpense.data.entities.SplitNodeTag(toSave.id, tag.id)
+                                        )
+                                    }
                                 }
                             }
                             nav.popBackStack()

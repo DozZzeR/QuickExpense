@@ -314,7 +314,6 @@ private const val MATCH_RATIO = OVERLAY_RATIO * 0.20f
 private const val SIG_COLS = 32
 private const val SIG_ROWS = 8
 private const val SIGNATURE_DIFF_THRESHOLD = 50.0
-private const val OVERLAY_SCALE_Y = 0.95f
 
 private fun computeSignatureFromBitmap(
     file: File,

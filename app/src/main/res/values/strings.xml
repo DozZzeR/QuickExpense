@@ -161,4 +161,21 @@
     <string name="note_label">Note</string>
     <string name="categories_in_merchant">Categories in this merchant</string>
     <string name="txs_and_positions">Transactions and positions</string>
+    <string name="transaction_default">Transaction</string>
+    <string name="position_default">Position</string>
+
+    <!-- Split editor -->
+    <string name="split_remaining_fmt">Remaining: %1$s %2$s</string>
+    <string name="split_add">Add</string>
+    <string name="split_fill_rest">Fill rest</string>
+    <string name="split_rest">Rest</string>
+    <string name="split_unallocated">Unallocated</string>
+    <string name="split_untitled">Untitled</string>
+    <string name="split_add_item">Add item</string>
+    <string name="split_edit_item">Edit item</string>
+    <string name="split_amount">Amount</string>
+    <string name="split_name">Name</string>
+    <string name="split_category_not_selected">Not selected</string>
+    <string name="split_add_tag">+ Tag</string>
+    <string name="split_exceeds_fmt">Amount exceeds the available remainder by %1$s %2$s</string>
 </resources>

@@ -8,6 +8,24 @@ import java.time.LocalDate
 
 class StatisticsRepository(private val db: AppDatabase) {
 
+    suspend fun getMerchantStats(state: StatisticsDateRangeState): List<StatsBreakdownItem> {
+        val currentRange = StatisticsDateUtils.getComparisonRange(state)
+        val data = getPeriodData(currentRange.currentStart, currentRange.currentEnd)
+        return calculateMerchantBreakdown(data)
+    }
+
+    suspend fun getCategoryStats(state: StatisticsDateRangeState): List<StatsBreakdownItem> {
+        val currentRange = StatisticsDateUtils.getComparisonRange(state)
+        val data = getPeriodData(currentRange.currentStart, currentRange.currentEnd)
+        return calculateCategoryBreakdown(data)
+    }
+
+    suspend fun getTagStats(state: StatisticsDateRangeState): List<StatsBreakdownItem> {
+        val currentRange = StatisticsDateUtils.getComparisonRange(state)
+        val data = getPeriodData(currentRange.currentStart, currentRange.currentEnd)
+        return calculateTagBreakdown(data)
+    }
+
     suspend fun getDashboardStatistics(state: StatisticsDateRangeState): DashboardStatistics {
         val currentRange = StatisticsDateUtils.getComparisonRange(state)
         
@@ -69,8 +87,8 @@ class StatisticsRepository(private val db: AppDatabase) {
         val currentAmount = fragments.sumOf { it.amount }
         val previousAmount = prevFragments?.sumOf { it.amount }
 
-        val merchantBreakdown = fragments.groupBy { frag -> 
-            currentData.expenses.find { it.id == frag.expenseId }?.merchantId 
+        val merchantBreakdown = fragments.groupBy { frag ->
+            currentData.expensesById[frag.expenseId]?.merchantId
         }.map { (mId, frags) ->
             val amount = frags.sumOf { it.amount }
             StatsBreakdownItem(
@@ -91,7 +109,7 @@ class StatisticsRepository(private val db: AppDatabase) {
             totalAmount = currentAmount,
             comparison = calculateComparison(currentAmount, previousAmount, state),
             merchantBreakdown = merchantBreakdownWithMax,
-            fragments = fragments.sortedByDescending { frag -> currentData.expenses.find { it.id == frag.expenseId }?.createdAt ?: 0L }
+            fragments = fragments.sortedByDescending { frag -> currentData.expensesById[frag.expenseId]?.createdAt ?: 0L }
         )
     }
 
@@ -115,89 +133,38 @@ class StatisticsRepository(private val db: AppDatabase) {
             tagName = currentData.tagNames[tagId] ?: "Tag",
             totalAmount = currentAmount,
             comparison = calculateComparison(currentAmount, previousAmount, state),
-            fragments = fragments.map { frag ->
-                val node = currentData.splitNodes.find { it.id == frag.splitNodeId }
-                TagResultItem(
-                    expenseId = frag.expenseId,
-                    label = node?.label ?: "Item",
-                    amount = frag.amount,
-                    date = currentData.expenses.find { it.id == frag.expenseId }?.createdAt ?: 0L,
-                    merchantName = currentData.merchantNames[currentData.expenses.find { it.id == frag.expenseId }?.merchantId]
-                )
-            }.sortedByDescending { it.date }
+            fragments = run {
+                val nodesById = currentData.splitNodes.associateBy { it.id }
+                fragments.map { frag ->
+                    val expense = currentData.expensesById[frag.expenseId]
+                    TagResultItem(
+                        expenseId = frag.expenseId,
+                        label = nodesById[frag.splitNodeId]?.label ?: "Item",
+                        amount = frag.amount,
+                        date = expense?.createdAt ?: 0L,
+                        merchantName = currentData.merchantNames[expense?.merchantId]
+                    )
+                }.sortedByDescending { it.date }
+            }
         )
     }
 
     suspend fun search(filter: StatisticsSearchFilter): SearchResultsData {
         val currentRange = StatisticsDateUtils.getComparisonRange(filter.dateRange)
         val currentData = getPeriodData(currentRange.currentStart, currentRange.currentEnd)
-        
-        val filteredFragments = currentData.expenses.flatMap { exp ->
-            StatisticsAggregation.buildCategoryFragments(exp, currentData.splitNodes)
-        }.filter { frag ->
-            val expense = currentData.expenses.find { it.id == frag.expenseId } ?: return@filter false
-            
-            // Filter by merchant
-            if (filter.merchantIds.isNotEmpty() && !filter.merchantIds.contains(expense.merchantId ?: "unknown")) return@filter false
-            
-            // Filter by category
-            if (filter.categoryIds.isNotEmpty() && !filter.categoryIds.contains(frag.effectiveCategoryId)) return@filter false
-            
-            // Filter by text query
-            if (filter.query.isNotBlank()) {
-                val matchesLabel = frag.label.contains(filter.query, ignoreCase = true)
-                val matchesNote = expense.note?.contains(filter.query, ignoreCase = true) == true
-                if (!matchesLabel && !matchesNote) return@filter false
-            }
-            
-            // Filter by tags
-            if (filter.tagIds.isNotEmpty()) {
-                val nodeTags = currentData.nodeTags[frag.splitNodeId].orEmpty().map { it.id }.toSet()
-                if (filter.tagMatchMode == TagMatchMode.ALL) {
-                    if (!nodeTags.containsAll(filter.tagIds)) return@filter false
-                } else {
-                    if (filter.tagIds.none { nodeTags.contains(it) }) return@filter false
-                }
-            }
-            
-            true
-        }
 
+        val filteredFragments = matchingFragments(currentData, filter)
         val totalAmount = filteredFragments.sumOf { it.amount }
-        
-        // For comparison in search, we'd ideally repeat the same filtering for previous period.
-        // For MVP, we'll return a placeholder comparison or just 0 delta if it's too heavy.
-        // Let's implement it properly though.
+
         val previousData = if (currentRange.previousStart != null && currentRange.previousEnd != null) {
             getPeriodData(currentRange.previousStart, currentRange.previousEnd)
         } else null
-        
         val prevAmount = previousData?.let { pData ->
-            pData.expenses.flatMap { exp ->
-                StatisticsAggregation.buildCategoryFragments(exp, pData.splitNodes)
-            }.filter { frag ->
-                val expense = pData.expenses.find { it.id == frag.expenseId } ?: return@filter false
-                if (filter.merchantIds.isNotEmpty() && !filter.merchantIds.contains(expense.merchantId ?: "unknown")) return@filter false
-                if (filter.categoryIds.isNotEmpty() && !filter.categoryIds.contains(frag.effectiveCategoryId)) return@filter false
-                if (filter.query.isNotBlank()) {
-                    val matchesLabel = frag.label.contains(filter.query, ignoreCase = true)
-                    val matchesNote = expense.note?.contains(filter.query, ignoreCase = true) == true
-                    if (!matchesLabel && !matchesNote) return@filter false
-                }
-                if (filter.tagIds.isNotEmpty()) {
-                    val nodeTags = pData.nodeTags[frag.splitNodeId].orEmpty().map { it.id }.toSet()
-                    if (filter.tagMatchMode == TagMatchMode.ALL) {
-                        if (!nodeTags.containsAll(filter.tagIds)) return@filter false
-                    } else {
-                        if (filter.tagIds.none { nodeTags.contains(it) }) return@filter false
-                    }
-                }
-                true
-            }.sumOf { it.amount }
+            matchingFragments(pData, filter).sumOf { it.amount }
         }
 
         val results = filteredFragments.map { frag ->
-            val expense = currentData.expenses.first { it.id == frag.expenseId }
+            val expense = currentData.expensesById.getValue(frag.expenseId)
             SearchResultItem(
                 expenseId = frag.expenseId,
                 title = frag.label,
@@ -214,6 +181,45 @@ class StatisticsRepository(private val db: AppDatabase) {
             comparison = calculateComparison(totalAmount, prevAmount, filter.dateRange),
             results = results
         )
+    }
+
+    /** Applies [filter] to the category fragments of a single period. Shared by the
+     *  current-period result set and the previous-period comparison total. */
+    private fun matchingFragments(
+        data: PeriodData,
+        filter: StatisticsSearchFilter
+    ): List<CategoryAmountFragment> {
+        return data.expenses
+            .flatMap { StatisticsAggregation.buildCategoryFragments(it, data.splitNodes) }
+            .filter { frag ->
+                val expense = data.expensesById[frag.expenseId] ?: return@filter false
+
+                if (filter.merchantIds.isNotEmpty() &&
+                    !filter.merchantIds.contains(expense.merchantId ?: "unknown")
+                ) return@filter false
+
+                if (filter.categoryIds.isNotEmpty() &&
+                    !filter.categoryIds.contains(frag.effectiveCategoryId)
+                ) return@filter false
+
+                if (filter.query.isNotBlank()) {
+                    val matchesLabel = frag.label.contains(filter.query, ignoreCase = true)
+                    val matchesNote = expense.note?.contains(filter.query, ignoreCase = true) == true
+                    if (!matchesLabel && !matchesNote) return@filter false
+                }
+
+                if (filter.tagIds.isNotEmpty()) {
+                    val nodeTags = data.nodeTags[frag.splitNodeId].orEmpty().map { it.id }.toSet()
+                    val matches = if (filter.tagMatchMode == TagMatchMode.ALL) {
+                        nodeTags.containsAll(filter.tagIds)
+                    } else {
+                        filter.tagIds.any { nodeTags.contains(it) }
+                    }
+                    if (!matches) return@filter false
+                }
+
+                true
+            }
     }
 
     suspend fun getTransactionDetails(expenseId: String): TransactionDetailsData? {
@@ -242,16 +248,16 @@ class StatisticsRepository(private val db: AppDatabase) {
         val expenses = db.expenses().expensesInRange(from, to)
         val expenseIds = expenses.map { it.id }
         
-        val allSplitNodes = mutableListOf<dev.keslorod.quickexpense.data.entities.SplitNode>()
-        // We might want to optimize this by adding a DAO method to fetch all nodes for a list of expenses
-        expenseIds.forEach { id ->
-            allSplitNodes.addAll(db.splitNodes().getByExpenseId(id))
-        }
+        val allSplitNodes = if (expenseIds.isNotEmpty()) {
+            db.splitNodes().getByExpenseIds(expenseIds)
+        } else emptyList()
 
-        val nodeTags = mutableMapOf<String, List<dev.keslorod.quickexpense.data.entities.Tag>>()
-        allSplitNodes.forEach { node ->
-            nodeTags[node.id] = db.splitNodeTags().getTagsForSplitNode(node.id)
-        }
+        val splitNodeIds = allSplitNodes.map { it.id }
+        val nodeTags = if (splitNodeIds.isNotEmpty()) {
+            db.splitNodeTags().getTagsForSplitNodes(splitNodeIds)
+                .groupBy { it.splitNodeId }
+                .mapValues { entry -> entry.value.map { it.tag } }
+        } else emptyMap()
 
         val categoryNames = db.categories().all().associate { it.id to it.name }
         val merchantNames = db.merchants().all().associate { it.id to it.name }
@@ -259,6 +265,7 @@ class StatisticsRepository(private val db: AppDatabase) {
 
         return PeriodData(
             expenses = expenses,
+            expensesById = expenses.associateBy { it.id },
             splitNodes = allSplitNodes,
             nodeTags = nodeTags,
             categoryNames = categoryNames,
@@ -388,6 +395,7 @@ class StatisticsRepository(private val db: AppDatabase) {
 
     private data class PeriodData(
         val expenses: List<dev.keslorod.quickexpense.data.entities.Expense>,
+        val expensesById: Map<String, dev.keslorod.quickexpense.data.entities.Expense>,
         val splitNodes: List<dev.keslorod.quickexpense.data.entities.SplitNode>,
         val nodeTags: Map<String, List<dev.keslorod.quickexpense.data.entities.Tag>>,
         val categoryNames: Map<String, String>,

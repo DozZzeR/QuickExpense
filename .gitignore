@@ -1,5 +1,5 @@
-# Gradle files
-gradle/
+# Gradle build cache (NOT the wrapper — the wrapper must stay tracked)
+.gradle/
 build/
 
 # Local configuration file (SDK path, etc.)
@@ -20,14 +20,9 @@ bin/
 gen/
 out/
 
-# Android Studio specific files
-idea/
+# Android Studio / IntelliJ specific files
+.idea/
 *.iml
-idea/workspace.xml
-idea/tasks.xml
-idea/libraries/
-idea/caches/
-idea/modules.xml
 
 # Keystore files (for signing)
 *.jks
