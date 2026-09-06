@@ -166,7 +166,10 @@ fun QuickAddScreen(
                 ) {
                     Icon(Icons.Default.CallSplit, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text(if (draftSplitNodes.isEmpty()) "Разбить" else "Сплит (${draftSplitNodes.size})")
+                    Text(
+                        if (draftSplitNodes.isEmpty()) stringResource(R.string.split_action)
+                        else stringResource(R.string.split_action_count_fmt, draftSplitNodes.size)
+                    )
                 }
 
                 OutlinedButton(
@@ -367,7 +370,7 @@ fun QuickAddScreen(
                     currency = currency,
                     initialNodes = draftSplitNodes,
                     initialTags = draftNodeTags,
-                    initialLabel = merchant?.label ?: "Транзакция",
+                    initialLabel = merchant?.label ?: stringResource(R.string.transaction_default),
                     onBack = { showSplitEditor = false },
                     onDone = { nodes, tags ->
                         draftSplitNodes = nodes

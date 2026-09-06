@@ -1,7 +1,9 @@
 package dev.keslorod.quickexpense.ui.manage
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import dev.keslorod.quickexpense.App
+import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.data.entities.Merchant
 
 @Composable
@@ -12,7 +14,7 @@ fun ManageMerchantsScreen(
     onSelectMerchant: ((Merchant) -> Unit)? = null
 ) {
     ManageListScreen<Merchant>(
-        title = "Получатели",
+        title = stringResource(R.string.merchants),
         onBack = onBack,
         mode = mode,
         onSelect = onSelectMerchant,

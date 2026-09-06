@@ -219,6 +219,8 @@ fun SettingsScreen(
 fun WidgetControls(app: App) {
     val ctx = LocalContext.current
     var hasWidget by remember { mutableStateOf(false) }
+    val widgetAddHint = stringResource(R.string.widget_add_hint)
+    val updatingWidgetToast = stringResource(R.string.updating_widget_toast)
 
     // при входе на экран проверяем наличие
     LaunchedEffect(Unit) {
@@ -245,7 +247,7 @@ fun WidgetControls(app: App) {
                 } else {
                     android.widget.Toast.makeText(
                         ctx,
-                        "Зажмите рабочий стол → Виджеты → QuickExpense",
+                        widgetAddHint,
                         android.widget.Toast.LENGTH_LONG
                     ).show()
                 }
@@ -258,7 +260,7 @@ fun WidgetControls(app: App) {
             onClick = {
                 // коалесированный пересчёт+редроу (твой класс)
                 app.widgetRefresher.schedule(300)
-                android.widget.Toast.makeText(ctx, "Обновляю виджет…", android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(ctx, updatingWidgetToast, android.widget.Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier.fillMaxWidth()
         ) { Text(stringResource(R.string.update_widget)) }

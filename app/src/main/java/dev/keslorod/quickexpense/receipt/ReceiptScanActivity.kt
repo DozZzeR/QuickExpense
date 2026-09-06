@@ -22,7 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import dev.keslorod.quickexpense.R
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -246,7 +248,7 @@ private fun ReceiptScanScreen(
                 OutlinedButton(
                     onClick = onCancel,
                     modifier = Modifier.weight(1f)
-                ) { Text("Cancel") }
+                ) { Text(stringResource(R.string.cancel)) }
 
                 Spacer(Modifier.width(12.dp))
 
@@ -289,7 +291,7 @@ private fun ReceiptScanScreen(
                         containerColor = Color.White.copy(alpha = 0.4f),
                         contentColor = Color.Black
                     )
-                ) { Text("Capture") }
+                ) { Text(stringResource(R.string.capture)) }
 
                 Spacer(Modifier.width(12.dp))
 
@@ -297,7 +299,7 @@ private fun ReceiptScanScreen(
                     onClick = { onDone(capturedFiles.toList()) },
                     modifier = Modifier.weight(1f),
                     enabled = capturedFiles.isNotEmpty()
-                ) { Text("Done") }
+                ) { Text(stringResource(R.string.done)) }
             }
         }
     }

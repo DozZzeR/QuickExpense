@@ -6,6 +6,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.ui.statistics.components.DateRangeFilterBar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -21,7 +23,7 @@ fun TagDetailsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Детали метки") },
+                title = { Text(stringResource(R.string.tag_details_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
@@ -36,7 +38,7 @@ fun TagDetailsScreen(
                 onPresetSelected = { filterViewModel.setPreset(it) }
             )
             Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                Text("Детали метки $tagId (в разработке)")
+                Text(stringResource(R.string.tag_details_placeholder_fmt, tagId))
             }
         }
     }

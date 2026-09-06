@@ -1,7 +1,9 @@
 package dev.keslorod.quickexpense.ui.manage
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import dev.keslorod.quickexpense.App
+import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.data.entities.Category
 
 @Composable
@@ -12,7 +14,7 @@ fun ManageCategoriesScreen(
     onSelectCategory: ((Category) -> Unit)? = null
 ) {
     ManageListScreen<Category>(
-        title = "Категории",
+        title = stringResource(R.string.categories),
         onBack = onBack,
         mode = mode,
         onSelect = onSelectCategory,

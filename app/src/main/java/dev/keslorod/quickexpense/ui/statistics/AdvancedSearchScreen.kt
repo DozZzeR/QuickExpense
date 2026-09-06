@@ -194,18 +194,18 @@ private fun SearchFiltersBlock(
         // Tags
         FilterSection(title = stringResource(R.string.tags)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Режим меток:", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.tag_match_mode_label), style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.width(8.dp))
                 FilterChip(
                     selected = filter.tagMatchMode == TagMatchMode.ALL,
                     onClick = { onSetTagMatchMode(TagMatchMode.ALL) },
-                    label = { Text("ВСЕ") }
+                    label = { Text(stringResource(R.string.tag_match_all)) }
                 )
                 Spacer(Modifier.width(8.dp))
                 FilterChip(
                     selected = filter.tagMatchMode == TagMatchMode.ANY,
                     onClick = { onSetTagMatchMode(TagMatchMode.ANY) },
-                    label = { Text("ЛЮБАЯ") }
+                    label = { Text(stringResource(R.string.tag_match_any)) }
                 )
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -261,7 +261,7 @@ private fun SearchResultsList(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f))
             ) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("Найдено: ${data.results.size}", style = MaterialTheme.typography.labelMedium)
+                    Text("${stringResource(R.string.found)}: ${data.results.size}", style = MaterialTheme.typography.labelMedium)
                     Text(
                         "${formatCents(data.totalAmount)} $currency",
                         style = MaterialTheme.typography.headlineSmall,

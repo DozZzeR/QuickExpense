@@ -9,6 +9,7 @@ import dev.keslorod.quickexpense.domain.Period
 import dev.keslorod.quickexpense.domain.Range
 import dev.keslorod.quickexpense.domain.getWidgetSubtitle
 import dev.keslorod.quickexpense.domain.periodRange
+import dev.keslorod.quickexpense.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -54,9 +55,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 .map { e ->
                     ExpenseItemUi(
                         id = e.id,
-                        title = e.categoryName ?: "Без категории",
+                        title = e.categoryName ?: appRef.getString(R.string.uncategorized),
                         subtitle = buildString {
-                            append("Источник: ")
+                            append(appRef.getString(R.string.source))
+                            append(": ")
                             append(e.sourceName ?: "—")
                             if (!e.merchantName.isNullOrBlank()) {
                                 append(" • ")

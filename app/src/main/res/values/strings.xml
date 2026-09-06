@@ -35,6 +35,8 @@
     <string name="create_new">+ Create</string>
     <string name="manage_dots">Manage…</string>
     <string name="split_transaction">Split transaction</string>
+    <string name="split_action">Split</string>
+    <string name="split_action_count_fmt">Split (%d)</string>
     <string name="total_label">Total: %s</string>
     <string name="remaining_label">Remaining: %s</string>
     <string name="add_row">+ Add row</string>
@@ -62,6 +64,7 @@
     <string name="open_receipt_gallery">Open receipt gallery</string>
     <string name="receipt_gallery_title">Receipt pages</string>
     <string name="close">Close</string>
+    <string name="capture">Capture</string>
 
     <!-- Manage List Screen -->
     <string name="add_item">➕ Add</string>
@@ -100,6 +103,8 @@
     <string name="save">Save</string>
     <string name="add_widget">Add widget to home screen</string>
     <string name="update_widget">Update widget now</string>
+    <string name="widget_add_hint">Long-press the home screen → Widgets → QuickExpense</string>
+    <string name="updating_widget_toast">Updating widget…</string>
 
     <!-- Default sources -->
     <string name="default_source_cash">Cash</string>
@@ -146,6 +151,9 @@
     <string name="no_tags">No tags</string>
     <string name="places_of_spending">Places of spending</string>
     <string name="advanced_search">Advanced search</string>
+    <string name="tag_match_mode_label">Tag match mode:</string>
+    <string name="tag_match_all">ALL</string>
+    <string name="tag_match_any">ANY</string>
     <string name="search_results">Search results</string>
     <string name="found">Found</string>
     <string name="open_purchase">Open purchase</string>
@@ -166,6 +174,8 @@
     <string name="txs_and_positions">Transactions and positions</string>
     <string name="transaction_default">Transaction</string>
     <string name="position_default">Position</string>
+    <string name="tag_details_title">Tag details</string>
+    <string name="tag_details_placeholder_fmt">Tag details %s (in development)</string>
 
     <!-- Split editor -->
     <string name="split_remaining_fmt">Remaining: %1$s %2$s</string>

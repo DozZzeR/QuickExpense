@@ -19,6 +19,29 @@
     <!-- Quick Input Screen -->
     <string name="source">Извор</string>
     <string name="category">Категорија</string>
+    <string name="expense">Трошак</string>
+    <string name="income">Приход</string>
+    <string name="transfer">Пренос</string>
+    <string name="yesterday">Јуче</string>
+    <string name="today">Данас</string>
+    <string name="calendar">Календар</string>
+    <string name="to_where">Коме / прималац</string>
+    <string name="choose_source">Изабери извор</string>
+    <string name="choose_or_add">Изабери или додај</string>
+    <string name="optional">Опционо</string>
+    <string name="quick_choice_to_where">Брзи избор примаоца</string>
+    <string name="templates_expense">Шаблони: трошак</string>
+    <string name="all_dots">Све…</string>
+    <string name="create_new">+ Направи</string>
+    <string name="manage_dots">Управљање…</string>
+    <string name="split_transaction">Подели трансакцију</string>
+    <string name="split_action">Подели</string>
+    <string name="split_action_count_fmt">Подела (%d)</string>
+    <string name="total_label">Укупно: %s</string>
+    <string name="remaining_label">Преостало: %s</string>
+    <string name="add_row">+ Додај ред</string>
+    <string name="fill_remaining">Попуни остатак…</string>
+    <string name="done">Готово</string>
     <string name="merchant">Прималац</string>
     <string name="tag">Ознака</string>
     <string name="select_source">Изабери извор</string>
@@ -27,12 +50,21 @@
     <string name="select_tag">Изабери ознаку</string>
     <string name="all_sources">Сви извори</string>
     <string name="all_categories">Све категорије</string>
+    <string name="select_item">Изабери…</string>
+    <string name="quick_pick_empty">Још нема омиљених. Додирните „Све” да изаберете или додате.</string>
+    <string name="all">Све</string>
     <string name="ok_save">OK — сачувај</string>
     <string name="confirm">Потврди</string>
     <string name="search">Претрага…</string>
     <string name="add_item_named">Додај „%s“</string>
     <string name="cancel">Отказ</string>
     <string name="back">Назад</string>
+    <string name="scan_receipt">Скенирај рачун</string>
+    <string name="scan_receipt_pages">Странице рачуна: %d</string>
+    <string name="capture">Сними</string>
+    <string name="open_receipt_gallery">Отвори галерију рачуна</string>
+    <string name="receipt_gallery_title">Странице рачуна</string>
+    <string name="close">Затвори</string>
 
     <!-- Manage List Screen -->
     <string name="add_item">➕ Додај</string>
@@ -71,6 +103,18 @@
     <string name="save">Сачувај</string>
     <string name="add_widget">Додај виџет на почетну екран</string>
     <string name="update_widget">Ажурирај виџет сада</string>
+    <string name="widget_add_hint">Држите почетни екран → Виџети → QuickExpense</string>
+    <string name="updating_widget_toast">Ажурирам виџет…</string>
+
+    <!-- Default sources -->
+    <string name="default_source_cash">Готовина</string>
+    <string name="default_source_card">Картица</string>
+
+    <!-- Default categories -->
+    <string name="default_category_groceries">Намирнице</string>
+    <string name="default_category_home">Кућа</string>
+    <string name="default_category_car">Ауто</string>
+    <string name="default_category_unsorted">Остало</string>
 
     <!-- Main Screen -->
     <string name="menu">Мени</string>
@@ -107,6 +151,9 @@
     <string name="no_tags">Без ознака</string>
     <string name="places_of_spending">Места потрошње</string>
     <string name="advanced_search">Напредна претрага</string>
+    <string name="tag_match_mode_label">Начин поклапања ознака:</string>
+    <string name="tag_match_all">СВЕ</string>
+    <string name="tag_match_any">БИЛО КОЈА</string>
     <string name="search_results">Резултати претраге</string>
     <string name="found">Пронађено</string>
     <string name="open_purchase">Отвори куповину</string>
@@ -127,6 +174,8 @@
     <string name="txs_and_positions">Трансакције и ставке</string>
     <string name="transaction_default">Трансакција</string>
     <string name="position_default">Ставка</string>
+    <string name="tag_details_title">Детаљи ознаке</string>
+    <string name="tag_details_placeholder_fmt">Детаљи ознаке %s (у изради)</string>
 
     <!-- Split editor -->
     <string name="split_remaining_fmt">Преостало: %1$s %2$s</string>

@@ -1,7 +1,9 @@
 package dev.keslorod.quickexpense.ui.manage
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import dev.keslorod.quickexpense.App
+import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.data.entities.Source
 
 @Composable
@@ -12,7 +14,7 @@ fun ManageSourcesScreen(
     onSelectSource: ((Source) -> Unit)? = null
 ) {
     ManageListScreen<Source>(
-        title = "Источники",
+        title = stringResource(R.string.sources),
         onBack = onBack,
         mode = mode,
         onSelect = onSelectSource,

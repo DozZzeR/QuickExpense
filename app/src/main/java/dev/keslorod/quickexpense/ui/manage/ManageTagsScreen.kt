@@ -1,7 +1,9 @@
 package dev.keslorod.quickexpense.ui.manage
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import dev.keslorod.quickexpense.App
+import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.data.entities.Tag
 
 @Composable
@@ -12,7 +14,7 @@ fun ManageTagsScreen(
     onSelectTag: ((Tag) -> Unit)? = null
 ) {
     ManageListScreen<Tag>(
-        title = "Метки",
+        title = stringResource(R.string.tags),
         onBack = onBack,
         mode = mode,
         onSelect = onSelectTag,

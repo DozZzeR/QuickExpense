@@ -4,7 +4,8 @@
     <!-- Widget -->
     <string name="widget_balance">Остаток</string>
     <string name="widget_expenses">Расходы</string>
-    <string name="widget_all_time">за всё время</string>    <string name="widget_subtitle_day">за день</string>
+    <string name="widget_all_time">за всё время</string>
+    <string name="widget_subtitle_day">за день</string>
     <string name="widget_subtitle_week">за неделю</string>
     <string name="widget_subtitle_month">за месяц</string>
     <string name="widget_subtitle_all_time">за всё время</string>
@@ -17,6 +18,29 @@
     <!-- Quick Input Screen -->
     <string name="source">Источник</string>
     <string name="category">Категория</string>
+    <string name="expense">Расход</string>
+    <string name="income">Доход</string>
+    <string name="transfer">Перевод</string>
+    <string name="yesterday">Вчера</string>
+    <string name="today">Сегодня</string>
+    <string name="calendar">Календарь</string>
+    <string name="to_where">Куда / получатель</string>
+    <string name="choose_source">Выбрать источник</string>
+    <string name="choose_or_add">Выбрать или добавить</string>
+    <string name="optional">Необязательно</string>
+    <string name="quick_choice_to_where">Быстрый выбор получателя</string>
+    <string name="templates_expense">Шаблоны: расходы</string>
+    <string name="all_dots">Все…</string>
+    <string name="create_new">+ Создать</string>
+    <string name="manage_dots">Управление…</string>
+    <string name="split_transaction">Разбить транзакцию</string>
+    <string name="split_action">Разбить</string>
+    <string name="split_action_count_fmt">Сплит (%d)</string>
+    <string name="total_label">Итого: %s</string>
+    <string name="remaining_label">Осталось: %s</string>
+    <string name="add_row">+ Добавить строку</string>
+    <string name="fill_remaining">Добить остаток…</string>
+    <string name="done">Готово</string>
     <string name="merchant">Получатель</string>
     <string name="tag">Метка</string>
     <string name="select_source">Выбрать источник</string>
@@ -25,12 +49,21 @@
     <string name="select_tag">Выбрать метку</string>
     <string name="all_sources">Все источники</string>
     <string name="all_categories">Все категории</string>
+    <string name="select_item">Выбрать…</string>
+    <string name="quick_pick_empty">Пока нет избранного. Нажмите «Все», чтобы выбрать или добавить.</string>
+    <string name="all">Все</string>
     <string name="ok_save">OK — сохранить</string>
     <string name="confirm">Подтвердить</string>
     <string name="search">Поиск…</string>
     <string name="add_item_named">Добавить «%s»</string>
     <string name="cancel">Отмена</string>
     <string name="back">Назад</string>
+    <string name="scan_receipt">Сканировать чек</string>
+    <string name="scan_receipt_pages">Страниц чека: %d</string>
+    <string name="capture">Снять</string>
+    <string name="open_receipt_gallery">Открыть галерею чека</string>
+    <string name="receipt_gallery_title">Страницы чека</string>
+    <string name="close">Закрыть</string>
 
     <!-- Manage List Screen -->
     <string name="add_item">➕ Добавить</string>
@@ -69,6 +102,8 @@
     <string name="save">Сохранить</string>
     <string name="add_widget">Добавить виджет на рабочий стол</string>
     <string name="update_widget">Обновить виджет сейчас</string>
+    <string name="widget_add_hint">Зажмите рабочий стол → Виджеты → QuickExpense</string>
+    <string name="updating_widget_toast">Обновляю виджет…</string>
 
     <!-- Default sources -->
     <string name="default_source_cash">Наличка</string>
@@ -78,6 +113,7 @@
     <string name="default_category_groceries">Продукты</string>
     <string name="default_category_home">Дом</string>
     <string name="default_category_car">Машина</string>
+    <string name="default_category_unsorted">Разное</string>
 
     <!-- Main Screen -->
     <string name="menu">Меню</string>
@@ -114,6 +150,9 @@
     <string name="no_tags">Без меток</string>
     <string name="places_of_spending">Места трат</string>
     <string name="advanced_search">Расширенный поиск</string>
+    <string name="tag_match_mode_label">Режим меток:</string>
+    <string name="tag_match_all">ВСЕ</string>
+    <string name="tag_match_any">ЛЮБАЯ</string>
     <string name="search_results">Результаты поиска</string>
     <string name="found">Найдено</string>
     <string name="open_purchase">Открыть покупку</string>
@@ -134,6 +173,8 @@
     <string name="txs_and_positions">Транзакции и позиции</string>
     <string name="transaction_default">Транзакция</string>
     <string name="position_default">Позиция</string>
+    <string name="tag_details_title">Детали метки</string>
+    <string name="tag_details_placeholder_fmt">Детали метки %s (в разработке)</string>
 
     <!-- Split editor -->
     <string name="split_remaining_fmt">Осталось: %1$s %2$s</string>

@@ -64,10 +64,10 @@ fun MainScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("QuickExpense") },
+                title = { Text(stringResource(R.string.app_name)) },
                 actions = {
                     IconButton(onClick = onOpenStatistics) {
-                        Icon(Icons.Default.TrendingUp, contentDescription = "Статистика")
+                        Icon(Icons.Default.TrendingUp, contentDescription = stringResource(R.string.statistics))
                     }
                     IconButton(onClick = { menuOpen = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.menu))

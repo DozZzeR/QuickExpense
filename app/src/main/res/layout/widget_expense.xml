@@ -38,7 +38,7 @@
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Остаток"
+            android:text="@string/widget_expenses"
             android:textSize="12sp"
             android:textColor="#CCFFFFFF" />
 
@@ -55,7 +55,7 @@
             android:id="@+id/subtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="за всё время"
+            android:text="@string/widget_subtitle_week"
             android:textSize="12sp"
             android:textColor="#AAFFFFFF" />
 
