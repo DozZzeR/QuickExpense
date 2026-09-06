@@ -11,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -87,8 +86,8 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
             )
         }
         navigation(startDestination = StatisticsRoutes.DASHBOARD, route = StatisticsRoutes.ROOT) {
-            composable(StatisticsRoutes.DASHBOARD) {
-                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+            composable(StatisticsRoutes.DASHBOARD) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
                 val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
                 
                 dev.keslorod.quickexpense.ui.statistics.StatisticsDashboardScreen(
@@ -103,8 +102,8 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
                     onTagClick = { nav.navigate("statistics/tags/$it") }
                 )
             }
-            composable(StatisticsRoutes.MERCHANTS) {
-                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+            composable(StatisticsRoutes.MERCHANTS) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
                 val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
                 val listViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModel = viewModel(factory = dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModelFactory(
                     application = app,
@@ -123,8 +122,8 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
                     onItemClick = { nav.navigate("statistics/merchants/$it") }
                 )
             }
-            composable(StatisticsRoutes.CATEGORIES) {
-                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+            composable(StatisticsRoutes.CATEGORIES) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
                 val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
                 val listViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModel = viewModel(factory = dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModelFactory(
                     application = app,
@@ -143,8 +142,8 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
                     onItemClick = { nav.navigate("statistics/categories/$it") }
                 )
             }
-            composable(StatisticsRoutes.TAGS) {
-                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+            composable(StatisticsRoutes.TAGS) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
                 val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
                 val listViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModel = viewModel(factory = dev.keslorod.quickexpense.ui.statistics.StatisticsListViewModelFactory(
                     application = app,
@@ -166,7 +165,7 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
             }
             composable(StatisticsRoutes.MERCHANT_DETAILS) { backStackEntry ->
                 val merchantId = backStackEntry.arguments?.getString("merchantId") ?: return@composable
-                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val parentEntry = remember(backStackEntry) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
                 val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
                 
                 dev.keslorod.quickexpense.ui.statistics.MerchantDetailsScreen(
@@ -178,7 +177,7 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
             }
             composable(StatisticsRoutes.CATEGORY_DETAILS) { backStackEntry ->
                 val categoryId = backStackEntry.arguments?.getString("categoryId") ?: return@composable
-                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val parentEntry = remember(backStackEntry) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
                 val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
                 
                 dev.keslorod.quickexpense.ui.statistics.CategoryDetailsScreen(
@@ -190,7 +189,7 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
             }
             composable(StatisticsRoutes.TAG_DETAILS) { backStackEntry ->
                 val tagId = backStackEntry.arguments?.getString("tagId") ?: return@composable
-                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+                val parentEntry = remember(backStackEntry) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
                 val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
                 
                 dev.keslorod.quickexpense.ui.statistics.TagDetailsScreen(
@@ -200,8 +199,8 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
                     onTransactionClick = { nav.navigate("statistics/transactions/$it") }
                 )
             }
-            composable(StatisticsRoutes.SEARCH) {
-                val parentEntry = remember(nav) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
+            composable(StatisticsRoutes.SEARCH) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) { nav.getBackStackEntry(StatisticsRoutes.ROOT) }
                 val filterViewModel: dev.keslorod.quickexpense.ui.statistics.StatisticsFilterViewModel = viewModel(parentEntry)
                 
                 dev.keslorod.quickexpense.ui.statistics.AdvancedSearchScreen(
