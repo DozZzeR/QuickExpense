@@ -119,12 +119,15 @@ fun StatsPieBreakdownCard(
             Spacer(Modifier.height(12.dp))
 
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                folded.forEach { item ->
+                folded.forEachIndexed { index, item ->
                     StatsRelativeBarRow(
                         item = item,
                         currency = currency,
                         onClick = { if (item.id != OTHER_ID) onItemClick(item) },
-                        formatAmount = { formatCents(it) }
+                        formatAmount = { formatCents(it) },
+                        // Same color as this item's donut slice (pieData[index]), so the row
+                        // reads as that slice's legend rather than a generic highlight.
+                        seriesColor = pieData[index].color
                     )
                 }
             }

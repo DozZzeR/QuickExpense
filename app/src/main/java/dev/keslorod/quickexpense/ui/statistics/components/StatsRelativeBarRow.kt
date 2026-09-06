@@ -19,7 +19,12 @@ fun StatsRelativeBarRow(
     currency: String,
     showPercent: Boolean = true,
     onClick: () -> Unit,
-    formatAmount: (Long) -> String
+    formatAmount: (Long) -> String,
+    // Ties this row's background back to its chart series (e.g. the matching donut slice) so a
+    // reader can tell which legend row belongs to which mark without cross-checking labels.
+    // Defaults to the generic theme tint for callers with no per-item chart color (e.g. tags,
+    // which aren't charted as a pie — see Statistics_Dashboard_Flow.md §2.3).
+    seriesColor: Color = MaterialTheme.colorScheme.primaryContainer
 ) {
     Box(
         modifier = Modifier
@@ -32,7 +37,7 @@ fun StatsRelativeBarRow(
             modifier = Modifier
                 .fillMaxWidth(fraction = (item.relativeToMaxPercent / 100.0).toFloat().coerceAtLeast(0.03f))
                 .matchParentSize()
-                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
+                .background(seriesColor.copy(alpha = 0.28f))
         )
 
         Row(
