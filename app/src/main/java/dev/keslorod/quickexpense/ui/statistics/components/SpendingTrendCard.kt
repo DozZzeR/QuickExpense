@@ -80,6 +80,11 @@ fun SpendingTrendCard(
                             label = null,
                             values = points.map { it.amount / 100.0 },
                             color = SolidColor(lineColor),
+                            // Area fill under the line, same hue as the line itself, fading to
+                            // transparent toward the baseline — mirrors the donut legend tint so
+                            // the backdrop always reads as "this series", just less saturated.
+                            firstGradientFillColor = lineColor.copy(alpha = 0.28f),
+                            secondGradientFillColor = lineColor.copy(alpha = 0f),
                             dotProperties = DotProperties(
                                 enabled = true,
                                 radius = 4.dp,
