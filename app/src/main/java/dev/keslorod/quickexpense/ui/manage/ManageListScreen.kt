@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
@@ -57,6 +58,11 @@ fun <T> ManageListScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     var searchQuery by remember { mutableStateOf("") }
+    // Блокирует повторный запуск add/rename/delete, пока предыдущая операция не завершилась —
+    // иначе даблклик/мисклик по кнопке может успеть создать дубликат до перезагрузки списка.
+    var isSubmitting by remember { mutableStateOf(false) }
+    // Ключ элемента, для которого сейчас открыто оверфлоу-меню (Переименовать/Удалить) в SELECT-режиме.
+    var menuOpenFor by remember { mutableStateOf<Any?>(null) }
 
     fun reload() = scope.launch(Dispatchers.IO) { items = loadAll() }
     LaunchedEffect(Unit) { reload() }
@@ -134,12 +140,17 @@ fun <T> ManageListScreen(
             if (searchQuery.isNotEmpty() && filteredItems.none { getName(it).equals(searchQuery.trim(), ignoreCase = true) }) {
                 Button(
                     onClick = {
-                        scope.launch(Dispatchers.IO) {
-                            addNew(searchQuery.trim())
-                            searchQuery = ""
-                            reload()
+                        if (!isSubmitting) {
+                            isSubmitting = true
+                            scope.launch(Dispatchers.IO) {
+                                addNew(searchQuery.trim())
+                                searchQuery = ""
+                                reload()
+                                isSubmitting = false
+                            }
                         }
                     },
+                    enabled = !isSubmitting,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                 ) {
                     Icon(Icons.Filled.Edit, contentDescription = null)
@@ -178,17 +189,59 @@ fun <T> ManageListScreen(
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f)
                         )
+                        val cannotDeleteMessage = stringResource(R.string.error_cannot_delete)
+                        val onDeleteClick = {
+                            if (!isSubmitting) {
+                                isSubmitting = true
+                                scope.launch(Dispatchers.IO) {
+                                    val deleted = deleteIfUnused(item)
+                                    if (deleted) {
+                                        reload()
+                                    } else {
+                                        snackbarHostState.showSnackbar(
+                                            cannotDeleteMessage,
+                                            withDismissAction = true
+                                        )
+                                    }
+                                    isSubmitting = false
+                                }
+                            }
+                        }
+
                         Row {
-                            // В SELECT режиме кнопка редактирования компактнее
+                            // В SELECT режиме Переименовать/Удалить спрятаны за одним оверфлоу-меню,
+                            // чтобы не перегружать компактный ряд отдельными значками.
                             if (mode == ListScreenMode.SELECT) {
-                                IconButton(
-                                    onClick = {
-                                        editingItem = item
-                                        editingText = getName(item)
-                                    },
-                                    modifier = Modifier.size(32.dp)
-                                ) {
-                                    Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.rename), modifier = Modifier.size(18.dp))
+                                Box {
+                                    IconButton(
+                                        onClick = { menuOpenFor = itemKey(item) },
+                                        enabled = !isSubmitting,
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.more_actions), modifier = Modifier.size(18.dp))
+                                    }
+                                    DropdownMenu(
+                                        expanded = menuOpenFor == itemKey(item),
+                                        onDismissRequest = { menuOpenFor = null }
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.rename)) },
+                                            leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = null) },
+                                            onClick = {
+                                                menuOpenFor = null
+                                                editingItem = item
+                                                editingText = getName(item)
+                                            }
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.delete)) },
+                                            leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null) },
+                                            onClick = {
+                                                menuOpenFor = null
+                                                onDeleteClick()
+                                            }
+                                        )
+                                    }
                                 }
                             } else {
                                 // В MANAGE режиме все кнопки
@@ -198,45 +251,43 @@ fun <T> ManageListScreen(
                                 }) {
                                     Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.rename))
                                 }
-                                IconButton(onClick = {
-                                    scope.launch(Dispatchers.IO) {
-                                        toggleFavorite(item)
-                                        reload()
-                                    }
-                                }) {
+                                IconButton(
+                                    onClick = {
+                                        if (!isSubmitting) {
+                                            isSubmitting = true
+                                            scope.launch(Dispatchers.IO) {
+                                                toggleFavorite(item)
+                                                reload()
+                                                isSubmitting = false
+                                            }
+                                        }
+                                    },
+                                    enabled = !isSubmitting
+                                ) {
                                     if (isFavorite(item))
                                         Icon(Icons.Filled.Star, contentDescription = stringResource(R.string.remove_from_favorites))
                                     else
                                         Icon(Icons.Outlined.StarBorder, contentDescription = stringResource(R.string.add_to_favorites))
                                 }
-                                IconButton(onClick = {
-                                    scope.launch(Dispatchers.IO) {
-                                        val deleted = deleteIfUnused(item)
-                                        if (deleted) {
-                                            reload()
-                                        } else {
-                                            scope.launch {
-                                                snackbarHostState.showSnackbar(
-                                                    "Нельзя удалить: есть операции с этой записью",
-                                                    withDismissAction = true
-                                                )
-                                            }
-                                        }
-                                    }
-                                }) {
+                                IconButton(onClick = onDeleteClick, enabled = !isSubmitting) {
                                     Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete))
                                 }
                             }
-                            
+
                             // В SELECT режиме звезда всегда видна справа
                             if (mode == ListScreenMode.SELECT) {
                                 IconButton(
                                     onClick = {
-                                        scope.launch(Dispatchers.IO) {
-                                            toggleFavorite(item)
-                                            reload()
+                                        if (!isSubmitting) {
+                                            isSubmitting = true
+                                            scope.launch(Dispatchers.IO) {
+                                                toggleFavorite(item)
+                                                reload()
+                                                isSubmitting = false
+                                            }
                                         }
                                     },
+                                    enabled = !isSubmitting,
                                     modifier = Modifier.size(32.dp)
                                 ) {
                                     if (isFavorite(item))
@@ -259,12 +310,17 @@ fun <T> ManageListScreen(
             initial = "",
             confirmText = stringResource(R.string.dialog_add_confirm),
             validator = { name -> validateName(name, null) },
+            isSubmitting = isSubmitting,
             onCancel = { showAdd = false },
             onConfirm = { name ->
-                scope.launch(Dispatchers.IO) {
-                    addNew(name.trim())
-                    showAdd = false
-                    reload()
+                if (!isSubmitting) {
+                    isSubmitting = true
+                    scope.launch(Dispatchers.IO) {
+                        addNew(name.trim())
+                        showAdd = false
+                        reload()
+                        isSubmitting = false
+                    }
                 }
             }
         )
@@ -279,12 +335,17 @@ fun <T> ManageListScreen(
             initial = editingText,
             confirmText = stringResource(R.string.dialog_rename_confirm),
             validator = { name -> validateName(name, originalName) },
+            isSubmitting = isSubmitting,
             onCancel = { editingItem = null },
             onConfirm = { newName ->
-                scope.launch(Dispatchers.IO) {
-                    rename(item, newName.trim())
-                    editingItem = null
-                    reload()
+                if (!isSubmitting) {
+                    isSubmitting = true
+                    scope.launch(Dispatchers.IO) {
+                        rename(item, newName.trim())
+                        editingItem = null
+                        reload()
+                        isSubmitting = false
+                    }
                 }
             }
         )
@@ -298,12 +359,13 @@ private fun NameDialog(
     initial: String,
     confirmText: String,
     validator: (String) -> String?, // null = валидно; иначе текст ошибки
+    isSubmitting: Boolean = false,
     onCancel: () -> Unit,
     onConfirm: (String) -> Unit,
 ) {
     var text by remember { mutableStateOf(initial) }
     val error: String? = validator(text)
-    val canSave = error == null
+    val canSave = error == null && !isSubmitting
 
     AlertDialog(
         onDismissRequest = onCancel,
@@ -314,6 +376,7 @@ private fun NameDialog(
                     value = text,
                     onValueChange = { text = it },
                     singleLine = true,
+                    enabled = !isSubmitting,
                     placeholder = { Text(stringResource(R.string.error_name_empty)) },
                     isError = error != null,
                     supportingText = { if (error != null) Text(error) },

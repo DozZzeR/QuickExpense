@@ -41,6 +41,7 @@
     <string name="add_to_favorites">У омиљене</string>
     <string name="remove_from_favorites">Уклони из омиљених</string>
     <string name="delete">Обриши</string>
+    <string name="more_actions">Још радњи</string>
     <string name="error_name_empty">Унесите назив</string>
     <string name="error_name_exists">Назив већ постоји</string>
     <string name="error_cannot_delete">Немогуће обрисати: постоје трансакције са овом ставком</string>
