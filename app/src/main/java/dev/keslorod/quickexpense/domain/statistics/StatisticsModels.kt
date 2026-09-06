@@ -62,11 +62,22 @@ data class StatsBreakdownItem(
     val relativeToMaxPercent: Double,
 )
 
+/** One day's total spend, for the dashboard trend line. Dense over the period —
+ *  every day in range is present, with 0 for days with no expenses, so the line
+ *  has no misleading gaps. */
+data class DailyTrendPoint(
+    val date: LocalDate,
+    val amount: Long, // cents
+)
+
 data class DashboardStatistics(
     val totalSpent: StatsAmountSummary,
     val categoryPie: List<StatsBreakdownItem>,
     val merchantPie: List<StatsBreakdownItem>,
     val topTags: List<StatsBreakdownItem>,
+    /** Empty when the period is too long for a legible daily chart (see
+     *  [dev.keslorod.quickexpense.data.repository.StatisticsRepository]). */
+    val dailyTrend: List<DailyTrendPoint> = emptyList(),
 )
 
 data class MerchantDetailsData(

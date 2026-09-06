@@ -98,4 +98,7 @@ dependencies {
 
     // ----- Coil (картинки чеков)
     implementation(libs.coil.compose)
+
+    // ----- Charts (донаты и линейные графики в статистике)
+    implementation(libs.compose.charts)
 }

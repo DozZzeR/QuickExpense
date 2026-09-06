@@ -24,6 +24,9 @@ object StatisticsDateUtils {
         return dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
+    fun millisToLocalDate(millis: Long): LocalDate =
+        java.time.Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
+
     fun getRangeForPreset(preset: StatisticsDatePreset, today: LocalDate = LocalDate.now()): Pair<LocalDate, LocalDate> {
         return when (preset) {
             StatisticsDatePreset.TODAY -> today to today

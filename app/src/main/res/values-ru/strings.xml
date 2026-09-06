@@ -121,6 +121,8 @@
     <string name="edit_split">Редактировать разбивку</string>
     <string name="no_data_period">За этот период расходов нет</string>
     <string name="no_data_period_hint">Выберите другой период или добавьте первую трату.</string>
+    <string name="chart_other">Остальное</string>
+    <string name="spending_trend">Расходы по дням</string>
     <string name="change_filters">Изменить фильтры</string>
     <string name="set_filters_and_search">Настройте фильтры и нажмите поиск</string>
     <string name="nothing_found">Ничего не найдено</string>

@@ -16,7 +16,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.ui.statistics.components.AmountSummaryCard
 import dev.keslorod.quickexpense.ui.statistics.components.DateRangeFilterBar
+import dev.keslorod.quickexpense.ui.statistics.components.SpendingTrendCard
 import dev.keslorod.quickexpense.ui.statistics.components.StatsBreakdownCard
+import dev.keslorod.quickexpense.ui.statistics.components.StatsPieBreakdownCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -113,7 +115,9 @@ private fun DashboardContent(
     ) {
         AmountSummaryCard(summary = data.totalSpent, currency = currency)
 
-        StatsBreakdownCard(
+        SpendingTrendCard(points = data.dailyTrend, currency = currency)
+
+        StatsPieBreakdownCard(
             title = stringResource(R.string.categories),
             items = data.categoryPie,
             currency = currency,
@@ -121,7 +125,7 @@ private fun DashboardContent(
             onItemClick = { onCategoryClick(it.id) }
         )
 
-        StatsBreakdownCard(
+        StatsPieBreakdownCard(
             title = stringResource(R.string.places_of_spending),
             items = data.merchantPie,
             currency = currency,

@@ -114,6 +114,8 @@
     <string name="edit_split">Измени поделу</string>
     <string name="no_data_period">Нема података за овај период</string>
     <string name="no_data_period_hint">Покушајте са другим периодом или додајте први трошак.</string>
+    <string name="chart_other">Остало</string>
+    <string name="spending_trend">Трошкови по данима</string>
     <string name="change_filters">Промени филтере</string>
     <string name="set_filters_and_search">Подесите филтере и притисните претрагу</string>
     <string name="nothing_found">Ништа није пронађено</string>

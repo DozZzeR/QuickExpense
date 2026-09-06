@@ -5,6 +5,7 @@ import dev.keslorod.quickexpense.domain.statistics.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 class StatisticsRepository(private val db: AppDatabase) {
 
@@ -28,23 +29,25 @@ class StatisticsRepository(private val db: AppDatabase) {
 
     suspend fun getDashboardStatistics(state: StatisticsDateRangeState): DashboardStatistics {
         val currentRange = StatisticsDateUtils.getComparisonRange(state)
-        
+
         val currentData = getPeriodData(currentRange.currentStart, currentRange.currentEnd)
         val previousData = if (currentRange.previousStart != null && currentRange.previousEnd != null) {
             getPeriodData(currentRange.previousStart, currentRange.previousEnd)
         } else null
 
         val totalSpent = calculateTotalSpent(currentData.expenses, previousData?.expenses, state)
-        
+
         val categoryPie = calculateCategoryBreakdown(currentData)
         val merchantPie = calculateMerchantBreakdown(currentData)
         val topTags = calculateTagBreakdown(currentData)
+        val dailyTrend = calculateDailyTrend(currentData, currentRange.currentStart, currentRange.currentEnd)
 
         return DashboardStatistics(
             totalSpent = totalSpent,
             categoryPie = categoryPie,
             merchantPie = merchantPie,
-            topTags = topTags
+            topTags = topTags,
+            dailyTrend = dailyTrend
         )
     }
 
@@ -372,6 +375,28 @@ class StatisticsRepository(private val db: AppDatabase) {
 
         val maxAmount = items.firstOrNull()?.amount ?: 1L
         return items.map { it.copy(relativeToMaxPercent = it.amount.toDouble() / maxAmount * 100) }
+    }
+
+    /** Dense per-day totals for the dashboard trend line. Returns empty for periods longer
+     *  than ~2 months — a 200+ point daily line stops being legible and needs a coarser
+     *  (weekly/monthly) bucket that isn't built yet, so the UI hides the trend card instead
+     *  of rendering an unreadable one. */
+    private fun calculateDailyTrend(
+        data: PeriodData,
+        start: LocalDate,
+        end: LocalDate
+    ): List<DailyTrendPoint> {
+        val dayCount = ChronoUnit.DAYS.between(start, end) + 1
+        if (dayCount !in 1..62) return emptyList()
+
+        val totalsByDay = data.expenses
+            .groupBy { StatisticsDateUtils.millisToLocalDate(it.createdAt) }
+            .mapValues { entry -> entry.value.sumOf { it.amount } }
+
+        return (0 until dayCount).map { offset ->
+            val day = start.plusDays(offset)
+            DailyTrendPoint(date = day, amount = totalsByDay[day] ?: 0L)
+        }
     }
 
     private fun calculateTagBreakdown(data: PeriodData): List<StatsBreakdownItem> {
