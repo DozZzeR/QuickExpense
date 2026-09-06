@@ -4,24 +4,36 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.Preferences
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
+import androidx.glance.background
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.currentState
+import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
+import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextStyle
+import androidx.glance.unit.ColorProvider
 import dev.keslorod.quickexpense.BuildConfig
+import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.ui.quickinput.QuickInputActivity
 import kotlin.math.abs
 
@@ -49,19 +61,50 @@ class QuickExpenseWidget : GlanceAppWidget() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
 
-        val labelRes = if (showRemainder) dev.keslorod.quickexpense.R.string.widget_balance else dev.keslorod.quickexpense.R.string.widget_expenses
+        val labelRes = if (showRemainder) R.string.widget_balance else R.string.widget_expenses
         val label = ctx.getString(labelRes)
-        
-        Column(
+
+        // Mirrors res/layout/widget_expense.xml (the static placeholder Android draws before
+        // this Glance content takes over) — background + money-bag watermark — so the widget
+        // doesn't visibly lose its icon the moment real data replaces the placeholder.
+        Box(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .padding(8.dp)
+                .background(ImageProvider(R.drawable.widget_bg))
                 .clickable(onClick = actionStartActivity(openIntent))
         ) {
-            Text(text = "$label: ${format(sum)} $currency")
-            if (subtitle.isNotEmpty()) {
-                Spacer(modifier = GlanceModifier.height(4.dp))
-                Text(text = subtitle)
+            Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd) {
+                Image(
+                    provider = ImageProvider(R.drawable.widget_bag),
+                    contentDescription = null,
+                    modifier = GlanceModifier.size(width = 82.dp, height = 80.dp)
+                )
+            }
+            Box(
+                modifier = GlanceModifier.fillMaxSize().padding(14.dp),
+                contentAlignment = Alignment.TopStart
+            ) {
+                Column {
+                    Text(
+                        text = label,
+                        style = TextStyle(color = ColorProvider(Color.White.copy(alpha = 0.8f)), fontSize = 12.sp)
+                    )
+                    Text(
+                        text = "${format(sum)} $currency",
+                        style = TextStyle(
+                            color = ColorProvider(Color.White),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                    if (subtitle.isNotEmpty()) {
+                        Spacer(modifier = GlanceModifier.height(4.dp))
+                        Text(
+                            text = subtitle,
+                            style = TextStyle(color = ColorProvider(Color.White.copy(alpha = 0.67f)), fontSize = 12.sp)
+                        )
+                    }
+                }
             }
         }
     }
