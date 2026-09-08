@@ -25,6 +25,7 @@
     <string name="yesterday">Yesterday</string>
     <string name="today">Today</string>
     <string name="calendar">Calendar</string>
+    <string name="selected_date_fmt">Date: %s</string>
     <string name="to_where">To / Where</string>
     <string name="choose_source">Choose source</string>
     <string name="choose_or_add">Choose or add</string>

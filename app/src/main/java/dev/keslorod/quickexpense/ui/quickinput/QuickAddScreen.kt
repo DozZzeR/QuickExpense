@@ -37,7 +37,9 @@ import dev.keslorod.quickexpense.receipt.ReceiptScanResult
 import dev.keslorod.quickexpense.data.entities.SplitNode
 import dev.keslorod.quickexpense.data.entities.Tag
 import dev.keslorod.quickexpense.ui.split.SplitEditorScreen
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 enum class OperationMode { EXPENSE, INCOME, TRANSFER }
 enum class QuickAddType { SOURCE, MERCHANT, CATEGORY, TEMPLATES }
@@ -194,7 +196,43 @@ fun QuickAddScreen(
 
     // Save/date buttons
     val isFormValid = source != null && amountText.isNotEmpty() && toCents(amountText) > 0
-    
+
+    // Yesterday/Today apply their offset to selectedDate, not to the real calendar day — so once
+    // the user has picked a custom date, "Today" silently means "the picked date", not today.
+    // Surface the picked date so that isn't invisible (see conversation: no on-screen indicator
+    // meant a Calendar-picked date could be mistaken for using the real current day).
+    val isCustomDate = remember(selectedDate) {
+        val today = Calendar.getInstance()
+        selectedDate.get(Calendar.YEAR) != today.get(Calendar.YEAR) ||
+            selectedDate.get(Calendar.DAY_OF_YEAR) != today.get(Calendar.DAY_OF_YEAR)
+    }
+    if (isCustomDate) {
+        val dateFormatter = remember { SimpleDateFormat("d MMMM yyyy", Locale.getDefault()) }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { showDatePicker = true }
+                .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f))
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                Icons.Default.CalendarToday,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Text(
+                text = stringResource(R.string.selected_date_fmt, dateFormatter.format(selectedDate.time)),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+    }
+
     SaveDateButtons(
         enabled = isFormValid,
         onSave = { daysOffset -> 

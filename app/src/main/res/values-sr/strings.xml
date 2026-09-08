@@ -25,6 +25,7 @@
     <string name="yesterday">Јуче</string>
     <string name="today">Данас</string>
     <string name="calendar">Календар</string>
+    <string name="selected_date_fmt">Датум: %s</string>
     <string name="to_where">Коме / прималац</string>
     <string name="choose_source">Изабери извор</string>
     <string name="choose_or_add">Изабери или додај</string>
