@@ -23,5 +23,17 @@ interface SplitNodeTagDao {
         INNER JOIN split_node_tags ON tags.id = split_node_tags.tagId
         WHERE split_node_tags.splitNodeId = :splitNodeId
     """)
-    suspend fun getTagsForSplitNode(splitNodeId: String): List<Tag>
+    suspend fun getTagsForSplitNode(splitNodeId: String): List<dev.keslorod.quickexpense.data.entities.Tag>
+
+    @Query("""
+        SELECT tags.*, split_node_tags.splitNodeId FROM tags
+        INNER JOIN split_node_tags ON tags.id = split_node_tags.tagId
+        WHERE split_node_tags.splitNodeId IN (:splitNodeIds)
+    """)
+    suspend fun getTagsForSplitNodes(splitNodeIds: List<String>): List<TagWithNodeId>
 }
+
+data class TagWithNodeId(
+    @androidx.room.Embedded val tag: dev.keslorod.quickexpense.data.entities.Tag,
+    val splitNodeId: String
+)

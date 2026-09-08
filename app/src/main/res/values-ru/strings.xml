@@ -181,14 +181,15 @@
     <string name="split_remaining_fmt">Осталось: %1$s %2$s</string>
     <string name="split_add">Добавить</string>
     <string name="split_fill_rest">Добить</string>
-    <string name="split_rest">Остаток</string>
     <string name="split_unallocated">Нераспределено</string>
     <string name="split_untitled">Без названия</string>
     <string name="split_add_item">Добавить элемент</string>
     <string name="split_edit_item">Редактировать элемент</string>
     <string name="split_amount">Сумма</string>
     <string name="split_name">Название</string>
-    <string name="split_category_not_selected">Не выбрана</string>
     <string name="split_add_tag">+ Метка</string>
     <string name="split_exceeds_fmt">Сумма превышает доступный остаток на %1$s %2$s</string>
+    <string name="discard_changes_title">Отменить изменения?</string>
+    <string name="discard_changes_message">Изменения ещё не сохранены.</string>
+    <string name="discard">Не сохранять</string>
 </resources>

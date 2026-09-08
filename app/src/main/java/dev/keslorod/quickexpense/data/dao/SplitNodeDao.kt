@@ -14,6 +14,9 @@ interface SplitNodeDao {
     @Query("SELECT * FROM split_nodes WHERE expenseId = :expenseId ORDER BY sortOrder ASC")
     suspend fun getByExpenseId(expenseId: String): List<SplitNode>
 
+    @Query("SELECT * FROM split_nodes WHERE expenseId IN (:expenseIds) ORDER BY sortOrder ASC")
+    suspend fun getByExpenseIds(expenseIds: List<String>): List<SplitNode>
+
     @Query("SELECT * FROM split_nodes WHERE parentId = :parentId ORDER BY sortOrder ASC")
     suspend fun getByParentId(parentId: String): List<SplitNode>
 

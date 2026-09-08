@@ -37,6 +37,9 @@ import dev.keslorod.quickexpense.receipt.ReceiptScanResult
 import dev.keslorod.quickexpense.data.entities.SplitNode
 import dev.keslorod.quickexpense.data.entities.Tag
 import dev.keslorod.quickexpense.ui.split.SplitEditorScreen
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -65,21 +68,42 @@ fun QuickAddScreen(
     
     var activePanel by remember { mutableStateOf<QuickAddType?>(null) }
     var showManageType by remember { mutableStateOf<QuickAddType?>(null) }
+
+    // Quick-pick grids (favorites) are seeded once by the caller at activity start,
+    // so they go stale after favorites are added/removed/renamed via "Manage" — refresh
+    // them whenever that screen is closed.
+    var sourceOptionsState by remember { mutableStateOf(sourceOptions) }
+    var merchantOptionsState by remember { mutableStateOf(merchantOptions) }
+    var categoryOptionsState by remember { mutableStateOf(categoryOptions) }
+    val coroutineScope = rememberCoroutineScope()
+    suspend fun refreshQuickPickOptions() {
+        val (newSources, newMerchants, newCategories) = withContext(Dispatchers.IO) {
+            Triple(
+                app.db.sources().favorites().map { Option(it.id, it.name) },
+                app.db.merchants().favorites().map { Option(it.id, it.name) },
+                app.db.categories().favorites().map { Option(it.id, it.name) }
+            )
+        }
+        sourceOptionsState = newSources
+        merchantOptionsState = newMerchants
+        categoryOptionsState = newCategories
+    }
     
     // Split state
     var showSplitEditor by remember { mutableStateOf(false) }
     var draftSplitNodes by remember { mutableStateOf<List<SplitNode>>(emptyList()) }
     var draftNodeTags by remember { mutableStateOf<Map<String, List<Tag>>>(emptyMap()) }
-    
-    val anyChildHasCategory = remember(draftSplitNodes) {
-        draftSplitNodes.any { it.parentId == null && it.categoryId != null }
-    }
 
-    LaunchedEffect(anyChildHasCategory) {
-        if (anyChildHasCategory) {
-            category = null
-        }
+    // While a split is uniform (every top-level row still carries the category picked
+    // above), that top-level category keeps acting as the shared default for new rows.
+    // The moment one row's category is changed away from it, the split has "diverged":
+    // the shared category no longer means anything, so it's cleared and stops being
+    // pre-filled into further rows (see SplitEditorScreen's onDivergedChange).
+    var splitCategoryDiverged by remember { mutableStateOf(false) }
+    LaunchedEffect(draftSplitNodes) {
+        if (draftSplitNodes.isEmpty()) splitCategoryDiverged = false
     }
+    val hideMainCategoryPicker = draftSplitNodes.isNotEmpty() && splitCategoryDiverged
 
     // Receipts state
     var lastScan by remember { mutableStateOf<ReceiptScanResult?>(null) }
@@ -129,7 +153,7 @@ fun QuickAddScreen(
                     value = merchant?.label ?: stringResource(R.string.choose_or_add),
                     onClick = { activePanel = QuickAddType.MERCHANT }
                 )
-                if (!anyChildHasCategory) {
+                if (!hideMainCategoryPicker) {
                     PickerRow(
                         label = stringResource(R.string.category),
                         value = category?.label ?: stringResource(R.string.optional),
@@ -295,9 +319,9 @@ fun QuickAddScreen(
         if (activePanel != null) {
             QuickGridPanel(
                 type = activePanel!!,
-                sourceOptions = sourceOptions,
-                merchantOptions = merchantOptions,
-                categoryOptions = categoryOptions,
+                sourceOptions = sourceOptionsState,
+                merchantOptions = merchantOptionsState,
+                categoryOptions = categoryOptionsState,
                 onDismiss = { activePanel = null },
                 onSelect = { type, option ->
                     when (type) {
@@ -331,9 +355,9 @@ fun QuickAddScreen(
                     QuickAddType.SOURCE -> {
                         dev.keslorod.quickexpense.ui.manage.ManageListScreen(
                             title = title,
-                            onBack = { showManageType = null },
+                            onBack = { showManageType = null; coroutineScope.launch { refreshQuickPickOptions() } },
                             mode = dev.keslorod.quickexpense.ui.manage.ListScreenMode.SELECT,
-                            onSelect = { source = Option(it.id, it.name); showManageType = null },
+                            onSelect = { source = Option(it.id, it.name); showManageType = null; coroutineScope.launch { refreshQuickPickOptions() } },
                             getName = { it.name },
                             isFavorite = { it.isFavorite },
                             itemKey = { it.id },
@@ -352,9 +376,9 @@ fun QuickAddScreen(
                     QuickAddType.MERCHANT -> {
                         dev.keslorod.quickexpense.ui.manage.ManageListScreen(
                             title = title,
-                            onBack = { showManageType = null },
+                            onBack = { showManageType = null; coroutineScope.launch { refreshQuickPickOptions() } },
                             mode = dev.keslorod.quickexpense.ui.manage.ListScreenMode.SELECT,
-                            onSelect = { merchant = Option(it.id, it.name); showManageType = null },
+                            onSelect = { merchant = Option(it.id, it.name); showManageType = null; coroutineScope.launch { refreshQuickPickOptions() } },
                             getName = { it.name },
                             isFavorite = { it.isFavorite },
                             itemKey = { it.id },
@@ -373,9 +397,9 @@ fun QuickAddScreen(
                     QuickAddType.CATEGORY -> {
                         dev.keslorod.quickexpense.ui.manage.ManageListScreen(
                             title = title,
-                            onBack = { showManageType = null },
+                            onBack = { showManageType = null; coroutineScope.launch { refreshQuickPickOptions() } },
                             mode = dev.keslorod.quickexpense.ui.manage.ListScreenMode.SELECT,
-                            onSelect = { category = Option(it.id, it.name); showManageType = null },
+                            onSelect = { category = Option(it.id, it.name); showManageType = null; coroutineScope.launch { refreshQuickPickOptions() } },
                             getName = { it.name },
                             isFavorite = { it.isFavorite },
                             itemKey = { it.id },
@@ -409,6 +433,12 @@ fun QuickAddScreen(
                     initialNodes = draftSplitNodes,
                     initialTags = draftNodeTags,
                     initialLabel = merchant?.label ?: stringResource(R.string.transaction_default),
+                    defaultCategoryId = category?.id,
+                    initialDiverged = splitCategoryDiverged,
+                    onDivergedChange = { diverged ->
+                        splitCategoryDiverged = diverged
+                        if (diverged) category = null
+                    },
                     onBack = { showSplitEditor = false },
                     onDone = { nodes, tags ->
                         draftSplitNodes = nodes

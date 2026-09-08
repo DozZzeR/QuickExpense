@@ -161,7 +161,7 @@ private fun SplitNodeItem(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(node.label ?: "Позиция", style = MaterialTheme.typography.bodyLarge)
+                Text(node.label ?: stringResource(R.string.position_default), style = MaterialTheme.typography.bodyLarge)
                 val tags = nodeTags[node.id].orEmpty()
                 if (tags.isNotEmpty()) {
                     Text(

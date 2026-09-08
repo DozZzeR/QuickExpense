@@ -45,13 +45,10 @@ class StatisticsListViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             _isLoading.value = true
             try {
-                // This is a bit inefficient as we fetch everything just for one list, 
-                // but okay for MVP with repo-level Kotlin aggregation.
-                val stats = repository.getDashboardStatistics(filterState)
                 _items.value = when (type) {
-                    StatsListType.MERCHANTS -> stats.merchantPie
-                    StatsListType.CATEGORIES -> stats.categoryPie
-                    StatsListType.TAGS -> stats.topTags
+                    StatsListType.MERCHANTS -> repository.getMerchantStats(filterState)
+                    StatsListType.CATEGORIES -> repository.getCategoryStats(filterState)
+                    StatsListType.TAGS -> repository.getTagStats(filterState)
                 }
             } finally {
                 _isLoading.value = false
