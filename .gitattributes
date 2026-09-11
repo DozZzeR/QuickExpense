@@ -1,0 +1,7 @@
+# Keep Unix shell scripts LF-only regardless of the checkout platform's
+# core.autocrlf setting — a CRLF gradlew fails to run under `sh` on CI.
+/gradlew text eol=lf
+*.sh text eol=lf
+
+# Windows batch files stay CRLF.
+*.bat text eol=crlf
