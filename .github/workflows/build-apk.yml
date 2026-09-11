@@ -28,7 +28,10 @@ jobs:
           cache: gradle
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
+        # Invoked via `sh` (not `./gradlew`) so it doesn't depend on the
+        # wrapper script's executable bit, which git checkouts made on
+        # Windows tend to drop.
+        run: sh gradlew assembleDebug --no-daemon
 
       - name: Collect build info
         id: info
