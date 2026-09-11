@@ -40,7 +40,6 @@
     <string name="total_label">Итого: %s</string>
     <string name="remaining_label">Осталось: %s</string>
     <string name="add_row">+ Добавить строку</string>
-    <string name="fill_remaining">Добить остаток…</string>
     <string name="done">Готово</string>
     <string name="merchant">Получатель</string>
     <string name="tag">Метка</string>
@@ -173,22 +172,18 @@
     <string name="categories_in_merchant">Категории в этом магазине</string>
     <string name="txs_and_positions">Транзакции и позиции</string>
     <string name="transaction_default">Транзакция</string>
-    <string name="position_default">Позиция</string>
     <string name="tag_details_title">Детали метки</string>
     <string name="tag_details_placeholder_fmt">Детали метки %s (в разработке)</string>
 
     <!-- Split editor -->
     <string name="split_remaining_fmt">Осталось: %1$s %2$s</string>
     <string name="split_add">Добавить</string>
-    <string name="split_fill_rest">Добить</string>
     <string name="split_unallocated">Нераспределено</string>
-    <string name="split_untitled">Без названия</string>
     <string name="split_add_item">Добавить элемент</string>
     <string name="split_edit_item">Редактировать элемент</string>
     <string name="split_amount">Сумма</string>
     <string name="split_name">Название</string>
     <string name="split_add_tag">+ Метка</string>
-    <string name="split_exceeds_fmt">Сумма превышает доступный остаток на %1$s %2$s</string>
     <string name="discard_changes_title">Отменить изменения?</string>
     <string name="discard_changes_message">Изменения ещё не сохранены.</string>
     <string name="discard">Не сохранять</string>

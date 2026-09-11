@@ -1,6 +1,7 @@
 package dev.keslorod.quickexpense.ui.split
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -168,52 +169,32 @@ fun SplitEditorScreen(
         },
         bottomBar = {
             // All primary actions for this screen live here, at the bottom — matching
-            // where the rest of the app anchors its save/confirm controls.
+            // where the rest of the app anchors its save/confirm controls. No separate
+            // "fill rest" action: whatever isn't split into a named item already shows up
+            // as "Unallocated" below, which covers that meaning on its own.
             Surface(tonalElevation = 2.dp) {
-                Column(
+                Row(
                     Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
-                        .navigationBarsPadding()
+                        .navigationBarsPadding(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    OutlinedButton(
+                        onClick = {
+                            editingNode = null
+                            showEditor = true
+                        },
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Button(
-                            onClick = {
-                                editingNode = null
-                                showEditor = true
-                            },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                            Spacer(Modifier.width(8.dp))
-                            Text(stringResource(R.string.split_add))
-                        }
-
-                        if (remainingAmount > 0) {
-                            OutlinedButton(
-                                onClick = {
-                                    val newNode = SplitNode(
-                                        expenseId = "",
-                                        parentId = currentParentId,
-                                        amount = remainingAmount,
-                                        categoryId = if (currentParentId == null && !diverged) defaultCategoryId else null,
-                                        depth = (currentParent?.depth ?: 0) + 1
-                                    )
-                                    allNodes = allNodes + newNode
-                                },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(stringResource(R.string.split_fill_rest))
-                            }
-                        }
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.split_add))
                     }
-                    Spacer(Modifier.height(12.dp))
+
                     Button(
                         onClick = { onDone(allNodes, nodeTags) },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.weight(1f)
                     ) {
                         Text(stringResource(R.string.done))
                     }
@@ -254,39 +235,41 @@ fun SplitEditorScreen(
     }
     
     if (showEditor) {
-        SplitItemEditorSheet(
-            app = app,
-            initialNode = editingNode,
-            parentId = currentParentId,
-            maxAmount = remainingAmount + (editingNode?.amount ?: 0L),
-            currency = currency,
-            initialTags = editingNode?.let { nodeTags[it.id] }.orEmpty(),
-            defaultCategoryIdForNew = if (currentParentId == null && !diverged) defaultCategoryId else null,
-            onDismiss = { showEditor = false },
-            onSave = { node, tags ->
-                if (editingNode != null) {
-                    allNodes = allNodes.map { if (it.id == node.id) node else it }
-                } else {
-                    allNodes = allNodes + node.copy(depth = (currentParent?.depth ?: 0) + 1)
+        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+            SplitItemEditorScreen(
+                app = app,
+                initialNode = editingNode,
+                parentId = currentParentId,
+                maxAmount = remainingAmount + (editingNode?.amount ?: 0L),
+                currency = currency,
+                initialTags = editingNode?.let { nodeTags[it.id] }.orEmpty(),
+                defaultCategoryIdForNew = if (currentParentId == null && !diverged) defaultCategoryId else null,
+                onDismiss = { showEditor = false },
+                onSave = { node, tags ->
+                    if (editingNode != null) {
+                        allNodes = allNodes.map { if (it.id == node.id) node else it }
+                    } else {
+                        allNodes = allNodes + node.copy(depth = (currentParent?.depth ?: 0) + 1)
+                    }
+                    nodeTags = nodeTags + (node.id to tags)
+                    // A top-level row diverging from the shared default breaks the sharing
+                    // for the rest of this split — see the defaultCategoryId param doc.
+                    if (currentParentId == null && !diverged && node.categoryId != defaultCategoryId) {
+                        diverged = true
+                        onDivergedChange(true)
+                    }
+                    showEditor = false
+                },
+                onDelete = { node ->
+                    // Delete the node together with its whole subtree, otherwise
+                    // grandchildren stay behind pointing at a parentId that no longer exists.
+                    val toRemove = collectSubtreeIds(node.id, allNodes)
+                    allNodes = allNodes.filter { it.id !in toRemove }
+                    nodeTags = nodeTags - toRemove
+                    showEditor = false
                 }
-                nodeTags = nodeTags + (node.id to tags)
-                // A top-level row diverging from the shared default breaks the sharing
-                // for the rest of this split — see the defaultCategoryId param doc.
-                if (currentParentId == null && !diverged && node.categoryId != defaultCategoryId) {
-                    diverged = true
-                    onDivergedChange(true)
-                }
-                showEditor = false
-            },
-            onDelete = { node ->
-                // Delete the node together with its whole subtree, otherwise
-                // grandchildren stay behind pointing at a parentId that no longer exists.
-                val toRemove = collectSubtreeIds(node.id, allNodes)
-                allNodes = allNodes.filter { it.id !in toRemove }
-                nodeTags = nodeTags - toRemove
-                showEditor = false
-            }
-        )
+            )
+        }
     }
 }
 
@@ -310,7 +293,7 @@ fun SplitNodeItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(Modifier.weight(1f)) {
-                Text(node.label ?: stringResource(R.string.split_untitled), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                Text(node.label ?: stringResource(R.string.split_unallocated), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
                 if (tags.isNotEmpty()) {
                     Text(
                         tags.joinToString(" ") { "#${it.name}" },
@@ -352,7 +335,7 @@ fun UnallocatedItem(amount: Long, currency: String) {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun SplitItemEditorSheet(
+fun SplitItemEditorScreen(
     app: App,
     initialNode: SplitNode?,
     parentId: String?,
@@ -369,7 +352,7 @@ fun SplitItemEditorSheet(
     var selectedCategoryId by remember { mutableStateOf(initialNode?.categoryId ?: defaultCategoryIdForNew) }
     var categoryName by remember { mutableStateOf<String?>(null) }
     var tags by remember { mutableStateOf(initialTags) }
-    
+
     var showCategoryPicker by remember { mutableStateOf(false) }
     var showTagPicker by remember { mutableStateOf(false) }
 
@@ -379,7 +362,7 @@ fun SplitItemEditorSheet(
         }
     }
 
-    // Tapping the scrim / swiping down / pressing back all resolve to the same
+    // The close icon, swiping back, and the system back gesture all resolve to the same
     // "dismiss" request — treat that uniformly as a cancel, and if anything was typed,
     // confirm before throwing it away instead of closing silently (see conversation).
     val initialAmountText = remember { initialNode?.let { formatCents(it.amount, '.') } ?: "" }
@@ -387,36 +370,18 @@ fun SplitItemEditorSheet(
     val initialCategoryId = remember { initialNode?.categoryId ?: defaultCategoryIdForNew }
     val hasChanges = amountText != initialAmountText || label != initialLabelText ||
         selectedCategoryId != initialCategoryId || tags != initialTags
-    var showSheetDiscardConfirm by remember { mutableStateOf(false) }
+    var showDiscardConfirm by remember { mutableStateOf(false) }
     val requestDismiss: () -> Unit = {
-        if (hasChanges) showSheetDiscardConfirm = true else onDismiss()
+        if (hasChanges) showDiscardConfirm = true else onDismiss()
     }
-
-    if (showSheetDiscardConfirm) {
-        AlertDialog(
-            onDismissRequest = { showSheetDiscardConfirm = false },
-            title = { Text(stringResource(R.string.discard_changes_title)) },
-            text = { Text(stringResource(R.string.discard_changes_message)) },
-            confirmButton = {
-                TextButton(onClick = { showSheetDiscardConfirm = false; onDismiss() }) {
-                    Text(stringResource(R.string.discard))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showSheetDiscardConfirm = false }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
-        )
-    }
-
+    BackHandler { requestDismiss() }
 
     if (showCategoryPicker) {
         ManageCategoriesScreen(
             app = app,
             onBack = { showCategoryPicker = false },
             mode = ListScreenMode.SELECT,
-            onSelectCategory = { 
+            onSelectCategory = {
                 selectedCategoryId = it.id
                 categoryName = it.name
                 showCategoryPicker = false
@@ -440,20 +405,103 @@ fun SplitItemEditorSheet(
         return
     }
 
-    ModalBottomSheet(onDismissRequest = requestDismiss) {
+    if (showDiscardConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDiscardConfirm = false },
+            title = { Text(stringResource(R.string.discard_changes_title)) },
+            text = { Text(stringResource(R.string.discard_changes_message)) },
+            confirmButton = {
+                TextButton(onClick = { showDiscardConfirm = false; onDismiss() }) {
+                    Text(stringResource(R.string.discard))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDiscardConfirm = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
+    // A full screen rather than a ModalBottomSheet — matching every other editing/picker
+    // flow in this app (ManageCategoriesScreen, ManageTagsScreen, SplitEditorScreen itself).
+    // M3's ModalBottomSheet is backed by its own platform Dialog window (verified by
+    // decompiling material3 1.3.1: ModalBottomSheetDialogWrapper extends ComponentDialog),
+    // which made this the one screen in the app with its own window — fighting IME/nav-bar
+    // insets independently of everything else, and capable of stacking a second Dialog
+    // (e.g. a confirm AlertDialog) on top of it, which OEM window managers can mishandle
+    // badly. A plain full-screen composable has none of that: one window, one insets model,
+    // same as the rest of the app.
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(if (initialNode == null) R.string.split_add_item else R.string.split_edit_item)) },
+                navigationIcon = {
+                    IconButton(onClick = requestDismiss) {
+                        Icon(Icons.Default.Close, contentDescription = null)
+                    }
+                }
+            )
+        },
+        bottomBar = {
+            Surface(tonalElevation = 2.dp) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .navigationBarsPadding()
+                        .imePadding()
+                ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        if (initialNode != null) {
+                            OutlinedButton(
+                                onClick = { onDelete(initialNode) },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = null)
+                                Spacer(Modifier.width(8.dp))
+                                Text(stringResource(R.string.delete))
+                            }
+                        }
+
+                        // amountText is already clamped to maxAmount as it's typed (see
+                        // onValueChange below), so parsed can never exceed it here.
+                        val parsed = parseAmount(amountText)
+                        val canSave = parsed > 0
+
+                        Button(
+                            onClick = {
+                                val node = (initialNode ?: SplitNode(expenseId = "", parentId = parentId, amount = parsed)).copy(
+                                    amount = parsed,
+                                    label = label,
+                                    categoryId = selectedCategoryId
+                                )
+                                onSave(node, tags)
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = canSave
+                        ) {
+                            Text(stringResource(R.string.save))
+                        }
+                    }
+                }
+            }
+        }
+    ) { pad ->
         Column(
             Modifier
+                .padding(pad)
                 .padding(16.dp)
-                .navigationBarsPadding()
-                .imePadding()
                 .verticalScroll(rememberScrollState())
         ) {
-            Text(stringResource(if (initialNode == null) R.string.split_add_item else R.string.split_edit_item), style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(16.dp))
-
             OutlinedTextField(
                 value = amountText,
-                onValueChange = { amountText = it },
+                onValueChange = { newText ->
+                    // Clamp to what's actually left to allocate instead of letting the
+                    // user type an amount that doesn't fit and blocking Save on it.
+                    amountText = if (parseAmount(newText) > maxAmount) formatCents(maxAmount, '.') else newText
+                },
                 label = { Text(stringResource(R.string.split_amount)) },
                 modifier = Modifier.fillMaxWidth(),
                 suffix = { Text(currency) },
@@ -488,7 +536,7 @@ fun SplitItemEditorSheet(
             }
 
             Spacer(Modifier.height(12.dp))
-            
+
             Text(stringResource(R.string.tags), style = MaterialTheme.typography.labelLarge)
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
@@ -507,49 +555,6 @@ fun SplitItemEditorSheet(
                     label = { Text(stringResource(R.string.split_add_tag)) }
                 )
             }
-            
-            Spacer(Modifier.height(24.dp))
-            
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (initialNode != null) {
-                    OutlinedButton(
-                        onClick = { onDelete(initialNode) },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                    ) {
-                        Icon(Icons.Default.Delete, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.delete))
-                    }
-                }
-                
-                val parsed = parseAmount(amountText)
-                val canSave = parsed > 0 && parsed <= maxAmount
-
-                Button(
-                    onClick = {
-                        val node = (initialNode ?: SplitNode(expenseId = "", parentId = parentId, amount = parsed)).copy(
-                            amount = parsed,
-                            label = label,
-                            categoryId = selectedCategoryId
-                        )
-                        onSave(node, tags)
-                    },
-                    modifier = Modifier.weight(1f),
-                    enabled = canSave
-                ) {
-                    Text(stringResource(R.string.save))
-                }
-            }
-            if (parseAmount(amountText) > maxAmount) {
-                Text(
-                    stringResource(R.string.split_exceeds_fmt, formatCents(parseAmount(amountText) - maxAmount), currency),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-            Spacer(Modifier.height(16.dp))
         }
     }
 }

@@ -41,7 +41,6 @@
     <string name="total_label">Total: %s</string>
     <string name="remaining_label">Remaining: %s</string>
     <string name="add_row">+ Add row</string>
-    <string name="fill_remaining">Fill remaining…</string>
     <string name="done">Done</string>
     <string name="select_source">Select source</string>
     <string name="select_category">Select category</string>
@@ -174,22 +173,18 @@
     <string name="categories_in_merchant">Categories in this merchant</string>
     <string name="txs_and_positions">Transactions and positions</string>
     <string name="transaction_default">Transaction</string>
-    <string name="position_default">Position</string>
     <string name="tag_details_title">Tag details</string>
     <string name="tag_details_placeholder_fmt">Tag details %s (in development)</string>
 
     <!-- Split editor -->
     <string name="split_remaining_fmt">Remaining: %1$s %2$s</string>
     <string name="split_add">Add</string>
-    <string name="split_fill_rest">Fill rest</string>
     <string name="split_unallocated">Unallocated</string>
-    <string name="split_untitled">Untitled</string>
     <string name="split_add_item">Add item</string>
     <string name="split_edit_item">Edit item</string>
     <string name="split_amount">Amount</string>
     <string name="split_name">Name</string>
     <string name="split_add_tag">+ Tag</string>
-    <string name="split_exceeds_fmt">Amount exceeds the available remainder by %1$s %2$s</string>
     <string name="discard_changes_title">Discard changes?</string>
     <string name="discard_changes_message">Your changes haven\'t been saved yet.</string>
     <string name="discard">Discard</string>
