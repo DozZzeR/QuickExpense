@@ -32,6 +32,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import dev.keslorod.quickexpense.App
 import dev.keslorod.quickexpense.BuildConfig
 import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.ui.quickinput.QuickInputActivity
@@ -120,4 +121,17 @@ class QuickExpenseWidget : GlanceAppWidget() {
 
 class QuickExpenseWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = QuickExpenseWidget()
+
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: android.appwidget.AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
+        super.onUpdate(context, appWidgetManager, appWidgetIds)
+        // onUpdate fires the moment a widget is first pinned, before anything in the app
+        // has ever written real data to its state — without this it would sit at the
+        // zeroed placeholder until an unrelated action (adding an expense, saving
+        // Settings) happened to trigger a refresh.
+        (context.applicationContext as App).widgetRefresher.schedule(0)
+    }
 }

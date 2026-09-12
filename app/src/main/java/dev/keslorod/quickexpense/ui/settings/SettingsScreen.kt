@@ -2,6 +2,8 @@ package dev.keslorod.quickexpense.ui.settings
 
 import android.util.Log
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material3.*
@@ -62,6 +64,7 @@ fun SettingsScreen(
         Column(Modifier
             .padding(pad)
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Button(
                 onClick = { nav.navigate("manage_sources") },
@@ -138,21 +141,44 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // Язык
-            Text(stringResource(R.string.language))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                val languageOptions = listOf(
-                    "" to stringResource(R.string.language_system),
-                    "en" to stringResource(R.string.language_english),
-                    "ru" to stringResource(R.string.language_russian),
-                    "sr" to stringResource(R.string.language_serbian)
+            // Язык — dropdown rather than a row of chips, which was pushing everything
+            // below it (including the widget button further down) further off-screen.
+            var languageMenuExpanded by remember { mutableStateOf(false) }
+            val languageOptions = listOf(
+                "" to stringResource(R.string.language_system),
+                "en" to stringResource(R.string.language_english),
+                "ru" to stringResource(R.string.language_russian),
+                "sr" to stringResource(R.string.language_serbian)
+            )
+            val selectedLanguageLabel = languageOptions.firstOrNull { it.first == languageCode }?.second
+                ?: languageOptions.first().second
+            ExposedDropdownMenuBox(
+                expanded = languageMenuExpanded,
+                onExpandedChange = { languageMenuExpanded = it }
+            ) {
+                OutlinedTextField(
+                    value = selectedLanguageLabel,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.language)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = languageMenuExpanded) },
+                    modifier = Modifier
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                        .fillMaxWidth()
                 )
-                languageOptions.forEach { (code, label) ->
-                    FilterChip(
-                        selected = languageCode == code,
-                        onClick = { languageCode = code },
-                        label = { Text(label) }
-                    )
+                ExposedDropdownMenu(
+                    expanded = languageMenuExpanded,
+                    onDismissRequest = { languageMenuExpanded = false }
+                ) {
+                    languageOptions.forEach { (code, label) ->
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            onClick = {
+                                languageCode = code
+                                languageMenuExpanded = false
+                            }
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(12.dp))
