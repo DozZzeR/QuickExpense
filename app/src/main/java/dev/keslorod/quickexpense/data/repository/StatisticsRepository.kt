@@ -58,16 +58,23 @@ class StatisticsRepository(private val db: AppDatabase) {
             getPeriodData(currentRange.previousStart, currentRange.previousEnd)
         } else null
 
-        val merchantExpenses = currentData.expenses.filter { it.merchantId == merchantId }
-        val prevMerchantExpenses = previousData?.expenses?.filter { it.merchantId == merchantId }
+        // "unknown" is a synthetic id the merchant breakdown list uses to represent
+        // expenses with no merchant (see calculateMerchantBreakdown) — there's no real row
+        // for it, the actual expenses just have merchantId == null. Map it back before
+        // filtering, otherwise `it.merchantId == merchantId` compares null to "unknown"
+        // and never matches, leaving the total right (grouped elsewhere) but the detail
+        // screen's breakdown/transaction list empty.
+        val actualMerchantId = merchantId.takeIf { it != "unknown" }
+        val merchantExpenses = currentData.expenses.filter { it.merchantId == actualMerchantId }
+        val prevMerchantExpenses = previousData?.expenses?.filter { it.merchantId == actualMerchantId }
 
         val totalSummary = calculateTotalSpent(merchantExpenses, prevMerchantExpenses, state)
-        
+
         val fragments = merchantExpenses.flatMap { StatisticsAggregation.buildCategoryFragments(it, currentData.splitNodes) }
         val categoryBreakdown = aggregateFragmentsByCategory(fragments, currentData.categoryNames)
 
         return MerchantDetailsData(
-            merchantName = currentData.merchantNames[merchantId] ?: "Unknown",
+            merchantName = currentData.merchantNames[actualMerchantId] ?: "Unknown",
             totalSummary = totalSummary,
             categoryBreakdown = categoryBreakdown,
             transactions = merchantExpenses.sortedByDescending { it.createdAt }
