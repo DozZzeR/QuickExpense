@@ -75,6 +75,13 @@ fun SplitEditorScreen(
     // Метки для каждого узла
     var nodeTags by remember { mutableStateOf<Map<String, List<Tag>>>(initialTags) }
 
+    // The "nothing's changed yet" snapshot to compare against below. Starts out as the
+    // initial params, but for an existing expense those are empty (its real nodes/tags load
+    // asynchronously below) — so the snapshot is updated once that load lands too, otherwise
+    // every such load would itself look like an unsaved edit.
+    var baselineNodes by remember { mutableStateOf(initialNodes) }
+    var baselineTags by remember { mutableStateOf<Map<String, List<Tag>>>(initialTags) }
+
     // Текущий путь (для drill-down)
     var currentParentId by remember { mutableStateOf<String?>(null) }
 
@@ -86,7 +93,7 @@ fun SplitEditorScreen(
 
     // Leaving with unsaved edits (rows added/changed since this screen opened) should be
     // a deliberate choice, not a silent discard.
-    val hasUnsavedChanges = allNodes != initialNodes || nodeTags != initialTags
+    val hasUnsavedChanges = allNodes != baselineNodes || nodeTags != baselineTags
     var showDiscardConfirm by remember { mutableStateOf(false) }
     val requestExit: () -> Unit = {
         if (hasUnsavedChanges) showDiscardConfirm = true else onBack()
@@ -102,6 +109,8 @@ fun SplitEditorScreen(
             }
             allNodes = nodes
             nodeTags = tagsMap
+            baselineNodes = nodes
+            baselineTags = tagsMap
             isLoading = false
         }
     }
@@ -168,36 +177,17 @@ fun SplitEditorScreen(
             )
         },
         bottomBar = {
-            // All primary actions for this screen live here, at the bottom — matching
-            // where the rest of the app anchors its save/confirm controls. No separate
-            // "fill rest" action: whatever isn't split into a named item already shows up
-            // as "Unallocated" below, which covers that meaning on its own.
+            // No separate "add" action — tapping "Unallocated" below is the one way to
+            // carve a new item off the remainder, so the only thing anchored here is Done.
             Surface(tonalElevation = 2.dp) {
-                Row(
-                    Modifier
+                Button(
+                    onClick = { onDone(allNodes, nodeTags) },
+                    modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
-                        .navigationBarsPadding(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        .navigationBarsPadding()
                 ) {
-                    OutlinedButton(
-                        onClick = {
-                            editingNode = null
-                            showEditor = true
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.split_add))
-                    }
-
-                    Button(
-                        onClick = { onDone(allNodes, nodeTags) },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(stringResource(R.string.done))
-                    }
+                    Text(stringResource(R.string.done))
                 }
             }
         }
@@ -225,10 +215,21 @@ fun SplitEditorScreen(
                     }
                 )
             }
-            
+
             if (remainingAmount > 0) {
                 item {
-                    UnallocatedItem(amount = remainingAmount, currency = currency)
+                    UnallocatedItem(
+                        amount = remainingAmount,
+                        currency = currency,
+                        onClick = {
+                            // The one way left to add an item: carve it off the remainder.
+                            // Starts blank (see SplitItemEditorScreen), not pre-filled to
+                            // the whole amount — the live "remaining" readout above its
+                            // amount field is what shows how much room is left as you type.
+                            editingNode = null
+                            showEditor = true
+                        }
+                    )
                 }
             }
         }
@@ -316,8 +317,11 @@ fun SplitNodeItem(
 }
 
 @Composable
-fun UnallocatedItem(amount: Long, currency: String) {
+fun UnallocatedItem(amount: Long, currency: String, onClick: () -> Unit) {
+    // Tappable like every real row above it — taps it the same way, and it opens the same
+    // add-item editor, just pre-filled with the whole remainder instead of starting blank.
     Surface(
+        onClick = onClick,
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         modifier = Modifier.fillMaxWidth()
@@ -328,7 +332,18 @@ fun UnallocatedItem(amount: Long, currency: String) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(stringResource(R.string.split_unallocated), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("${formatCents(amount)} $currency", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("${formatCents(amount)} $currency", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.width(8.dp))
+                // With no dedicated "add" button anymore, this is the one hint that the
+                // row itself is tappable to carve a new item off it.
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -347,8 +362,11 @@ fun SplitItemEditorScreen(
     onSave: (SplitNode, List<Tag>) -> Unit,
     onDelete: (SplitNode) -> Unit
 ) {
+    // Empty for a new item — the live "remaining" readout above the field (below) is what
+    // shows how much room there is, rather than starting the field pre-filled with it.
     var amountText by remember { mutableStateOf(initialNode?.let { formatCents(it.amount, '.') } ?: "") }
     var label by remember { mutableStateOf(initialNode?.label ?: "") }
+    val defaultLabel = stringResource(R.string.split_default_name)
     var selectedCategoryId by remember { mutableStateOf(initialNode?.categoryId ?: defaultCategoryIdForNew) }
     var categoryName by remember { mutableStateOf<String?>(null) }
     var tags by remember { mutableStateOf(initialTags) }
@@ -474,7 +492,10 @@ fun SplitItemEditorScreen(
                             onClick = {
                                 val node = (initialNode ?: SplitNode(expenseId = "", parentId = parentId, amount = parsed)).copy(
                                     amount = parsed,
-                                    label = label,
+                                    // An empty label stays an empty string, not null — the
+                                    // "?: Unallocated" fallback elsewhere only catches null,
+                                    // so a blank name would otherwise render as a blank line.
+                                    label = label.trim().ifBlank { defaultLabel },
                                     categoryId = selectedCategoryId
                                 )
                                 onSave(node, tags)
@@ -495,6 +516,19 @@ fun SplitItemEditorScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            // Shrinks live as the amount below is typed — reaches zero exactly when the
+            // field below clamps at maxAmount. Lets moving this item's amount up or down
+            // read as moving the border between it and whatever's still unallocated.
+            Text(
+                stringResource(
+                    R.string.split_remaining_fmt,
+                    formatCents((maxAmount - parseAmount(amountText)).coerceAtLeast(0L)),
+                    currency
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
             OutlinedTextField(
                 value = amountText,
                 onValueChange = { newText ->

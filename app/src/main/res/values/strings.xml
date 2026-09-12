@@ -178,8 +178,8 @@
 
     <!-- Split editor -->
     <string name="split_remaining_fmt">Remaining: %1$s %2$s</string>
-    <string name="split_add">Add</string>
     <string name="split_unallocated">Unallocated</string>
+    <string name="split_default_name">Something</string>
     <string name="split_add_item">Add item</string>
     <string name="split_edit_item">Edit item</string>
     <string name="split_amount">Amount</string>

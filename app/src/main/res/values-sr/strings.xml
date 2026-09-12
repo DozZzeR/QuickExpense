@@ -178,8 +178,8 @@
 
     <!-- Split editor -->
     <string name="split_remaining_fmt">Преостало: %1$s %2$s</string>
-    <string name="split_add">Додај</string>
     <string name="split_unallocated">Нераспоређено</string>
+    <string name="split_default_name">Нешто</string>
     <string name="split_add_item">Додај ставку</string>
     <string name="split_edit_item">Измени ставку</string>
     <string name="split_amount">Износ</string>

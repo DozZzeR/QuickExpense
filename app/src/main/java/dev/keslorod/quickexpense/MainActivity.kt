@@ -245,22 +245,26 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
                     initialLabel = label.value ?: app.getString(R.string.transaction_default),
                     onBack = { nav.popBackStack() },
                     onDone = { nodes, tags ->
-                        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                        scope.launch {
                             // Persist the whole split tree atomically. Inserting parents before
                             // children keeps the self-referencing parentId foreign key satisfied
                             // (SQLite checks it immediately, not at commit).
-                            app.db.withTransaction {
-                                app.db.splitNodes().deleteByExpenseId(expenseId)
-                                nodes.sortedBy { it.depth }.forEach { node ->
-                                    val toSave = node.copy(expenseId = expenseId)
-                                    app.db.splitNodes().insert(toSave)
-                                    tags[node.id]?.forEach { tag ->
-                                        app.db.splitNodeTags().insert(
-                                            dev.keslorod.quickexpense.data.entities.SplitNodeTag(toSave.id, tag.id)
-                                        )
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                                app.db.withTransaction {
+                                    app.db.splitNodes().deleteByExpenseId(expenseId)
+                                    nodes.sortedBy { it.depth }.forEach { node ->
+                                        val toSave = node.copy(expenseId = expenseId)
+                                        app.db.splitNodes().insert(toSave)
+                                        tags[node.id]?.forEach { tag ->
+                                            app.db.splitNodeTags().insert(
+                                                dev.keslorod.quickexpense.data.entities.SplitNodeTag(toSave.id, tag.id)
+                                            )
+                                        }
                                     }
                                 }
                             }
+                            // Back on the scope's main dispatcher here — popBackStack touches
+                            // Lifecycle, which asserts it's called from the main thread.
                             nav.popBackStack()
                         }
                     }

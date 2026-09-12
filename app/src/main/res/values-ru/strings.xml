@@ -177,8 +177,8 @@
 
     <!-- Split editor -->
     <string name="split_remaining_fmt">Осталось: %1$s %2$s</string>
-    <string name="split_add">Добавить</string>
     <string name="split_unallocated">Нераспределено</string>
+    <string name="split_default_name">Что-то</string>
     <string name="split_add_item">Добавить элемент</string>
     <string name="split_edit_item">Редактировать элемент</string>
     <string name="split_amount">Сумма</string>
