@@ -8,6 +8,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import dev.keslorod.quickexpense.data.dao.CategoryDao
 import dev.keslorod.quickexpense.data.dao.ExpenseDao
+import dev.keslorod.quickexpense.data.dao.ExpenseTagDao
 import dev.keslorod.quickexpense.data.dao.MerchantDao
 import dev.keslorod.quickexpense.data.dao.SourceDao
 import dev.keslorod.quickexpense.data.dao.SplitNodeDao
@@ -15,6 +16,7 @@ import dev.keslorod.quickexpense.data.dao.SplitNodeTagDao
 import dev.keslorod.quickexpense.data.dao.TagDao
 import dev.keslorod.quickexpense.data.entities.Category
 import dev.keslorod.quickexpense.data.entities.Expense
+import dev.keslorod.quickexpense.data.entities.ExpenseTag
 import dev.keslorod.quickexpense.data.entities.Merchant
 import dev.keslorod.quickexpense.data.entities.Source
 import dev.keslorod.quickexpense.data.entities.SplitNode
@@ -29,9 +31,10 @@ import dev.keslorod.quickexpense.data.entities.Tag
         Merchant::class,
         Tag::class,
         SplitNode::class,
-        SplitNodeTag::class
+        SplitNodeTag::class,
+        ExpenseTag::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -42,6 +45,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun tags(): TagDao
     abstract fun splitNodes(): SplitNodeDao
     abstract fun splitNodeTags(): SplitNodeTagDao
+    abstract fun expenseTags(): ExpenseTagDao
 
     companion object {
         @Volatile private var INSTANCE: AppDatabase? = null
@@ -54,7 +58,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "quickexpense.db"
                 )
                     // .fallbackToDestructiveMigration() // не включаем, будем писать миграции
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build().also { INSTANCE = it }
             }
     }
@@ -101,5 +105,13 @@ private val MIGRATION_3_4 = object : Migration(3, 4) {
         
         db.execSQL("ALTER TABLE categories ADD COLUMN normalizedName TEXT NOT NULL DEFAULT ''")
         db.execSQL("UPDATE categories SET normalizedName = LOWER(TRIM(name))")
+    }
+}
+
+private val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS `expense_tags` (`expenseId` TEXT NOT NULL, `tagId` TEXT NOT NULL, PRIMARY KEY(`expenseId`, `tagId`), FOREIGN KEY(`expenseId`) REFERENCES `expenses`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`tagId`) REFERENCES `tags`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_expense_tags_expenseId` ON `expense_tags` (`expenseId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_expense_tags_tagId` ON `expense_tags` (`tagId`)")
     }
 }

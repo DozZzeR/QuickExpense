@@ -86,6 +86,11 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) { Text(stringResource(R.string.tags)) }
 
+            Button(
+                onClick = { nav.navigate(dev.keslorod.quickexpense.ui.statistics.StatisticsRoutes.RECEIPTS) },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(stringResource(R.string.receipts)) }
+
             OutlinedTextField(
                 value = currency,
                 onValueChange = { currency = it.take(3).uppercase() },

@@ -35,6 +35,10 @@ fun <T> ManageListScreen(
     title: String,
     onBack: () -> Unit,
     mode: ListScreenMode = ListScreenMode.MANAGE,
+    // Pre-fills the search field — e.g. voice input opening this screen with whatever it
+    // couldn't match, so the existing "search or add" flow below does double duty as a resolve
+    // step for it.
+    initialQuery: String = "",
     onSelect: ((T) -> Unit)? = null, // вызывается при тапе на элемент в SELECT mode
     // извлечение полей
     getName: (T) -> String,
@@ -57,7 +61,7 @@ fun <T> ManageListScreen(
     var editingText by remember { mutableStateOf("") }
 
     val snackbarHostState = remember { SnackbarHostState() }
-    var searchQuery by remember { mutableStateOf("") }
+    var searchQuery by remember { mutableStateOf(initialQuery) }
     // Блокирует повторный запуск add/rename/delete, пока предыдущая операция не завершилась —
     // иначе даблклик/мисклик по кнопке может успеть создать дубликат до перезагрузки списка.
     var isSubmitting by remember { mutableStateOf(false) }

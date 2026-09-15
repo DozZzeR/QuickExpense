@@ -182,7 +182,9 @@ class StatisticsRepository(private val db: AppDatabase) {
                 date = expense.createdAt,
                 merchantName = currentData.merchantNames[expense.merchantId],
                 categoryName = currentData.categoryNames[frag.effectiveCategoryId],
-                tags = currentData.nodeTags[frag.splitNodeId].orEmpty().map { it.name }
+                tags = (currentData.nodeTags[frag.splitNodeId].orEmpty() + currentData.expenseTags[frag.expenseId].orEmpty())
+                    .distinctBy { it.id }
+                    .map { it.name }
             )
         }.sortedByDescending { it.date }
 
@@ -219,11 +221,15 @@ class StatisticsRepository(private val db: AppDatabase) {
                 }
 
                 if (filter.tagIds.isNotEmpty()) {
-                    val nodeTags = data.nodeTags[frag.splitNodeId].orEmpty().map { it.id }.toSet()
+                    // Combines both levels a tag can live at: on this one split item
+                    // (nodeTags) and on the expense as a whole (expenseTags, e.g. the
+                    // built-in "Has receipt" tag) — a search for a tag shouldn't care which.
+                    val tagIds = (data.nodeTags[frag.splitNodeId].orEmpty() + data.expenseTags[frag.expenseId].orEmpty())
+                        .mapTo(mutableSetOf()) { it.id }
                     val matches = if (filter.tagMatchMode == TagMatchMode.ALL) {
-                        nodeTags.containsAll(filter.tagIds)
+                        tagIds.containsAll(filter.tagIds)
                     } else {
-                        filter.tagIds.any { nodeTags.contains(it) }
+                        filter.tagIds.any { tagIds.contains(it) }
                     }
                     if (!matches) return@filter false
                 }
@@ -269,6 +275,14 @@ class StatisticsRepository(private val db: AppDatabase) {
                 .mapValues { entry -> entry.value.map { it.tag } }
         } else emptyMap()
 
+        // Tags on the whole expense (e.g. the built-in "Has receipt" tag) — distinct from
+        // nodeTags above, which only cover one split-item within an expense.
+        val expenseTags = if (expenseIds.isNotEmpty()) {
+            db.expenseTags().getTagsForExpenses(expenseIds)
+                .groupBy { it.expenseId }
+                .mapValues { entry -> entry.value.map { it.tag } }
+        } else emptyMap()
+
         val categoryNames = db.categories().all().associate { it.id to it.name }
         val merchantNames = db.merchants().all().associate { it.id to it.name }
         val tagNames = db.tags().all().associate { it.id to it.name }
@@ -278,6 +292,7 @@ class StatisticsRepository(private val db: AppDatabase) {
             expensesById = expenses.associateBy { it.id },
             splitNodes = allSplitNodes,
             nodeTags = nodeTags,
+            expenseTags = expenseTags,
             categoryNames = categoryNames,
             merchantNames = merchantNames,
             tagNames = tagNames
@@ -430,6 +445,8 @@ class StatisticsRepository(private val db: AppDatabase) {
         val expensesById: Map<String, dev.keslorod.quickexpense.data.entities.Expense>,
         val splitNodes: List<dev.keslorod.quickexpense.data.entities.SplitNode>,
         val nodeTags: Map<String, List<dev.keslorod.quickexpense.data.entities.Tag>>,
+        /** Keyed by expenseId, not splitNodeId — tags on the whole expense (e.g. "Has receipt"). */
+        val expenseTags: Map<String, List<dev.keslorod.quickexpense.data.entities.Tag>>,
         val categoryNames: Map<String, String>,
         val merchantNames: Map<String, String>,
         val tagNames: Map<String, String>

@@ -11,12 +11,14 @@ fun ManageSourcesScreen(
     app: App,
     onBack: () -> Unit,
     mode: ListScreenMode = ListScreenMode.MANAGE,
+    initialQuery: String = "",
     onSelectSource: ((Source) -> Unit)? = null
 ) {
     ManageListScreen<Source>(
         title = stringResource(R.string.sources),
         onBack = onBack,
         mode = mode,
+        initialQuery = initialQuery,
         onSelect = onSelectSource,
         getName = { it.name },
         isFavorite = { it.isFavorite },

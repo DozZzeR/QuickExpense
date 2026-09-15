@@ -11,12 +11,14 @@ fun ManageCategoriesScreen(
     app: App,
     onBack: () -> Unit,
     mode: ListScreenMode = ListScreenMode.MANAGE,
+    initialQuery: String = "",
     onSelectCategory: ((Category) -> Unit)? = null
 ) {
     ManageListScreen<Category>(
         title = stringResource(R.string.categories),
         onBack = onBack,
         mode = mode,
+        initialQuery = initialQuery,
         onSelect = onSelectCategory,
         getName = { it.name },
         isFavorite = { it.isFavorite },

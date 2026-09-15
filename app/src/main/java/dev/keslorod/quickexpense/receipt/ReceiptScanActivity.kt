@@ -306,7 +306,10 @@ private fun ReceiptScanScreen(
 }
 
 private fun createReceiptPageFile(context: android.content.Context): File {
-    val dir = File(context.cacheDir, "receipts").apply { mkdirs() }
+    // filesDir, not cacheDir: receipts back warranty claims, so the OS clearing the cache
+    // under storage pressure (which it can do at any time, silently) must not lose them.
+    // Only removed on uninstall/"clear data" now, same as the rest of the app's data.
+    val dir = File(context.filesDir, "receipts").apply { mkdirs() }
     val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(System.currentTimeMillis())
     return File(dir, "receipt_page_$stamp.jpg")
 }

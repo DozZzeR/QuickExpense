@@ -18,7 +18,8 @@ data class ExpenseItemUi(
     val id: String,
     val title: String,      // "Еда" и т.п.
     val subtitle: String,   // "Источник: Карта • 2025-01-01 12:34"
-    val amount: Long
+    val amount: Long,
+    val hasReceipt: Boolean = false
 )
 
 data class MainUiState(
@@ -67,7 +68,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                             append(" • ")
                             append(formatTs(e.createdAt))
                         },
-                        amount = e.amount
+                        amount = e.amount,
+                        hasReceipt = !e.photoPaths.isNullOrBlank()
                     )
                 }
 

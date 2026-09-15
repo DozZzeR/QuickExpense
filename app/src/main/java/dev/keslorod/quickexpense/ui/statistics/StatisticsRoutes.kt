@@ -12,4 +12,5 @@ object StatisticsRoutes {
     const val SEARCH = "statistics/search"
     const val SEARCH_RESULTS = "statistics/search/results"
     const val TRANSACTION_DETAILS = "statistics/transactions/{expenseId}"
+    const val RECEIPTS = "statistics/receipts"
 }

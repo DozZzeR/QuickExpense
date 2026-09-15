@@ -11,12 +11,14 @@ fun ManageMerchantsScreen(
     app: App,
     onBack: () -> Unit,
     mode: ListScreenMode = ListScreenMode.MANAGE,
+    initialQuery: String = "",
     onSelectMerchant: ((Merchant) -> Unit)? = null
 ) {
     ManageListScreen<Merchant>(
         title = stringResource(R.string.merchants),
         onBack = onBack,
         mode = mode,
+        initialQuery = initialQuery,
         onSelect = onSelectMerchant,
         getName = { it.name },
         isFavorite = { it.isFavorite },

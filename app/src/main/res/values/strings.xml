@@ -26,10 +26,10 @@
     <string name="today">Today</string>
     <string name="calendar">Calendar</string>
     <string name="selected_date_fmt">Date: %s</string>
-    <string name="to_where">To / Where</string>
+    <string name="to_where">Recipient</string>
     <string name="choose_source">Choose source</string>
-    <string name="choose_or_add">Choose or add</string>
-    <string name="optional">Optional</string>
+    <string name="choose_or_add">…</string>
+    <string name="optional">…</string>
     <string name="quick_choice_to_where">Quick choice: To / Where</string>
     <string name="templates_expense">Templates: Expense</string>
     <string name="all_dots">All…</string>
@@ -42,6 +42,16 @@
     <string name="remaining_label">Remaining: %s</string>
     <string name="add_row">+ Add row</string>
     <string name="done">Done</string>
+    <string name="voice_add">Voice</string>
+    <string name="voice_help">How this works</string>
+    <string name="voice_help_title">Voice input</string>
+    <string name="voice_help_message">Say the amount and, if you like, the merchant or category — e.g. \"two fifty coffee Lidl\". The number is recognized automatically; the remaining words are matched against your categories and merchants.</string>
+    <string name="voice_not_available">No speech recognition app is available on this device</string>
+    <string name="voice_understood_title">Looks like that was understood correctly</string>
+    <string name="voice_autosave_countdown_fmt">Saving in %d s…</string>
+    <string name="voice_save_now">Save now</string>
+    <string name="voice_unmatched_word_fmt">Not recognized: \"%s\"</string>
+    <string name="ignore">Ignore</string>
     <string name="select_source">Select source</string>
     <string name="select_category">Select category</string>
     <string name="select_merchant">Select merchant</string>
@@ -63,6 +73,11 @@
     <string name="scan_receipt_pages">Receipt pages: %d</string>
     <string name="open_receipt_gallery">Open receipt gallery</string>
     <string name="receipt_gallery_title">Receipt pages</string>
+    <string name="receipts">Receipts</string>
+    <string name="save_to_gallery">Save to gallery</string>
+    <string name="receipt_exported">Saved to gallery</string>
+    <string name="receipt_export_failed">Couldn\'t save</string>
+    <string name="no_receipts">No expenses with receipts yet</string>
     <string name="close">Close</string>
     <string name="capture">Capture</string>
 
@@ -115,6 +130,7 @@
     <string name="default_category_home">Home</string>
     <string name="default_category_car">Car</string>
     <string name="default_category_unsorted">Unsorted</string>
+    <string name="default_tag_has_receipt">Has receipt</string>
 
     <!-- Main Screen -->
     <string name="menu">Menu</string>

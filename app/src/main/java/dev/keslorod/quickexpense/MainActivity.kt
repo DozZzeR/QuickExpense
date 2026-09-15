@@ -54,7 +54,7 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
         composable("main") {
             MainScreen(
                 onOpenSettings = { nav.navigate("settings") },
-                onOpenSplit = { expenseId -> nav.navigate("split_editor/$expenseId") },
+                onOpenTransactionDetails = { expenseId -> nav.navigate("statistics/transactions/$expenseId") },
                 onOpenStatistics = { nav.navigate("statistics") }
             )
         }
@@ -216,6 +216,13 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
                     onBack = { nav.popBackStack() },
                     onEditTransaction = { /* TODO */ },
                     onEditSplit = { nav.navigate("split_editor/$it") }
+                )
+            }
+            composable(StatisticsRoutes.RECEIPTS) {
+                dev.keslorod.quickexpense.ui.statistics.ReceiptsListScreen(
+                    app = app,
+                    onBack = { nav.popBackStack() },
+                    onOpenExpense = { nav.navigate("statistics/transactions/$it") }
                 )
             }
         }

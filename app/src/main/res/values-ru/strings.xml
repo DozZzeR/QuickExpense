@@ -25,10 +25,10 @@
     <string name="today">Сегодня</string>
     <string name="calendar">Календарь</string>
     <string name="selected_date_fmt">Дата: %s</string>
-    <string name="to_where">Куда / получатель</string>
+    <string name="to_where">Получатель</string>
     <string name="choose_source">Выбрать источник</string>
-    <string name="choose_or_add">Выбрать или добавить</string>
-    <string name="optional">Необязательно</string>
+    <string name="choose_or_add">…</string>
+    <string name="optional">…</string>
     <string name="quick_choice_to_where">Быстрый выбор получателя</string>
     <string name="templates_expense">Шаблоны: расходы</string>
     <string name="all_dots">Все…</string>
@@ -41,6 +41,16 @@
     <string name="remaining_label">Осталось: %s</string>
     <string name="add_row">+ Добавить строку</string>
     <string name="done">Готово</string>
+    <string name="voice_add">Голосом</string>
+    <string name="voice_help">Как это работает</string>
+    <string name="voice_help_title">Голосовой ввод</string>
+    <string name="voice_help_message">Скажите сумму и, если хотите, магазин или категорию — например: «двести пятьдесят кофе Лидл». Число распознаётся автоматически, остальные слова сверяются с вашими категориями и магазинами.</string>
+    <string name="voice_not_available">На этом устройстве нет приложения для распознавания речи</string>
+    <string name="voice_understood_title">Похоже, распознано верно</string>
+    <string name="voice_autosave_countdown_fmt">Сохраняю через %d с…</string>
+    <string name="voice_save_now">Сохранить сейчас</string>
+    <string name="voice_unmatched_word_fmt">Не распознано: «%s»</string>
+    <string name="ignore">Игнорировать</string>
     <string name="merchant">Получатель</string>
     <string name="tag">Метка</string>
     <string name="select_source">Выбрать источник</string>
@@ -63,6 +73,11 @@
     <string name="capture">Снять</string>
     <string name="open_receipt_gallery">Открыть галерею чека</string>
     <string name="receipt_gallery_title">Страницы чека</string>
+    <string name="receipts">Чеки</string>
+    <string name="save_to_gallery">Сохранить в галерею</string>
+    <string name="receipt_exported">Сохранено в галерею</string>
+    <string name="receipt_export_failed">Не удалось сохранить</string>
+    <string name="no_receipts">Трат с чеками пока нет</string>
     <string name="close">Закрыть</string>
 
     <!-- Manage List Screen -->
@@ -114,6 +129,7 @@
     <string name="default_category_home">Дом</string>
     <string name="default_category_car">Машина</string>
     <string name="default_category_unsorted">Разное</string>
+    <string name="default_tag_has_receipt">Есть чек</string>
 
     <!-- Main Screen -->
     <string name="menu">Меню</string>

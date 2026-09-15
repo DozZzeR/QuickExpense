@@ -26,10 +26,10 @@
     <string name="today">Данас</string>
     <string name="calendar">Календар</string>
     <string name="selected_date_fmt">Датум: %s</string>
-    <string name="to_where">Коме / прималац</string>
+    <string name="to_where">Прималац</string>
     <string name="choose_source">Изабери извор</string>
-    <string name="choose_or_add">Изабери или додај</string>
-    <string name="optional">Опционо</string>
+    <string name="choose_or_add">…</string>
+    <string name="optional">…</string>
     <string name="quick_choice_to_where">Брзи избор примаоца</string>
     <string name="templates_expense">Шаблони: трошак</string>
     <string name="all_dots">Све…</string>
@@ -42,6 +42,16 @@
     <string name="remaining_label">Преостало: %s</string>
     <string name="add_row">+ Додај ред</string>
     <string name="done">Готово</string>
+    <string name="voice_add">Гласом</string>
+    <string name="voice_help">Како ово ради</string>
+    <string name="voice_help_title">Гласовни унос</string>
+    <string name="voice_help_message">Изговорите износ и, ако желите, продавницу или категорију — на пример: „двеста педесет кафа Лидл". Број се препознаје аутоматски, остале речи се упоређују са вашим категоријама и продавницама.</string>
+    <string name="voice_not_available">На овом уређају нема апликације за препознавање говора</string>
+    <string name="voice_understood_title">Изгледа да је исправно препознато</string>
+    <string name="voice_autosave_countdown_fmt">Чувам за %d с…</string>
+    <string name="voice_save_now">Сачувај сада</string>
+    <string name="voice_unmatched_word_fmt">Није препознато: „%s"</string>
+    <string name="ignore">Игнориши</string>
     <string name="merchant">Прималац</string>
     <string name="tag">Ознака</string>
     <string name="select_source">Изабери извор</string>
@@ -64,6 +74,11 @@
     <string name="capture">Сними</string>
     <string name="open_receipt_gallery">Отвори галерију рачуна</string>
     <string name="receipt_gallery_title">Странице рачуна</string>
+    <string name="receipts">Рачуни</string>
+    <string name="save_to_gallery">Сачувај у галерију</string>
+    <string name="receipt_exported">Сачувано у галерију</string>
+    <string name="receipt_export_failed">Чување није успело</string>
+    <string name="no_receipts">Још нема трошкова са рачунима</string>
     <string name="close">Затвори</string>
 
     <!-- Manage List Screen -->
@@ -115,6 +130,7 @@
     <string name="default_category_home">Кућа</string>
     <string name="default_category_car">Ауто</string>
     <string name="default_category_unsorted">Остало</string>
+    <string name="default_tag_has_receipt">Има рачун</string>
 
     <!-- Main Screen -->
     <string name="menu">Мени</string>

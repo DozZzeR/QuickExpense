@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.*
@@ -38,7 +39,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainScreen(
     onOpenSettings: () -> Unit,
-    onOpenSplit: (expenseId: String) -> Unit,
+    // Was "onOpenSplit" and jumped straight to the split editor, skipping the details screen
+    // entirely — meaning receipt viewing/export (which lives in TransactionDetailsScreen,
+    // reachable from the split editor via its own "Edit split" button) was never reachable
+    // from this list. Renamed to match what it now actually opens.
+    onOpenTransactionDetails: (expenseId: String) -> Unit,
     onOpenStatistics: () -> Unit
 ) {
     val vm: MainViewModel = viewModel()
@@ -160,7 +165,7 @@ fun MainScreen(
             } else {
                 LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
                     items(items) { item ->
-                        ExpenseRow(item, state.currency, onClick = { onOpenSplit(item.id) })
+                        ExpenseRow(item, state.currency, onClick = { onOpenTransactionDetails(item.id) })
                     }
                 }
             }
@@ -178,7 +183,18 @@ private fun ExpenseRow(item: ExpenseItemUi, currency: String, onClick: () -> Uni
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(Modifier.weight(1f)) {
-            Text(item.title, style = MaterialTheme.typography.titleMedium, maxLines = 1)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(item.title, style = MaterialTheme.typography.titleMedium, maxLines = 1)
+                if (item.hasReceipt) {
+                    Spacer(Modifier.width(6.dp))
+                    Icon(
+                        Icons.Default.Receipt,
+                        contentDescription = stringResource(R.string.receipts),
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             Text(item.subtitle, style = MaterialTheme.typography.bodySmall, maxLines = 1)
         }
         // сумма справа: одна строка, без переносов
