@@ -23,12 +23,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import dev.keslorod.quickexpense.App
 import dev.keslorod.quickexpense.R
@@ -45,6 +47,7 @@ import dev.keslorod.quickexpense.voice.rememberVoiceRecognizerLauncher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -67,15 +70,29 @@ fun QuickAddScreen(
     allMerchantOptions: List<Option> = emptyList(),
     allSourceOptions: List<Option> = emptyList(),
     languageCode: String = "",
+    // Non-null when editing an already-saved expense rather than creating a new one. Splitting
+    // then goes through the real, persisted split editor (onOpenSplitEditor) instead of this
+    // screen's own in-memory draft — an existing expense's splits already live in the DB, so
+    // there's nothing to hold as an unsaved draft the way a new expense's splits are.
+    editingExpenseId: String? = null,
+    initialAmountCents: Long? = null,
+    initialSource: Option? = null,
+    initialMerchant: Option? = null,
+    initialCategory: Option? = null,
+    initialDateMillis: Long? = null,
+    initialReceiptPaths: List<String> = emptyList(),
+    onOpenSplitEditor: (expenseId: String, currentAmountCents: Long) -> Unit = { _, _ -> },
     onConfirm: (cents: Long, sourceId: String, merchantId: String?, categoryId: String?, date: Long, receiptPaths: List<String>, splitNodes: List<SplitNode>, nodeTags: Map<String, List<Tag>>) -> Unit,
     onCancel: () -> Unit
 ) {
-    var amountText by remember { mutableStateOf("") }
-    var selectedDate by remember { mutableStateOf(Calendar.getInstance()) }
+    var amountText by remember { mutableStateOf(initialAmountCents?.let { formatCents(it, '.') } ?: "") }
+    var selectedDate by remember {
+        mutableStateOf(initialDateMillis?.let { Calendar.getInstance().apply { timeInMillis = it } } ?: Calendar.getInstance())
+    }
     var showDatePicker by remember { mutableStateOf(false) }
-    var source by remember { mutableStateOf<Option?>(sourceOptions.firstOrNull()) }
-    var merchant by remember { mutableStateOf<Option?>(null) }
-    var category by remember { mutableStateOf<Option?>(null) }
+    var source by remember { mutableStateOf(initialSource ?: sourceOptions.firstOrNull()) }
+    var merchant by remember { mutableStateOf(initialMerchant) }
+    var category by remember { mutableStateOf(initialCategory) }
     
     var activePanel by remember { mutableStateOf<QuickAddType?>(null) }
     var showManageType by remember { mutableStateOf<QuickAddType?>(null) }
@@ -116,8 +133,29 @@ fun QuickAddScreen(
     }
     val hideMainCategoryPicker = draftSplitNodes.isNotEmpty() && splitCategoryDiverged
 
-    // Receipts state
-    var lastScan by remember { mutableStateOf<ReceiptScanResult?>(null) }
+    // Receipts state. When editing, hydrates from the expense's already-persisted photo(s) —
+    // same shape as a fresh scan result, so the "scan receipt" button's existing "already have
+    // one" state (its label, the gallery link) picks this up with no extra branching.
+    val receiptContext = LocalContext.current
+    var lastScan by remember {
+        mutableStateOf(
+            initialReceiptPaths
+                .map { File(it) }
+                .filter { it.exists() }
+                .takeIf { it.isNotEmpty() }
+                ?.let { files ->
+                    ReceiptScanResult(
+                        uris = files.map { FileProvider.getUriForFile(receiptContext, "${receiptContext.packageName}.fileprovider", it) },
+                        files = files,
+                        displayName = files.first().name
+                    )
+                }
+        )
+    }
+    // The paths this screen started with — cancelling must only ever delete files scanned
+    // fresh this session (see the Cancel button below); an already-persisted receipt from
+    // before this edit began must survive a cancelled edit untouched.
+    val initialReceiptFilePaths = remember { initialReceiptPaths.toSet() }
     var showGallery by remember { mutableStateOf(false) }
     val scanner = LocalReceiptScanner.current
     val scannerHandle = scanner.rememberLauncher { result ->
@@ -296,7 +334,12 @@ fun QuickAddScreen(
             run {
                 val cents = toCents(amountText)
                 OutlinedButton(
-                    onClick = { showSplitEditor = true },
+                    onClick = {
+                        // Editing: an existing expense's splits already live in the DB — go
+                        // straight to the real split editor instead of this screen's own
+                        // in-memory draft, which only makes sense for a not-yet-saved expense.
+                        if (editingExpenseId != null) onOpenSplitEditor(editingExpenseId, cents) else showSplitEditor = true
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = cents > 0,
                     shape = RoundedCornerShape(16.dp),
@@ -305,7 +348,7 @@ fun QuickAddScreen(
                     Icon(Icons.Default.CallSplit, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        if (draftSplitNodes.isEmpty()) stringResource(R.string.split_action)
+                        if (editingExpenseId != null || draftSplitNodes.isEmpty()) stringResource(R.string.split_action)
                         else stringResource(R.string.split_action_count_fmt, draftSplitNodes.size)
                     )
                 }
@@ -416,11 +459,25 @@ fun QuickAddScreen(
         )
     }
 
-    SaveDateButtons(
-        enabled = isFormValid,
-        onSave = { daysOffset -> performSave(daysOffset) },
-        onOpenCalendar = { showDatePicker = true }
-    )
+    if (editingExpenseId != null) {
+        // "Yesterday"/"Today" are relative-day shortcuts for logging a fresh expense — while
+        // editing, selectedDate is already the expense's real date (changeable via the
+        // calendar chip above), so a plain Save is the only button that makes sense here.
+        Button(
+            onClick = { performSave(0) },
+            enabled = isFormValid,
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp)
+        ) {
+            Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
+        }
+    } else {
+        SaveDateButtons(
+            enabled = isFormValid,
+            onSave = { daysOffset -> performSave(daysOffset) },
+            onOpenCalendar = { showDatePicker = true }
+        )
+    }
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
@@ -456,8 +513,10 @@ fun QuickAddScreen(
             Spacer(Modifier.height(16.dp))
             TextButton(onClick = {
                 // A scanned-but-unsaved receipt shouldn't linger in persistent storage forever
-                // just because this screen was cancelled — nothing will ever reference it.
-                lastScan?.files?.forEach { it.delete() }
+                // just because this screen was cancelled — nothing will ever reference it. Only
+                // ever deletes files scanned fresh this session: a pre-existing receipt loaded
+                // for editing (in initialReceiptFilePaths) must survive a cancelled edit.
+                lastScan?.files?.forEach { if (it.absolutePath !in initialReceiptFilePaths) it.delete() }
                 onCancel()
             }) {
                 Text(stringResource(R.string.cancel))

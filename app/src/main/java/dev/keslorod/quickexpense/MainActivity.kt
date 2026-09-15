@@ -211,11 +211,16 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
             }
             composable(StatisticsRoutes.TRANSACTION_DETAILS) { backStackEntry ->
                 val expenseId = backStackEntry.arguments?.getString("expenseId") ?: return@composable
+                val ctx = androidx.compose.ui.platform.LocalContext.current
                 dev.keslorod.quickexpense.ui.statistics.TransactionDetailsScreen(
                     expenseId = expenseId,
                     onBack = { nav.popBackStack() },
-                    onEditTransaction = { /* TODO */ },
-                    onEditSplit = { nav.navigate("split_editor/$it") }
+                    onEditTransaction = { id ->
+                        ctx.startActivity(
+                            android.content.Intent(ctx, dev.keslorod.quickexpense.ui.quickinput.QuickInputActivity::class.java)
+                                .putExtra(dev.keslorod.quickexpense.ui.quickinput.QuickInputActivity.EXTRA_EDIT_EXPENSE_ID, id)
+                        )
+                    }
                 )
             }
             composable(StatisticsRoutes.RECEIPTS) {

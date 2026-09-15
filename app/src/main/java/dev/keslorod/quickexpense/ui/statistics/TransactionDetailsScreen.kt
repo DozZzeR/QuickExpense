@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CallSplit
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
@@ -26,9 +25,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -51,8 +52,7 @@ import java.util.*
 fun TransactionDetailsScreen(
     expenseId: String,
     onBack: () -> Unit,
-    onEditTransaction: (String) -> Unit,
-    onEditSplit: (String) -> Unit
+    onEditTransaction: (String) -> Unit
 ) {
     val viewModel: TransactionDetailsViewModel = viewModel(factory = TransactionDetailsViewModelFactory(
         application = androidx.compose.ui.platform.LocalContext.current.applicationContext as android.app.Application,
@@ -61,6 +61,20 @@ fun TransactionDetailsScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     val currency by viewModel.currency.collectAsState()
+
+    // Editing (via onEditTransaction) is a separate Activity, not a nav destination on this
+    // screen's own back stack — reload on resume so returning from a save shows the change,
+    // same pattern as MainScreen's own history list.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                viewModel.loadDetails()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     Scaffold(
         topBar = {
@@ -146,18 +160,8 @@ fun TransactionDetailsScreen(
                             SplitNodeItem(rootNode, data.splitNodes, data.nodeTags, currency)
                         }
                     }
-
-                    Spacer(Modifier.height(24.dp))
-                    
-                    OutlinedButton(
-                        onClick = { onEditSplit(expenseId) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Icon(Icons.Default.CallSplit, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.edit_split))
-                    }
+                    // Splitting is reached through Edit now (its own "Разбить" button, same as
+                    // creating a new expense) rather than a direct shortcut from here.
                 }
             }
         }
@@ -242,12 +246,14 @@ private fun ZoomableReceiptDialog(path: String, onDismiss: () -> Unit) {
     }
     var scale by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
+    var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Box(
             Modifier
                 .fillMaxSize()
                 .background(Color.Black)
+                .onSizeChanged { containerSize = it }
         ) {
             AsyncImage(
                 model = uri,
@@ -263,8 +269,18 @@ private fun ZoomableReceiptDialog(path: String, onDismiss: () -> Unit) {
                     )
                     .pointerInput(Unit) {
                         detectTransformGestures { _, pan, zoom, _ ->
-                            scale = (scale * zoom).coerceIn(1f, 6f)
-                            offset += pan
+                            val newScale = (scale * zoom).coerceIn(1f, 6f)
+                            // Zoomed-out (or back to 1x) has nothing to pan to — clamp panning
+                            // room to how far the scaled image actually extends past the
+                            // viewport, otherwise it could be dragged arbitrarily far off-screen
+                            // with no way back short of closing and reopening this dialog.
+                            val maxX = (containerSize.width * (newScale - 1) / 2f).coerceAtLeast(0f)
+                            val maxY = (containerSize.height * (newScale - 1) / 2f).coerceAtLeast(0f)
+                            scale = newScale
+                            offset = Offset(
+                                (offset.x + pan.x).coerceIn(-maxX, maxX),
+                                (offset.y + pan.y).coerceIn(-maxY, maxY)
+                            )
                         }
                     }
             )
@@ -308,7 +324,9 @@ private fun SplitNodeItem(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(node.label ?: stringResource(R.string.split_unallocated), style = MaterialTheme.typography.bodyLarge)
+                // Same reasoning as SplitEditorScreen's SplitNodeItem: a null label is a real
+                // (if unnamed) item, not the "Unallocated" bucket, which is a distinct concept.
+                Text(node.label ?: stringResource(R.string.split_default_name), style = MaterialTheme.typography.bodyLarge)
                 val tags = nodeTags[node.id].orEmpty()
                 if (tags.isNotEmpty()) {
                     Text(
