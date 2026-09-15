@@ -4,6 +4,15 @@
 
     <uses-permission android:name="android.permission.CAMERA" />
 
+    <!-- Package-visibility declaration (required on API 30+) so the implicit
+         RecognizerIntent.ACTION_RECOGNIZE_SPEECH launched from QuickAddScreen can actually
+         find the system speech-recognition app instead of silently failing to resolve it. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
+        </intent>
+    </queries>
+
     <application
         android:name=".App"
         android:allowBackup="false"

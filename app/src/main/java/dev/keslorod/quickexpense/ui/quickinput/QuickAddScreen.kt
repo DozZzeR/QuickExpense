@@ -36,7 +36,12 @@ import dev.keslorod.quickexpense.receipt.LocalReceiptScanner
 import dev.keslorod.quickexpense.receipt.ReceiptScanResult
 import dev.keslorod.quickexpense.data.entities.SplitNode
 import dev.keslorod.quickexpense.data.entities.Tag
+import dev.keslorod.quickexpense.domain.formatCents
 import dev.keslorod.quickexpense.ui.split.SplitEditorScreen
+import dev.keslorod.quickexpense.voice.VoiceExpenseParser
+import dev.keslorod.quickexpense.voice.VoiceParseConfidence
+import dev.keslorod.quickexpense.voice.languageCodeToRecognizerTag
+import dev.keslorod.quickexpense.voice.rememberVoiceRecognizerLauncher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,8 +51,9 @@ import java.util.Locale
 
 enum class OperationMode { EXPENSE, INCOME, TRANSFER }
 enum class QuickAddType { SOURCE, MERCHANT, CATEGORY, TEMPLATES }
+enum class VoiceEntityRole { MERCHANT, CATEGORY, SOURCE }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun QuickAddScreen(
     app: App,
@@ -55,10 +61,15 @@ fun QuickAddScreen(
     sourceOptions: List<Option>,
     categoryOptions: List<Option>,
     merchantOptions: List<Option>,
+    // Full (not favorites-only) lists, so voice input can match a category/merchant it hasn't
+    // been used often enough to be pinned as a favorite.
+    allCategoryOptions: List<Option> = emptyList(),
+    allMerchantOptions: List<Option> = emptyList(),
+    allSourceOptions: List<Option> = emptyList(),
+    languageCode: String = "",
     onConfirm: (cents: Long, sourceId: String, merchantId: String?, categoryId: String?, date: Long, receiptPaths: List<String>, splitNodes: List<SplitNode>, nodeTags: Map<String, List<Tag>>) -> Unit,
     onCancel: () -> Unit
 ) {
-    var mode by remember { mutableStateOf(OperationMode.EXPENSE) }
     var amountText by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf(Calendar.getInstance()) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -109,7 +120,48 @@ fun QuickAddScreen(
     var lastScan by remember { mutableStateOf<ReceiptScanResult?>(null) }
     var showGallery by remember { mutableStateOf(false) }
     val scanner = LocalReceiptScanner.current
-    val scannerHandle = scanner.rememberLauncher { lastScan = it }
+    val scannerHandle = scanner.rememberLauncher { result ->
+        if (dev.keslorod.quickexpense.BuildConfig.DEBUG) {
+            android.util.Log.d("ReceiptDebug", "scanner returned: $result, files=${result?.files?.map { it.absolutePath }}")
+        }
+        lastScan = result
+    }
+
+    // Voice input state. autoSaveSecondsLeft != null means the parse was unambiguous enough
+    // (see VoiceParseConfidence.HIGH) to offer saving automatically — counts down to 0, and
+    // dismissing it (Cancel, tapping outside, or back) just stops the countdown, leaving
+    // whatever voice already filled in for manual review, same as a PARTIAL/NONE parse.
+    var showVoiceHelp by remember { mutableStateOf(false) }
+    var autoSaveSecondsLeft by remember { mutableStateOf<Int?>(null) }
+    // Phrases voice heard but couldn't match to anything — offered below as "use as merchant/
+    // category/source?" chips instead of just being silently dropped. Resolving one (or
+    // dismissing it) removes it from this list.
+    var voiceLeftoverPhrases by remember { mutableStateOf<List<String>>(emptyList()) }
+    // Non-null while resolving one such phrase: which phrase, and which field it's meant to
+    // fill. Opens the existing manage screen for that field in SELECT mode with the phrase
+    // pre-filled as the search text — its own "matches below, or add new" flow already covers
+    // exactly what's needed here, existing-record typos included, not just brand-new names.
+    var resolvingVoicePhrase by remember { mutableStateOf<Pair<String, VoiceEntityRole>?>(null) }
+    val voiceRecognizer = rememberVoiceRecognizerLauncher(languageTag = languageCodeToRecognizerTag(languageCode)) { transcripts ->
+        val result = VoiceExpenseParser.parseBest(transcripts, allCategoryOptions, allMerchantOptions, allSourceOptions)
+            ?: return@rememberVoiceRecognizerLauncher
+        if (dev.keslorod.quickexpense.BuildConfig.DEBUG) {
+            android.util.Log.d(
+                "VoiceInput",
+                "alternatives=$transcripts -> best: amountCents=${result.amountCents} category=${result.category} " +
+                    "merchant=${result.merchant} source=${result.source} confidence=${result.confidence} " +
+                    "leftover=${result.leftoverPhrases}"
+            )
+        }
+        result.amountCents?.takeIf { it > 0 }?.let { cents -> amountText = formatCents(cents, '.') }
+        result.category?.let { category = it }
+        result.merchant?.let { merchant = it }
+        result.source?.let { source = it }
+        voiceLeftoverPhrases = result.leftoverPhrases
+        if (result.confidence == VoiceParseConfidence.HIGH) {
+            autoSaveSecondsLeft = 10
+        }
+    }
 
     fun toCents(txt: String): Long {
         if (txt.isBlank()) return 0
@@ -127,12 +179,40 @@ fun QuickAddScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top section: Operation mode selector
-            OperationModeSelector(
-                selectedMode = mode,
-                onModeChange = { mode = it },
-                onOpenTemplates = { activePanel = QuickAddType.TEMPLATES }
-            )
+            // Income/Transfer and Templates are hidden for now (see OperationModeSelector,
+            // unused below): there's no source-balance tracking yet to make either mean
+            // anything, so this screen just always adds a plain expense.
+            FlowRow(verticalArrangement = Arrangement.spacedBy(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                // Voice and receipt scan are grouped together as the two alternative-input
+                // entry points — both fill the form via recognition instead of manual taps.
+                OutlinedButton(
+                    onClick = { voiceRecognizer.start() },
+                    shape = RoundedCornerShape(16.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Icon(Icons.Default.Mic, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.voice_add))
+                }
+                OutlinedButton(
+                    onClick = { scannerHandle.start() },
+                    shape = RoundedCornerShape(16.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Icon(Icons.Default.Receipt, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (lastScan == null) stringResource(R.string.scan_receipt) else stringResource(R.string.scan_receipt_pages, lastScan!!.files.size))
+                }
+                IconButton(onClick = { showVoiceHelp = true }) {
+                    Icon(Icons.Default.HelpOutline, contentDescription = stringResource(R.string.voice_help))
+                }
+            }
+
+            if (lastScan != null) {
+                TextButton(onClick = { showGallery = true }) {
+                    Text(stringResource(R.string.open_receipt_gallery))
+                }
+            }
 
             Spacer(Modifier.height(32.dp))
 
@@ -162,6 +242,41 @@ fun QuickAddScreen(
                 }
             }
 
+            // Phrases voice heard but couldn't match — a tap opens that field's own picker,
+            // pre-filled with the phrase, to either pick an existing near-match or add it as new.
+            if (voiceLeftoverPhrases.isNotEmpty()) {
+                Spacer(Modifier.height(16.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    voiceLeftoverPhrases.forEach { phrase ->
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                stringResource(R.string.voice_unmatched_word_fmt, phrase),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                AssistChip(
+                                    onClick = { resolvingVoicePhrase = phrase to VoiceEntityRole.MERCHANT },
+                                    label = { Text(stringResource(R.string.to_where)) }
+                                )
+                                AssistChip(
+                                    onClick = { resolvingVoicePhrase = phrase to VoiceEntityRole.CATEGORY },
+                                    label = { Text(stringResource(R.string.category)) }
+                                )
+                                AssistChip(
+                                    onClick = { resolvingVoicePhrase = phrase to VoiceEntityRole.SOURCE },
+                                    label = { Text(stringResource(R.string.source)) }
+                                )
+                                AssistChip(
+                                    onClick = { voiceLeftoverPhrases = voiceLeftoverPhrases - phrase },
+                                    label = { Text(stringResource(R.string.ignore)) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             Spacer(Modifier.height(24.dp))
 
             // Custom numpad
@@ -177,15 +292,12 @@ fun QuickAddScreen(
 
             Spacer(Modifier.height(24.dp))
             
-            // Split and Scan buttons
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            // Split button (Scan moved up next to Voice — see top of screen)
+            run {
                 val cents = toCents(amountText)
                 OutlinedButton(
                     onClick = { showSplitEditor = true },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                     enabled = cents > 0,
                     shape = RoundedCornerShape(16.dp),
                     border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
@@ -196,23 +308,6 @@ fun QuickAddScreen(
                         if (draftSplitNodes.isEmpty()) stringResource(R.string.split_action)
                         else stringResource(R.string.split_action_count_fmt, draftSplitNodes.size)
                     )
-                }
-
-                OutlinedButton(
-                    onClick = { scannerHandle.start() },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(16.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                ) {
-                    Icon(Icons.Default.Receipt, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(if (lastScan == null) stringResource(R.string.scan_receipt) else stringResource(R.string.scan_receipt_pages, lastScan!!.files.size))
-                }
-            }
-            
-            if (lastScan != null) {
-                TextButton(onClick = { showGallery = true }) {
-                    Text(stringResource(R.string.open_receipt_gallery))
                 }
             }
 
@@ -257,24 +352,73 @@ fun QuickAddScreen(
         Spacer(Modifier.height(8.dp))
     }
 
+    fun performSave(daysOffset: Int) {
+        val cal = (selectedDate.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, daysOffset) }
+        val receiptPaths = lastScan?.files?.map { it.absolutePath }.orEmpty()
+        if (dev.keslorod.quickexpense.BuildConfig.DEBUG) {
+            android.util.Log.d("ReceiptDebug", "performSave: lastScan=$lastScan, receiptPaths=$receiptPaths")
+        }
+        // TODO: handle split saving in onConfirm if needed,
+        // but for now we just pass data back to activity
+        onConfirm(
+            toCents(amountText),
+            source!!.id,
+            merchant?.id,
+            category?.id,
+            cal.timeInMillis,
+            receiptPaths,
+            draftSplitNodes,
+            draftNodeTags
+        )
+    }
+
+    // Ticks the voice auto-save countdown down to 0, then performs the save — same path as
+    // tapping "Today" by hand. Re-runs on every change to autoSaveSecondsLeft (each tick, and
+    // being cancelled/restarted), which is exactly what's wanted here.
+    LaunchedEffect(autoSaveSecondsLeft) {
+        val secondsLeft = autoSaveSecondsLeft ?: return@LaunchedEffect
+        if (secondsLeft > 0) {
+            kotlinx.coroutines.delay(1000)
+            autoSaveSecondsLeft = secondsLeft - 1
+        } else {
+            autoSaveSecondsLeft = null
+            if (isFormValid) performSave(0)
+        }
+    }
+
+    if (autoSaveSecondsLeft != null) {
+        AlertDialog(
+            onDismissRequest = { autoSaveSecondsLeft = null },
+            title = { Text(stringResource(R.string.voice_understood_title)) },
+            text = { Text(stringResource(R.string.voice_autosave_countdown_fmt, autoSaveSecondsLeft ?: 0)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    autoSaveSecondsLeft = null
+                    performSave(0)
+                }) { Text(stringResource(R.string.voice_save_now)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { autoSaveSecondsLeft = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
+    if (showVoiceHelp) {
+        AlertDialog(
+            onDismissRequest = { showVoiceHelp = false },
+            title = { Text(stringResource(R.string.voice_help_title)) },
+            text = { Text(stringResource(R.string.voice_help_message)) },
+            confirmButton = {
+                TextButton(onClick = { showVoiceHelp = false }) { Text(stringResource(R.string.confirm)) }
+            }
+        )
+    }
+
     SaveDateButtons(
         enabled = isFormValid,
-        onSave = { daysOffset -> 
-            val cal = (selectedDate.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, daysOffset) }
-            // TODO: handle split saving in onConfirm if needed, 
-            // but for now we just pass data back to activity
-            onConfirm(
-                toCents(amountText),
-                source!!.id,
-                merchant?.id,
-                category?.id,
-                cal.timeInMillis,
-                lastScan?.files?.map { it.absolutePath }.orEmpty(),
-                draftSplitNodes,
-                draftNodeTags
-            )
-            // Note: Split nodes saving should be handled in QuickInputActivity
-        },
+        onSave = { daysOffset -> performSave(daysOffset) },
         onOpenCalendar = { showDatePicker = true }
     )
 
@@ -310,7 +454,12 @@ fun QuickAddScreen(
     }
             
             Spacer(Modifier.height(16.dp))
-            TextButton(onClick = onCancel) {
+            TextButton(onClick = {
+                // A scanned-but-unsaved receipt shouldn't linger in persistent storage forever
+                // just because this screen was cancelled — nothing will ever reference it.
+                lastScan?.files?.forEach { it.delete() }
+                onCancel()
+            }) {
                 Text(stringResource(R.string.cancel))
             }
         }
@@ -419,7 +568,94 @@ fun QuickAddScreen(
                 }
             }
         }
-        
+
+        // Resolving one "not recognized" voice phrase: the same manage/select screens as
+        // above, just pre-filled with the phrase so its own "pick a match below, or add new"
+        // flow does the resolving — a typo-tolerant existing record beats minting a near-
+        // duplicate, and a genuinely new name still gets created with one tap either way.
+        if (resolvingVoicePhrase != null) {
+            val (phrase, role) = resolvingVoicePhrase!!
+            val title = when (role) {
+                VoiceEntityRole.MERCHANT -> stringResource(R.string.select_merchant)
+                VoiceEntityRole.CATEGORY -> stringResource(R.string.select_category)
+                VoiceEntityRole.SOURCE -> stringResource(R.string.select_source)
+            }
+            fun dismissResolved() {
+                voiceLeftoverPhrases = voiceLeftoverPhrases - phrase
+                resolvingVoicePhrase = null
+            }
+            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+                when (role) {
+                    VoiceEntityRole.MERCHANT -> {
+                        dev.keslorod.quickexpense.ui.manage.ManageListScreen(
+                            title = title,
+                            onBack = { resolvingVoicePhrase = null },
+                            mode = dev.keslorod.quickexpense.ui.manage.ListScreenMode.SELECT,
+                            initialQuery = phrase,
+                            onSelect = { merchant = Option(it.id, it.name); dismissResolved() },
+                            getName = { it.name },
+                            isFavorite = { it.isFavorite },
+                            itemKey = { it.id },
+                            loadAll = { app.db.merchants().all() },
+                            addNew = { app.db.merchants().insert(dev.keslorod.quickexpense.data.entities.Merchant(name = it, isFavorite = false)) },
+                            toggleFavorite = { app.db.merchants().update(it.copy(isFavorite = !it.isFavorite)) },
+                            rename = { item, newName -> app.db.merchants().update(item.copy(name = newName)) },
+                            deleteIfUnused = { item ->
+                                if (app.db.expenses().countByMerchant(item.id) == 0L) {
+                                    app.db.merchants().delete(item)
+                                    true
+                                } else false
+                            }
+                        )
+                    }
+                    VoiceEntityRole.CATEGORY -> {
+                        dev.keslorod.quickexpense.ui.manage.ManageListScreen(
+                            title = title,
+                            onBack = { resolvingVoicePhrase = null },
+                            mode = dev.keslorod.quickexpense.ui.manage.ListScreenMode.SELECT,
+                            initialQuery = phrase,
+                            onSelect = { category = Option(it.id, it.name); dismissResolved() },
+                            getName = { it.name },
+                            isFavorite = { it.isFavorite },
+                            itemKey = { it.id },
+                            loadAll = { app.db.categories().all() },
+                            addNew = { app.db.categories().insert(dev.keslorod.quickexpense.data.entities.Category(name = it, isFavorite = false)) },
+                            toggleFavorite = { app.db.categories().update(it.copy(isFavorite = !it.isFavorite)) },
+                            rename = { item, newName -> app.db.categories().update(item.copy(name = newName)) },
+                            deleteIfUnused = { item ->
+                                if (app.db.expenses().countByCategory(item.id) == 0L) {
+                                    app.db.categories().delete(item)
+                                    true
+                                } else false
+                            }
+                        )
+                    }
+                    VoiceEntityRole.SOURCE -> {
+                        dev.keslorod.quickexpense.ui.manage.ManageListScreen(
+                            title = title,
+                            onBack = { resolvingVoicePhrase = null },
+                            mode = dev.keslorod.quickexpense.ui.manage.ListScreenMode.SELECT,
+                            initialQuery = phrase,
+                            onSelect = { source = Option(it.id, it.name); dismissResolved() },
+                            getName = { it.name },
+                            isFavorite = { it.isFavorite },
+                            itemKey = { it.id },
+                            loadAll = { app.db.sources().all() },
+                            addNew = { app.db.sources().insert(dev.keslorod.quickexpense.data.entities.Source(name = it, isFavorite = false)) },
+                            toggleFavorite = { app.db.sources().update(it.copy(isFavorite = !it.isFavorite)) },
+                            rename = { item, newName -> app.db.sources().update(item.copy(name = newName)) },
+                            deleteIfUnused = { item ->
+                                if (app.db.expenses().countBySource(item.id) == 0L) {
+                                    app.db.sources().delete(item)
+                                    true
+                                } else false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
         if (showGallery && lastScan != null) {
             // ... (existing dialog)
         }
