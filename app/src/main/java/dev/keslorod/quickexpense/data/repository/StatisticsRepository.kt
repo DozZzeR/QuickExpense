@@ -9,6 +9,16 @@ import java.time.temporal.ChronoUnit
 
 class StatisticsRepository(private val db: AppDatabase) {
 
+    // SQLite caps how many bound parameters one statement can take (historically 999, though
+    // newer builds allow far more) — a `WHERE id IN (:ids)` query built from e.g. every expense
+    // ID under an "All time" filter could exceed it once there are enough of them. Splitting
+    // into chunks keeps every such query safely under that limit regardless of history size.
+    private suspend fun <T, R> chunkedInQuery(ids: List<T>, query: suspend (List<T>) -> List<R>): List<R> {
+        if (ids.isEmpty()) return emptyList()
+        if (ids.size <= 900) return query(ids)
+        return ids.chunked(900).flatMap { query(it) }
+    }
+
     suspend fun getMerchantStats(state: StatisticsDateRangeState): List<StatsBreakdownItem> {
         val currentRange = StatisticsDateUtils.getComparisonRange(state)
         val data = getPeriodData(currentRange.currentStart, currentRange.currentEnd)
@@ -130,10 +140,10 @@ class StatisticsRepository(private val db: AppDatabase) {
             getPeriodData(currentRange.previousStart, currentRange.previousEnd)
         } else null
 
-        val fragments = StatisticsAggregation.buildTagFragments(currentData.splitNodes, currentData.nodeTags)
+        val fragments = StatisticsAggregation.buildTagFragments(currentData.splitNodes, currentData.nodeTags, currentData.expenses, currentData.expenseTags)
             .filter { it.tagId == tagId }
-        val prevFragments = previousData?.let { 
-            StatisticsAggregation.buildTagFragments(it.splitNodes, it.nodeTags).filter { it.tagId == tagId }
+        val prevFragments = previousData?.let {
+            StatisticsAggregation.buildTagFragments(it.splitNodes, it.nodeTags, it.expenses, it.expenseTags).filter { it.tagId == tagId }
         }
 
         val currentAmount = fragments.sumOf { it.amount }
@@ -147,9 +157,12 @@ class StatisticsRepository(private val db: AppDatabase) {
                 val nodesById = currentData.splitNodes.associateBy { it.id }
                 fragments.map { frag ->
                     val expense = currentData.expensesById[frag.expenseId]
+                    // A null splitNodeId means this fragment is a whole-expense tag (see
+                    // buildTagFragments) — there's no split item to name it after.
+                    val nodeLabel = frag.splitNodeId?.let { nodesById[it]?.label }
                     TagResultItem(
                         expenseId = frag.expenseId,
-                        label = nodesById[frag.splitNodeId]?.label ?: "Item",
+                        label = nodeLabel ?: currentData.categoryNames[expense?.categoryId] ?: "Item",
                         amount = frag.amount,
                         date = expense?.createdAt ?: 0L,
                         merchantName = currentData.merchantNames[expense?.merchantId]
@@ -264,24 +277,18 @@ class StatisticsRepository(private val db: AppDatabase) {
         val expenses = db.expenses().expensesInRange(from, to)
         val expenseIds = expenses.map { it.id }
         
-        val allSplitNodes = if (expenseIds.isNotEmpty()) {
-            db.splitNodes().getByExpenseIds(expenseIds)
-        } else emptyList()
+        val allSplitNodes = chunkedInQuery(expenseIds) { db.splitNodes().getByExpenseIds(it) }
 
         val splitNodeIds = allSplitNodes.map { it.id }
-        val nodeTags = if (splitNodeIds.isNotEmpty()) {
-            db.splitNodeTags().getTagsForSplitNodes(splitNodeIds)
-                .groupBy { it.splitNodeId }
-                .mapValues { entry -> entry.value.map { it.tag } }
-        } else emptyMap()
+        val nodeTags = chunkedInQuery(splitNodeIds) { db.splitNodeTags().getTagsForSplitNodes(it) }
+            .groupBy { it.splitNodeId }
+            .mapValues { entry -> entry.value.map { it.tag } }
 
         // Tags on the whole expense (e.g. the built-in "Has receipt" tag) — distinct from
         // nodeTags above, which only cover one split-item within an expense.
-        val expenseTags = if (expenseIds.isNotEmpty()) {
-            db.expenseTags().getTagsForExpenses(expenseIds)
-                .groupBy { it.expenseId }
-                .mapValues { entry -> entry.value.map { it.tag } }
-        } else emptyMap()
+        val expenseTags = chunkedInQuery(expenseIds) { db.expenseTags().getTagsForExpenses(it) }
+            .groupBy { it.expenseId }
+            .mapValues { entry -> entry.value.map { it.tag } }
 
         val categoryNames = db.categories().all().associate { it.id to it.name }
         val merchantNames = db.merchants().all().associate { it.id to it.name }
@@ -422,7 +429,7 @@ class StatisticsRepository(private val db: AppDatabase) {
     }
 
     private fun calculateTagBreakdown(data: PeriodData): List<StatsBreakdownItem> {
-        val fragments = StatisticsAggregation.buildTagFragments(data.splitNodes, data.nodeTags)
+        val fragments = StatisticsAggregation.buildTagFragments(data.splitNodes, data.nodeTags, data.expenses, data.expenseTags)
         val totals = fragments.groupBy { it.tagId }
             .mapValues { entry -> entry.value.sumOf { it.amount } }
         

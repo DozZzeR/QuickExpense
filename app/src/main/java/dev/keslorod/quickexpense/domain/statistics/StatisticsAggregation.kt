@@ -14,7 +14,8 @@ data class CategoryAmountFragment(
 
 data class TagAmountFragment(
     val expenseId: String,
-    val splitNodeId: String,
+    /** Null for a tag on the whole expense (via the expense_tags table) rather than one split item. */
+    val splitNodeId: String?,
     val tagId: String,
     val amount: Long,
 )
@@ -104,7 +105,9 @@ object StatisticsAggregation {
 
     fun buildTagFragments(
         allSplitNodes: List<SplitNode>,
-        nodeTags: Map<String, List<Tag>>
+        nodeTags: Map<String, List<Tag>>,
+        expenses: List<Expense> = emptyList(),
+        expenseTags: Map<String, List<Tag>> = emptyMap()
     ): List<TagAmountFragment> {
         val fragments = mutableListOf<TagAmountFragment>()
         allSplitNodes.forEach { node ->
@@ -116,6 +119,20 @@ object StatisticsAggregation {
                         splitNodeId = node.id,
                         tagId = tag.id,
                         amount = node.amount
+                    )
+                )
+            }
+        }
+        // Tags on the whole expense (e.g. the built-in "Has receipt" tag) — attributed to the
+        // full expense amount, with no single split item to point at.
+        expenses.forEach { expense ->
+            expenseTags[expense.id].orEmpty().forEach { tag ->
+                fragments.add(
+                    TagAmountFragment(
+                        expenseId = expense.id,
+                        splitNodeId = null,
+                        tagId = tag.id,
+                        amount = expense.amount
                     )
                 )
             }

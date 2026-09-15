@@ -128,13 +128,18 @@ object VoiceExpenseParser {
      * guessed at.
      */
     private fun findBestMatch(text: String, candidates: List<Option>): Pair<Option?, Set<String>> {
+        // text already had its punctuation stripped by parse() — do the same to each
+        // candidate's name, otherwise e.g. "Coffee, Please" could never match "coffee please".
         val matches = candidates.filter { candidate ->
-            candidate.label.isNotBlank() && text.contains(candidate.label.lowercase(Locale.getDefault()))
+            candidate.label.isNotBlank() && text.contains(normalizeForMatch(candidate.label))
         }
         val best = matches.singleOrNull() ?: return null to emptySet()
-        val nameWords = best.label.lowercase(Locale.getDefault()).split(Regex("\\s+")).toSet()
+        val nameWords = normalizeForMatch(best.label).split(Regex("\\s+")).toSet()
         return best to nameWords
     }
+
+    private fun normalizeForMatch(text: String): String =
+        punctuationRegex.replace(text.lowercase(Locale.getDefault()), "")
 
     /**
      * Walks [words] in order and joins each run of consecutive words that are neither

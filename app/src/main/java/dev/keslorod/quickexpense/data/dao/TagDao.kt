@@ -19,6 +19,13 @@ interface TagDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(tag: Tag)
 
+    // IGNORE, not REPLACE: REPLACE on a fixed-id row (e.g. the built-in "has receipt" tag)
+    // is a DELETE+INSERT under the hood, and expense_tags' FK to tags is ON DELETE CASCADE —
+    // so re-"seeding" an already-existing tag this way would silently wipe every expense's
+    // existing link to it. Use this for any tag keyed by a well-known fixed id.
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertIfAbsent(tag: Tag)
+
     @Update suspend fun update(tag: Tag)
 
     @Delete suspend fun delete(tag: Tag)

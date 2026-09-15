@@ -98,8 +98,6 @@ fun SplitEditorScreen(
     val requestExit: () -> Unit = {
         if (hasUnsavedChanges) showDiscardConfirm = true else onBack()
     }
-    BackHandler(enabled = currentParentId == null) { requestExit() }
-
     LaunchedEffect(expenseId) {
         if (expenseId != null && initialNodes.isEmpty()) {
             val nodes = app.db.splitNodes().getByExpenseId(expenseId)
@@ -126,6 +124,14 @@ fun SplitEditorScreen(
     val currentParent = allNodes.find { it.id == currentParentId }
     val currentTotal = currentParent?.amount ?: totalAmount
     val currentLabel = currentParent?.label ?: initialLabel
+
+    // Was enabled only at the top level, so the system back gesture/button while drilled into
+    // a child node fell through to NavHost and popped this whole screen — skipping both the
+    // "step up one level" behavior and the unsaved-changes check below. Mirrors the top bar's
+    // own back icon, which already got this right.
+    BackHandler {
+        if (currentParentId == null) requestExit() else currentParentId = currentParent?.parentId
+    }
     
     val children = allNodes.filter { it.parentId == currentParentId }
     val allocatedAmount = children.sumOf { it.amount }
@@ -294,7 +300,11 @@ fun SplitNodeItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(Modifier.weight(1f)) {
-                Text(node.label ?: stringResource(R.string.split_unallocated), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                // A real (if unnamed) item, not the "Unallocated" virtual bucket below — that
+                // label is reserved for money not assigned to any item. New nodes always get
+                // split_default_name at save time (see SplitItemEditorScreen); a null label
+                // here only happens for pre-existing data from before that.
+                Text(node.label ?: stringResource(R.string.split_default_name), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
                 if (tags.isNotEmpty()) {
                     Text(
                         tags.joinToString(" ") { "#${it.name}" },
@@ -318,8 +328,9 @@ fun SplitNodeItem(
 
 @Composable
 fun UnallocatedItem(amount: Long, currency: String, onClick: () -> Unit) {
-    // Tappable like every real row above it — taps it the same way, and it opens the same
-    // add-item editor, just pre-filled with the whole remainder instead of starting blank.
+    // Tappable like every real row above it — opens the same add-item editor, starting blank
+    // (see SplitItemEditorScreen's amountText) with a live "remaining" readout above the
+    // amount field instead of pre-filling it with the whole remainder.
     Surface(
         onClick = onClick,
         shape = MaterialTheme.shapes.medium,

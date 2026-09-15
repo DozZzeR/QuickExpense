@@ -199,15 +199,21 @@ fun <T> ManageListScreen(
                                 isSubmitting = true
                                 scope.launch(Dispatchers.IO) {
                                     val deleted = deleteIfUnused(item)
+                                    // Release the lock as soon as the actual delete attempt is
+                                    // done — showSnackbar suspends until it's dismissed (up to
+                                    // its full timeout), which used to keep every button on this
+                                    // screen disabled for the whole time it was visible.
+                                    isSubmitting = false
                                     if (deleted) {
                                         reload()
                                     } else {
-                                        snackbarHostState.showSnackbar(
-                                            cannotDeleteMessage,
-                                            withDismissAction = true
-                                        )
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                cannotDeleteMessage,
+                                                withDismissAction = true
+                                            )
+                                        }
                                     }
-                                    isSubmitting = false
                                 }
                             }
                         }
