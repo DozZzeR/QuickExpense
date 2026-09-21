@@ -41,8 +41,13 @@ obj/
 *.log
 
 # OS-specific files
-DS_Store
+.DS_Store
 Thumbs.db
+
+# Stray Windows binaries (installers etc. dropped into the project folder)
+*.exe
+*.msi
+*.winmd
 
 # Crashlytics/Fabric plugin files
 crashlytics.properties
