@@ -17,9 +17,10 @@ class WidgetRecomputeAndRedraw(
     private var job: Job? = null
 
     /** коалесированный пересчёт + запись state + redraw */
-    fun schedule(delayMs: Long = 1200) {
+    @Synchronized
+    fun schedule(delayMs: Long = 1200): Job {
         job?.cancel()
-        job = scope.launch(Dispatchers.IO) {
+        return scope.launch(Dispatchers.IO) {
             delay(delayMs)
 
             val periodStr = app.prefs.widgetPeriodFlow.first()
@@ -35,7 +36,7 @@ class WidgetRecomputeAndRedraw(
                 else  -> Period.DAY
             }
             val range = periodRange(period, 1)
-            val total = app.db.expenses().sumInRange(range.from, range.to)
+            val total = app.db.expenses().sumInRange(range.from, range.to, currency)
             
             // Вычисляем значение для отображения: либо расход, либо остаток
             val displayValue = if (showRemainder && limitCents > 0) {
@@ -54,7 +55,11 @@ class WidgetRecomputeAndRedraw(
                 showRemainder = showRemainder
             )
             QuickExpenseWidget().updateAll(app)
-        }
+            // Every period the widget shows (day/week/month) rolls over at a local midnight —
+            // re-arm for the next one so the total resets then, not whenever an expense is
+            // next added.
+            if (hasAnyQuickExpenseWidget(app)) scheduleMidnightWidgetRefresh(app)
+        }.also { job = it }
     }
 }
 

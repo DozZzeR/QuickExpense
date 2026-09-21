@@ -116,7 +116,7 @@ object VoiceExpenseParser {
 
     private fun toCents(numStr: String): Long? {
         val parts = numStr.split('.', limit = 2)
-        val major = parts[0].toLongOrNull() ?: return null
+        val major = parts[0].toLongOrNull()?.takeIf { it <= Long.MAX_VALUE / 100 - 1 } ?: return null
         val minor = (parts.getOrNull(1) ?: "").padEnd(2, '0').take(2).toLongOrNull() ?: 0L
         return major * 100 + minor
     }

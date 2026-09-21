@@ -4,7 +4,6 @@
     <!-- Widget -->
     <string name="widget_balance">Balance</string>
     <string name="widget_expenses">Expenses</string>
-    <string name="widget_all_time">All time</string>
     <string name="widget_subtitle_day">per day</string>
     <string name="widget_subtitle_week">per week</string>
     <string name="widget_subtitle_month">per month</string>
@@ -32,15 +31,8 @@
     <string name="optional">…</string>
     <string name="quick_choice_to_where">Quick choice: To / Where</string>
     <string name="templates_expense">Templates: Expense</string>
-    <string name="all_dots">All…</string>
-    <string name="create_new">+ Create</string>
-    <string name="manage_dots">Manage…</string>
-    <string name="split_transaction">Split transaction</string>
     <string name="split_action">Split</string>
     <string name="split_action_count_fmt">Split (%d)</string>
-    <string name="total_label">Total: %s</string>
-    <string name="remaining_label">Remaining: %s</string>
-    <string name="add_row">+ Add row</string>
     <string name="done">Done</string>
     <string name="voice_add">Voice</string>
     <string name="voice_help">How this works</string>
@@ -55,15 +47,7 @@
     <string name="select_source">Select source</string>
     <string name="select_category">Select category</string>
     <string name="select_merchant">Select merchant</string>
-    <string name="select_tag">Select tag</string>
-    <string name="tag">Tag</string>
-    <string name="all_sources">All sources</string>
-    <string name="all_categories">All categories</string>
     <string name="merchant">Merchant</string>
-    <string name="select_item">Select…</string>
-    <string name="quick_pick_empty">No favorites yet. Tap “All” to choose or add.</string>
-    <string name="all">All</string>
-    <string name="ok_save">OK — Save</string>
     <string name="confirm">Confirm</string>
     <string name="search">Search…</string>
     <string name="add_item_named">Add “%s”</string>
@@ -144,7 +128,6 @@
 
     <!-- Statistics -->
     <string name="statistics">Statistics</string>
-    <string name="analytics">Analytics</string>
     <string name="this_month">This month</string>
     <string name="this_week">This week</string>
     <string name="this_year">This year</string>
@@ -153,30 +136,23 @@
     <string name="custom_range">Custom range</string>
     <string name="all_time">All time</string>
     <string name="total_spent">Total spent</string>
-    <string name="previous_period">Previous period</string>
     <string name="vs_previous_period">vs previous period</string>
     <string name="new_spending">new spending</string>
-    <string name="comparison_unavailable">Comparison unavailable</string>
     <string name="tag_totals_overlap_note">Tag totals may overlap</string>
     <string name="view_all">View all</string>
-    <string name="items">Items</string>
     <string name="transactions">Transactions</string>
     <string name="avg_transaction">Avg. transaction</string>
     <string name="uncategorized">Uncategorized</string>
     <string name="unknown_merchant">Unknown merchant</string>
-    <string name="no_tags">No tags</string>
     <string name="places_of_spending">Places of spending</string>
     <string name="advanced_search">Advanced search</string>
     <string name="tag_match_mode_label">Tag match mode:</string>
     <string name="tag_match_all">ALL</string>
     <string name="tag_match_any">ANY</string>
-    <string name="search_results">Search results</string>
     <string name="found">Found</string>
     <string name="open_purchase">Open purchase</string>
     <string name="edit_purchase">Edit purchase</string>
-    <string name="edit_split">Edit split</string>
     <string name="no_data_period">No data for this period</string>
-    <string name="no_data_period_hint">Try another date range or add your first expense.</string>
     <string name="chart_other">Other</string>
     <string name="spending_trend">Spending by day</string>
     <string name="change_filters">Change filters</string>
@@ -204,4 +180,17 @@
     <string name="discard_changes_title">Discard changes?</string>
     <string name="discard_changes_message">Your changes haven\'t been saved yet.</string>
     <string name="discard">Discard</string>
+    <string name="save_failed">Couldn\'t save the expense. Nothing was changed — please try again.</string>
+    <string name="split_exceeds_amount">The split adds up to more than the amount — fix the split or the amount.</string>
+    <string name="error_cannot_delete_builtin">This built-in item can\'t be deleted</string>
+    <string name="receipt_scan_align_hint" formatted="false">Align the next frame with the overlay (20% overlap)</string>
+    <string name="receipt_scan_pages_fmt">Pages: %d</string>
+    <string name="unknown_source">Unknown source</string>
+    <string name="unknown_tag">Tag</string>
+    <string name="split_item_default">Item</string>
+    <string name="export_share_subject">QuickExpense export</string>
+    <plurals name="stats_items_count">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
 </resources>

@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Receipt scanning is optional: don't hide the app from devices without a camera. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <!-- Package-visibility declaration (required on API 30+) so the implicit
          RecognizerIntent.ACTION_RECOGNIZE_SPEECH launched from QuickAddScreen can actually
@@ -50,6 +52,11 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <!-- Where "today" starts moved: recompute the day/week/month total. -->
+            <intent-filter>
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

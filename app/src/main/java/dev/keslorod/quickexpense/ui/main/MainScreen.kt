@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -54,6 +55,10 @@ fun MainScreen(
     LaunchedEffect(Unit) { vm.load() }
 
     val ctx = LocalContext.current
+    // LocalResources (not ctx.resources) so these follow an in-app language change.
+    val resources = LocalResources.current
+    val shareSubject = stringResource(R.string.export_share_subject)
+    val exportFailedMessage = stringResource(R.string.export_failed)
     var menuOpen by remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -104,19 +109,19 @@ fun MainScreen(
                                                         // share из UI (разрешено)
                                                         val share = Intent(Intent.ACTION_SEND).apply {
                                                             type = "application/zip"
-                                                            putExtra(Intent.EXTRA_SUBJECT, "QuickExpense export")
+                                                            putExtra(Intent.EXTRA_SUBJECT, shareSubject)
                                                             putExtra(Intent.EXTRA_STREAM, uri)
                                                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                                         }
                                                         ctx.startActivity(
-                                                            Intent.createChooser(share, ctx.getString(R.string.send_export, name))
+                                                            Intent.createChooser(share, resources.getString(R.string.send_export, name))
                                                                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                                         )
                                                     }
                                                     true
                                                 }
                                                 WorkInfo.State.FAILED -> {
-                                                    Toast.makeText(ctx, ctx.getString(R.string.export_failed), Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(ctx, exportFailedMessage, Toast.LENGTH_SHORT).show()
                                                     true
                                                 }
                                                 else -> false
@@ -165,7 +170,7 @@ fun MainScreen(
             } else {
                 LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
                     items(items) { item ->
-                        ExpenseRow(item, state.currency, onClick = { onOpenTransactionDetails(item.id) })
+                        ExpenseRow(item, onClick = { onOpenTransactionDetails(item.id) })
                     }
                 }
             }
@@ -174,7 +179,7 @@ fun MainScreen(
 }
 
 @Composable
-private fun ExpenseRow(item: ExpenseItemUi, currency: String, onClick: () -> Unit) {
+private fun ExpenseRow(item: ExpenseItemUi, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -199,7 +204,7 @@ private fun ExpenseRow(item: ExpenseItemUi, currency: String, onClick: () -> Uni
         }
         // сумма справа: одна строка, без переносов
         Text(
-            text = "${formatCents(item.amount)} $currency",
+            text = "${formatCents(item.amount)} ${item.currency}",
             style = MaterialTheme.typography.titleMedium,
             maxLines = 1,
             softWrap = false,

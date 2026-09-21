@@ -24,7 +24,7 @@ class TagDetailsViewModel(
 ) : AndroidViewModel(application) {
 
     private val app = application as App
-    private val repository = StatisticsRepository(app.db)
+    private val repository = StatisticsRepository.forApp(app)
 
     private val _uiState = MutableStateFlow<TagDetailsUiState>(TagDetailsUiState.Loading)
     val uiState: StateFlow<TagDetailsUiState> = _uiState.asStateFlow()

@@ -20,7 +20,7 @@ class StatisticsListViewModel(
 ) : AndroidViewModel(application) {
 
     private val app = application as App
-    private val repository = StatisticsRepository(app.db)
+    private val repository = StatisticsRepository.forApp(app)
 
     private val _items = MutableStateFlow<List<StatsBreakdownItem>>(emptyList())
     val items: StateFlow<List<StatsBreakdownItem>> = _items.asStateFlow()

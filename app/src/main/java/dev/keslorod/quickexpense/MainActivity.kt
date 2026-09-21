@@ -2,7 +2,7 @@ package dev.keslorod.quickexpense
 
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import dev.keslorod.quickexpense.ui.theme.QuickExpenseTheme
 import androidx.compose.runtime.Composable
@@ -31,7 +31,7 @@ import dev.keslorod.quickexpense.ui.split.SplitEditorScreen
 import dev.keslorod.quickexpense.ui.settings.SettingsScreen
 import kotlinx.coroutines.launch
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     private val app by lazy { application as App }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -245,7 +245,8 @@ private fun AppNav(app: App, nav: NavHostController = rememberNavController()) {
                         currency.value = expense.currency
                         label.value = app.getString(R.string.transaction_default)
                     }
-                }
+                    expense
+                } ?: nav.popBackStack() // gone — don't sit on a blank screen forever
             }
 
             if (amount.value != null && currency.value != null) {

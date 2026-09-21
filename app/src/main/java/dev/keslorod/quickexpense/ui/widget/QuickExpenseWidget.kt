@@ -1,5 +1,7 @@
 package dev.keslorod.quickexpense.ui.widget
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -36,6 +38,7 @@ import dev.keslorod.quickexpense.App
 import dev.keslorod.quickexpense.BuildConfig
 import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.ui.quickinput.QuickInputActivity
+import java.util.Calendar
 import kotlin.math.abs
 
 class QuickExpenseWidget : GlanceAppWidget() {
@@ -134,4 +137,46 @@ class QuickExpenseWidgetReceiver : GlanceAppWidgetReceiver() {
         // Settings) happened to trigger a refresh.
         (context.applicationContext as App).widgetRefresher.schedule(0)
     }
+
+    override fun onReceive(context: Context, intent: Intent) {
+        when (intent.action) {
+            // The midnight alarm (see scheduleMidnightWidgetRefresh), and clock/zone changes
+            // that move where "today" starts.
+            ACTION_MIDNIGHT_REFRESH, Intent.ACTION_TIME_CHANGED, Intent.ACTION_TIMEZONE_CHANGED -> {
+                // Keep the process alive until the recompute has actually been written —
+                // a plain fire-and-forget launch can be killed as soon as onReceive returns.
+                val pending = goAsync()
+                (context.applicationContext as App).widgetRefresher.schedule(0)
+                    .invokeOnCompletion { pending.finish() }
+            }
+            else -> super.onReceive(context, intent)
+        }
+    }
+
+    companion object {
+        const val ACTION_MIDNIGHT_REFRESH = "dev.keslorod.quickexpense.action.WIDGET_MIDNIGHT_REFRESH"
+    }
+}
+
+/**
+ * Arms a (re-armed on every refresh) alarm for the next local midnight that wakes
+ * [QuickExpenseWidgetReceiver] to recompute the widget. Inexact on purpose: a few minutes'
+ * delay is fine for a spending total, and it needs no exact-alarm permission.
+ */
+fun scheduleMidnightWidgetRefresh(context: Context) {
+    val alarmManager = context.getSystemService(AlarmManager::class.java) ?: return
+    val intent = Intent(context, QuickExpenseWidgetReceiver::class.java)
+        .setAction(QuickExpenseWidgetReceiver.ACTION_MIDNIGHT_REFRESH)
+    val pendingIntent = PendingIntent.getBroadcast(
+        context, 0, intent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
+    val nextMidnight = Calendar.getInstance().apply {
+        add(Calendar.DAY_OF_YEAR, 1)
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 5)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
+    alarmManager.set(AlarmManager.RTC, nextMidnight, pendingIntent)
 }

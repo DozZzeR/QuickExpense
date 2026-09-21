@@ -16,6 +16,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 class App : Application() {
     // Ленивая инициализация — доступ из любой точки через (application as App)
@@ -74,6 +75,28 @@ class App : Application() {
                 seedDefaults()
                 prefs.setSeeded(true)
             }
+            deleteOrphanedReceipts()
+        }
+    }
+
+    /**
+     * Receipt photos no expense points to — scanned on a form that was then abandoned without
+     * going through Cancel (process killed, swiped away from Recents…). Only files older than
+     * a day are touched, so a form that's still open right now keeps its fresh scan.
+     */
+    private suspend fun deleteOrphanedReceipts() {
+        try {
+            val dir = File(filesDir, "receipts")
+            val files = dir.listFiles() ?: return
+            val referenced = (db.expenses().allPhotoPaths().flatMap { it.split("|") } +
+                db.expenses().allLegacyPhotoPaths())
+                .filter { it.isNotBlank() }
+                .toSet()
+            val cutoff = System.currentTimeMillis() - 24 * 60 * 60 * 1000L
+            files.filter { it.isFile && it.absolutePath !in referenced && it.lastModified() < cutoff }
+                .forEach { it.delete() }
+        } catch (e: Exception) {
+            Log.e("App.onCreate", "Orphaned receipt cleanup failed", e)
         }
     }
 

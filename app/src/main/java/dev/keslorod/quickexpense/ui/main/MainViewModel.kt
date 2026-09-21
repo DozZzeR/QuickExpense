@@ -19,6 +19,9 @@ data class ExpenseItemUi(
     val title: String,      // "Еда" и т.п.
     val subtitle: String,   // "Источник: Карта • 2025-01-01 12:34"
     val amount: Long,
+    // The expense's own currency — the list shows every expense, but the total above it
+    // only covers the currency picked in Settings.
+    val currency: String,
     val hasReceipt: Boolean = false
 )
 
@@ -49,7 +52,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
 
             val range = periodRange(period, 1)
-            val total = appRef.db.expenses().sumInRange(range.from, range.to)
+            val total = appRef.db.expenses().sumInRange(range.from, range.to, currency)
 
             val list = appRef.db.expenses()
                 .expensesInRangeWithNames(range.from, range.to, limit = 200)
@@ -69,6 +72,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                             append(formatTs(e.createdAt))
                         },
                         amount = e.amount,
+                        currency = e.currency,
                         hasReceipt = !e.photoPaths.isNullOrBlank()
                     )
                 }

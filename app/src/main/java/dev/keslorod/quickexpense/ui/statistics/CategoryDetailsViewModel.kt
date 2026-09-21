@@ -24,7 +24,7 @@ class CategoryDetailsViewModel(
 ) : AndroidViewModel(application) {
 
     private val app = application as App
-    private val repository = StatisticsRepository(app.db)
+    private val repository = StatisticsRepository.forApp(app)
 
     private val _uiState = MutableStateFlow<CategoryDetailsUiState>(CategoryDetailsUiState.Loading)
     val uiState: StateFlow<CategoryDetailsUiState> = _uiState.asStateFlow()

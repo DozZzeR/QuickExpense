@@ -1,22 +1,21 @@
 package dev.keslorod.quickexpense.ui.quickinput
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import androidx.room.withTransaction
 import dev.keslorod.quickexpense.App
 import dev.keslorod.quickexpense.BuildConfig
 import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.data.entities.Expense
+import dev.keslorod.quickexpense.data.entities.SplitNode
 import dev.keslorod.quickexpense.data.entities.SplitNodeTag
+import dev.keslorod.quickexpense.data.entities.Tag
 import dev.keslorod.quickexpense.domain.RECEIPT_TAG_ID
+import dev.keslorod.quickexpense.domain.UNSORTED_CATEGORY_ID
 import dev.keslorod.quickexpense.domain.tagExpenseAsHavingReceipt
-import dev.keslorod.quickexpense.ui.split.SplitEditorScreen
 import dev.keslorod.quickexpense.ui.theme.QuickExpenseTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -24,12 +23,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-class QuickInputActivity : ComponentActivity() {
+class QuickInputActivity : AppCompatActivity() {
     private val launchedFromWidget by lazy { intent.getBooleanExtra("from_widget", false) }
     // Present when this screen was opened to edit an already-saved expense (from
     // TransactionDetailsScreen's edit button) rather than to create a new one.
     private val editingExpenseId by lazy { intent.getStringExtra(EXTRA_EDIT_EXPENSE_ID) }
     private val app by lazy { application as App }
+
+    // Only touched on the main thread. Guards against a second save (a double tap on "Today",
+    // or the voice auto-save firing alongside a manual tap) inserting the same expense twice
+    // while the first save is still in flight — finish() only happens once it completes.
+    private var saveInProgress = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,158 +63,159 @@ class QuickInputActivity : ComponentActivity() {
             // its own currency, not the app-wide default, so an old expense in a currency the
             // user has since switched away from still displays and saves correctly.
             val editingExpense = editingExpenseId?.let { app.db.expenses().getById(it) }
+            if (editingExpenseId != null && editingExpense == null) {
+                // Asked to edit an expense that no longer exists — don't fall through to the
+                // create-new form, whose Save would silently mint a brand-new expense instead.
+                withContext(Dispatchers.Main) { close() }
+                return@launch
+            }
             val currency = editingExpense?.currency ?: defaultCurrency
             val initialSource = editingExpense?.let { exp -> allSourceOptions.find { it.id == exp.sourceId } }
             val initialMerchant = editingExpense?.merchantId?.let { mid -> allMerchantOptions.find { it.id == mid } }
             val initialCategory = editingExpense?.let { exp -> allCategoryOptions.find { it.id == exp.categoryId } }
             val initialReceiptPaths = editingExpense?.photoPaths?.split("|")?.filter { it.isNotBlank() }.orEmpty()
+            // Its persisted split becomes QuickAddScreen's in-memory draft, written back only
+            // on Save (see onConfirm) — same as a new expense's split.
+            val initialSplitNodes = editingExpense?.let { app.db.splitNodes().getByExpenseId(it.id) }.orEmpty()
+            val initialNodeTags = initialSplitNodes.associate { it.id to app.db.splitNodeTags().getTagsForSplitNode(it.id) }
+            // A split row with no category of its own was saved alongside an expense whose
+            // missing category became "unsorted" — the two mean the same thing, not a divergence.
+            val initialSplitDiverged = editingExpense != null &&
+                initialSplitNodes.any { it.parentId == null && (it.categoryId ?: UNSORTED_CATEGORY_ID) != editingExpense.categoryId }
 
             withContext(Dispatchers.Main) {
                 setContent {
                     QuickExpenseTheme {
-                        // Non-null while the user is fixing an existing expense's split from
-                        // within the edit form (see QuickAddScreen's onOpenSplitEditor) — splits
-                        // on an already-saved expense live directly in the DB, so this hosts the
-                        // same real split editor MainActivity's own split_editor route uses,
-                        // just inline in this Activity instead of as a separate nav destination.
-                        var splitEditorTarget by remember { mutableStateOf<Pair<String, Long>?>(null) }
-                        val target = splitEditorTarget
-
-                        if (target != null) {
-                            val (splitExpenseId, splitAmount) = target
-                            SplitEditorScreen(
-                                app = app,
-                                expenseId = splitExpenseId,
-                                totalAmount = splitAmount,
-                                currency = currency,
-                                initialLabel = getString(R.string.transaction_default),
-                                onBack = { splitEditorTarget = null },
-                                onDone = { nodes, tags ->
-                                    lifecycleScope.launch(Dispatchers.IO) {
-                                        app.db.withTransaction {
-                                            app.db.splitNodes().deleteByExpenseId(splitExpenseId)
-                                            nodes.sortedBy { it.depth }.forEach { node ->
-                                                val toSave = node.copy(expenseId = splitExpenseId)
-                                                app.db.splitNodes().insert(toSave)
-                                                tags[node.id]?.forEach { tag ->
-                                                    app.db.splitNodeTags().insert(SplitNodeTag(toSave.id, tag.id))
-                                                }
-                                            }
+                        QuickAddScreen(
+                            app = app,
+                            currency = currency,
+                            sourceOptions = sourceOptions,
+                            categoryOptions = categoryOptions,
+                            merchantOptions = merchantOptions,
+                            allCategoryOptions = allCategoryOptions,
+                            allMerchantOptions = allMerchantOptions,
+                            allSourceOptions = allSourceOptions,
+                            languageCode = languageCode,
+                            editingExpenseId = editingExpense?.id,
+                            initialAmountCents = editingExpense?.amount,
+                            initialSource = initialSource,
+                            initialMerchant = initialMerchant,
+                            initialCategory = initialCategory,
+                            initialDateMillis = editingExpense?.createdAt,
+                            initialReceiptPaths = initialReceiptPaths,
+                            initialSplitNodes = initialSplitNodes,
+                            initialNodeTags = initialNodeTags,
+                            initialSplitDiverged = initialSplitDiverged,
+                            onConfirm = { cents, sourceId, merchantId, categoryId, date, receiptPaths, splitNodes, nodeTags ->
+                                if (BuildConfig.DEBUG) {
+                                    android.util.Log.d("ReceiptDebug", "onConfirm received receiptPaths=$receiptPaths")
+                                }
+                                if (saveInProgress) return@QuickAddScreen
+                                saveInProgress = true
+                                lifecycleScope.launch {
+                                    val saved = try {
+                                        withContext(Dispatchers.IO) {
+                                            save(editingExpense, currency, cents, sourceId, merchantId, categoryId, date, receiptPaths, splitNodes, nodeTags)
                                         }
-                                        withContext(Dispatchers.Main) { splitEditorTarget = null }
+                                        true
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("QuickInputActivity", "Failed to save expense", e)
+                                        false
+                                    }
+                                    if (saved) {
+                                        app.widgetRefresher.schedule()
+                                        close()
+                                    } else {
+                                        // Stay on the form with everything still filled in, so the
+                                        // user knows nothing was written and can simply retry —
+                                        // closing here made a failed save look like a normal one.
+                                        saveInProgress = false
+                                        Toast.makeText(this@QuickInputActivity, R.string.save_failed, Toast.LENGTH_LONG).show()
                                     }
                                 }
-                            )
-                        } else {
-                            QuickAddScreen(
-                                app = app,
-                                currency = currency,
-                                sourceOptions = sourceOptions,
-                                categoryOptions = categoryOptions,
-                                merchantOptions = merchantOptions,
-                                allCategoryOptions = allCategoryOptions,
-                                allMerchantOptions = allMerchantOptions,
-                                allSourceOptions = allSourceOptions,
-                                languageCode = languageCode,
-                                editingExpenseId = editingExpenseId,
-                                initialAmountCents = editingExpense?.amount,
-                                initialSource = initialSource,
-                                initialMerchant = initialMerchant,
-                                initialCategory = initialCategory,
-                                initialDateMillis = editingExpense?.createdAt,
-                                initialReceiptPaths = initialReceiptPaths,
-                                onOpenSplitEditor = { id, amount -> splitEditorTarget = id to amount },
-                                onConfirm = { cents, sourceId, merchantId, categoryId, date, receiptPaths, splitNodes, nodeTags ->
-                                    if (BuildConfig.DEBUG) {
-                                        android.util.Log.d("ReceiptDebug", "onConfirm received receiptPaths=$receiptPaths")
-                                    }
-                                    lifecycleScope.launch(Dispatchers.IO) {
-                                        try {
-                                            val editId = editingExpenseId
-                                            if (editId != null && editingExpense != null) {
-                                                val updated = editingExpense.copy(
-                                                    amount = cents,
-                                                    sourceId = sourceId,
-                                                    categoryId = categoryId ?: "unsorted",
-                                                    merchantId = merchantId,
-                                                    photoPaths = if (receiptPaths.isEmpty()) null else receiptPaths.joinToString("|"),
-                                                    createdAt = date
-                                                )
-                                                app.db.expenses().update(updated)
-
-                                                // A receipt replaced during this edit leaves its old file
-                                                // with nothing pointing at it once the new path list is
-                                                // saved — clean it up rather than leak it forever.
-                                                val oldPaths = editingExpense.photoPaths
-                                                    ?.split("|")?.filter { it.isNotBlank() }.orEmpty().toSet()
-                                                (oldPaths - receiptPaths.toSet()).forEach { File(it).delete() }
-
-                                                if (receiptPaths.isNotEmpty()) {
-                                                    app.tagExpenseAsHavingReceipt(editId)
-                                                } else if (oldPaths.isNotEmpty()) {
-                                                    app.db.expenseTags().delete(editId, RECEIPT_TAG_ID)
-                                                }
-                                                // Splits aren't touched here — editing an existing
-                                                // expense's split goes through the real split editor
-                                                // above (onOpenSplitEditor), which persists on its own.
-                                            } else {
-                                                val expense = Expense(
-                                                    amount = cents,
-                                                    currency = currency,
-                                                    sourceId = sourceId,
-                                                    categoryId = categoryId ?: "unsorted",
-                                                    merchantId = merchantId,
-                                                    photoPaths = if (receiptPaths.isEmpty()) null else receiptPaths.joinToString("|"),
-                                                    createdAt = date
-                                                )
-                                                app.db.expenses().insert(expense)
-
-                                                if (receiptPaths.isNotEmpty()) {
-                                                    app.tagExpenseAsHavingReceipt(expense.id)
-                                                }
-
-                                                // Сохраняем сплиты
-                                                splitNodes.forEach { node ->
-                                                    val nodeToSave = node.copy(expenseId = expense.id)
-                                                    app.db.splitNodes().insert(nodeToSave)
-
-                                                    // Сохраняем метки для этого узла
-                                                    nodeTags[node.id]?.forEach { tag ->
-                                                        app.db.splitNodeTags().insert(SplitNodeTag(nodeToSave.id, tag.id))
-                                                    }
-                                                }
-                                            }
-
-                                            app.widgetRefresher.schedule()
-
-                                        } catch (e: Exception) {
-                                            // The old bare try/finally let any failure here (DB
-                                            // constraint, whatever) vanish silently — finish() still
-                                            // ran, so the screen closed looking like a normal save
-                                            // while nothing was actually written.
-                                            android.util.Log.e("QuickInputActivity", "Failed to save expense", e)
-                                        } finally {
-                                            withContext(Dispatchers.Main) {
-                                                if (launchedFromWidget)
-                                                    finishAffinity()
-                                                else
-                                                    finish()
-                                            }
-                                        }
-                                    }
-                                },
-                                onCancel = {
-                                    if (launchedFromWidget)
-                                        finishAffinity()
-                                    else
-                                        finish()
-                                }
-                            )
-                        }
+                            },
+                            onCancel = { close() }
+                        )
                     }
                 }
             }
         }
+    }
+
+    private fun close() {
+        if (launchedFromWidget) finishAffinity() else finish()
+    }
+
+    /**
+     * Writes the expense together with its receipt tag and split tree in one transaction, so a
+     * failure part-way through (a constraint violation, whatever) can't leave e.g. an expense
+     * saved with only half of its split. Receipt files that this edit replaced are deleted only
+     * after the transaction has committed.
+     */
+    private suspend fun save(
+        editingExpense: Expense?,
+        currency: String,
+        cents: Long,
+        sourceId: String,
+        merchantId: String?,
+        categoryId: String?,
+        date: Long,
+        receiptPaths: List<String>,
+        splitNodes: List<SplitNode>,
+        nodeTags: Map<String, List<Tag>>
+    ) {
+        val photoPaths = if (receiptPaths.isEmpty()) null else receiptPaths.joinToString("|")
+        val oldPaths = editingExpense?.photoPaths
+            ?.split("|")?.filter { it.isNotBlank() }.orEmpty().toSet()
+
+        app.db.withTransaction {
+            val expenseId = if (editingExpense != null) {
+                app.db.expenses().update(
+                    editingExpense.copy(
+                        amount = cents,
+                        sourceId = sourceId,
+                        categoryId = categoryId ?: UNSORTED_CATEGORY_ID,
+                        merchantId = merchantId,
+                        photoPaths = photoPaths,
+                        createdAt = date
+                    )
+                )
+                app.db.splitNodes().deleteByExpenseId(editingExpense.id)
+                editingExpense.id
+            } else {
+                val expense = Expense(
+                    amount = cents,
+                    currency = currency,
+                    sourceId = sourceId,
+                    categoryId = categoryId ?: UNSORTED_CATEGORY_ID,
+                    merchantId = merchantId,
+                    photoPaths = photoPaths,
+                    createdAt = date
+                )
+                app.db.expenses().insert(expense)
+                expense.id
+            }
+
+            if (receiptPaths.isNotEmpty()) {
+                app.tagExpenseAsHavingReceipt(expenseId)
+            } else if (oldPaths.isNotEmpty()) {
+                app.db.expenseTags().delete(expenseId, RECEIPT_TAG_ID)
+            }
+
+            // Parents before children: split_nodes.parentId is a self-referencing foreign key,
+            // and SQLite checks it at each insert, not at commit.
+            splitNodes.sortedBy { it.depth }.forEach { node ->
+                val nodeToSave = node.copy(expenseId = expenseId)
+                app.db.splitNodes().insert(nodeToSave)
+                nodeTags[node.id]?.forEach { tag ->
+                    app.db.splitNodeTags().insert(SplitNodeTag(nodeToSave.id, tag.id))
+                }
+            }
+        }
+
+        // A receipt replaced during this edit leaves its old file with nothing pointing at it
+        // once the new path list is saved — clean it up rather than leak it forever.
+        (oldPaths - receiptPaths.toSet()).forEach { File(it).delete() }
     }
 
     companion object {

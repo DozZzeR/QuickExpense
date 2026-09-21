@@ -4,7 +4,6 @@
     <!-- Widget -->
     <string name="widget_balance">Остаток</string>
     <string name="widget_expenses">Расходы</string>
-    <string name="widget_all_time">за всё время</string>
     <string name="widget_subtitle_day">за день</string>
     <string name="widget_subtitle_week">за неделю</string>
     <string name="widget_subtitle_month">за месяц</string>
@@ -31,15 +30,8 @@
     <string name="optional">…</string>
     <string name="quick_choice_to_where">Быстрый выбор получателя</string>
     <string name="templates_expense">Шаблоны: расходы</string>
-    <string name="all_dots">Все…</string>
-    <string name="create_new">+ Создать</string>
-    <string name="manage_dots">Управление…</string>
-    <string name="split_transaction">Разбить транзакцию</string>
     <string name="split_action">Разбить</string>
     <string name="split_action_count_fmt">Сплит (%d)</string>
-    <string name="total_label">Итого: %s</string>
-    <string name="remaining_label">Осталось: %s</string>
-    <string name="add_row">+ Добавить строку</string>
     <string name="done">Готово</string>
     <string name="voice_add">Голосом</string>
     <string name="voice_help">Как это работает</string>
@@ -52,17 +44,9 @@
     <string name="voice_unmatched_word_fmt">Не распознано: «%s»</string>
     <string name="ignore">Игнорировать</string>
     <string name="merchant">Получатель</string>
-    <string name="tag">Метка</string>
     <string name="select_source">Выбрать источник</string>
     <string name="select_category">Выбрать категорию</string>
     <string name="select_merchant">Выбрать получателя</string>
-    <string name="select_tag">Выбрать метку</string>
-    <string name="all_sources">Все источники</string>
-    <string name="all_categories">Все категории</string>
-    <string name="select_item">Выбрать…</string>
-    <string name="quick_pick_empty">Пока нет избранного. Нажмите «Все», чтобы выбрать или добавить.</string>
-    <string name="all">Все</string>
-    <string name="ok_save">OK — сохранить</string>
     <string name="confirm">Подтвердить</string>
     <string name="search">Поиск…</string>
     <string name="add_item_named">Добавить «%s»</string>
@@ -143,7 +127,6 @@
 
     <!-- Statistics -->
     <string name="statistics">Статистика</string>
-    <string name="analytics">Аналитика</string>
     <string name="this_month">Этот месяц</string>
     <string name="this_week">Эта неделя</string>
     <string name="this_year">Этот год</string>
@@ -152,30 +135,23 @@
     <string name="custom_range">Произвольный период</string>
     <string name="all_time">Всё время</string>
     <string name="total_spent">Всего потрачено</string>
-    <string name="previous_period">Прошлый период</string>
     <string name="vs_previous_period">к прошлому периоду</string>
     <string name="new_spending">новые траты</string>
-    <string name="comparison_unavailable">Сравнение недоступно</string>
     <string name="tag_totals_overlap_note">Суммы по меткам могут пересекаться</string>
     <string name="view_all">Показать все</string>
-    <string name="items">Позиции</string>
     <string name="transactions">Транзакции</string>
     <string name="avg_transaction">Средний чек</string>
     <string name="uncategorized">Без категории</string>
     <string name="unknown_merchant">Без получателя</string>
-    <string name="no_tags">Без меток</string>
     <string name="places_of_spending">Места трат</string>
     <string name="advanced_search">Расширенный поиск</string>
     <string name="tag_match_mode_label">Режим меток:</string>
     <string name="tag_match_all">ВСЕ</string>
     <string name="tag_match_any">ЛЮБАЯ</string>
-    <string name="search_results">Результаты поиска</string>
     <string name="found">Найдено</string>
     <string name="open_purchase">Открыть покупку</string>
     <string name="edit_purchase">Редактировать покупку</string>
-    <string name="edit_split">Редактировать разбивку</string>
     <string name="no_data_period">За этот период расходов нет</string>
-    <string name="no_data_period_hint">Выберите другой период или добавьте первую трату.</string>
     <string name="chart_other">Остальное</string>
     <string name="spending_trend">Расходы по дням</string>
     <string name="change_filters">Изменить фильтры</string>
@@ -203,4 +179,19 @@
     <string name="discard_changes_title">Отменить изменения?</string>
     <string name="discard_changes_message">Изменения ещё не сохранены.</string>
     <string name="discard">Не сохранять</string>
+    <string name="save_failed">Не удалось сохранить трату. Ничего не изменено — попробуйте ещё раз.</string>
+    <string name="split_exceeds_amount">Сумма разбивки больше суммы траты — исправьте разбивку или сумму.</string>
+    <string name="error_cannot_delete_builtin">Встроенную запись удалить нельзя</string>
+    <string name="receipt_scan_align_hint" formatted="false">Совместите следующий кадр с подсказкой (перекрытие 20%)</string>
+    <string name="receipt_scan_pages_fmt">Страниц: %d</string>
+    <string name="unknown_source">Неизвестный источник</string>
+    <string name="unknown_tag">Метка</string>
+    <string name="split_item_default">Позиция</string>
+    <string name="export_share_subject">Экспорт QuickExpense</string>
+    <plurals name="stats_items_count">
+        <item quantity="one">%d позиция</item>
+        <item quantity="few">%d позиции</item>
+        <item quantity="many">%d позиций</item>
+        <item quantity="other">%d позиции</item>
+    </plurals>
 </resources>

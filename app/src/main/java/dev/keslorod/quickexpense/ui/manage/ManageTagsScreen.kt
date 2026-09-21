@@ -5,6 +5,8 @@ import androidx.compose.ui.res.stringResource
 import dev.keslorod.quickexpense.App
 import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.data.entities.Tag
+import dev.keslorod.quickexpense.domain.deleteTagIfUnused
+import dev.keslorod.quickexpense.domain.isBuiltIn
 
 @Composable
 fun ManageTagsScreen(
@@ -25,13 +27,7 @@ fun ManageTagsScreen(
         addNew = { name -> app.db.tags().insert(Tag(name = name, normalizedName = name.lowercase().trim())) },
         toggleFavorite = { t -> app.db.tags().update(t.copy(isFavorite = !t.isFavorite)) },
         rename = { t, newName -> app.db.tags().update(t.copy(name = newName, normalizedName = newName.lowercase().trim())) },
-        deleteIfUnused = { t ->
-            // Для меток пока считаем, что удалять можно всегда, 
-            // так как связи в split_node_tags имеют ON DELETE CASCADE
-            // Но в идеале стоит проверить, используется ли метка где-то.
-            // Пока просто удаляем.
-            app.db.tags().delete(t)
-            true
-        }
+        deleteIfUnused = { t -> app.deleteTagIfUnused(t) },
+        isBuiltIn = { it.isBuiltIn() }
     )
 }

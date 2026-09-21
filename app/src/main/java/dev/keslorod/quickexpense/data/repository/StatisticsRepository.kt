@@ -1,5 +1,8 @@
 package dev.keslorod.quickexpense.data.repository
 
+import dev.keslorod.quickexpense.App
+import dev.keslorod.quickexpense.R
+import kotlinx.coroutines.flow.first
 import dev.keslorod.quickexpense.data.db.AppDatabase
 import dev.keslorod.quickexpense.domain.statistics.*
 import kotlinx.coroutines.flow.Flow
@@ -7,7 +10,39 @@ import kotlinx.coroutines.flow.flow
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-class StatisticsRepository(private val db: AppDatabase) {
+/**
+ * @param currencyProvider the currency whose expenses the statistics cover. Amounts in
+ * different currencies can't be summed meaningfully, so expenses recorded in any other
+ * currency are left out of every total/breakdown here. Null means no filtering.
+ * @param labels fallback display names for rows whose name couldn't be resolved.
+ */
+class StatisticsRepository(
+    private val db: AppDatabase,
+    private val currencyProvider: suspend () -> String? = { null },
+    private val labels: Labels = Labels()
+) {
+
+    data class Labels(
+        val unknownMerchant: String = "Unknown merchant",
+        val uncategorized: String = "Uncategorized",
+        val tag: String = "Tag",
+        val item: String = "Item"
+    )
+
+    companion object {
+        /** The repository as the app's screens use it: filtered to the currency picked in
+         *  Settings, with localized fallback labels. */
+        fun forApp(app: App) = StatisticsRepository(
+            db = app.db,
+            currencyProvider = { app.prefs.currencyFlow.first() },
+            labels = Labels(
+                unknownMerchant = app.getString(R.string.unknown_merchant),
+                uncategorized = app.getString(R.string.uncategorized),
+                tag = app.getString(R.string.unknown_tag),
+                item = app.getString(R.string.split_item_default)
+            )
+        )
+    }
 
     // SQLite caps how many bound parameters one statement can take (historically 999, though
     // newer builds allow far more) — a `WHERE id IN (:ids)` query built from e.g. every expense
@@ -84,7 +119,7 @@ class StatisticsRepository(private val db: AppDatabase) {
         val categoryBreakdown = aggregateFragmentsByCategory(fragments, currentData.categoryNames)
 
         return MerchantDetailsData(
-            merchantName = currentData.merchantNames[actualMerchantId] ?: "Unknown",
+            merchantName = currentData.merchantNames[actualMerchantId] ?: labels.unknownMerchant,
             totalSummary = totalSummary,
             categoryBreakdown = categoryBreakdown,
             transactions = merchantExpenses.sortedByDescending { it.createdAt }
@@ -113,7 +148,7 @@ class StatisticsRepository(private val db: AppDatabase) {
             val amount = frags.sumOf { it.amount }
             StatsBreakdownItem(
                 id = mId ?: "unknown",
-                label = currentData.merchantNames[mId] ?: "Unknown merchant",
+                label = currentData.merchantNames[mId] ?: labels.unknownMerchant,
                 amount = amount,
                 count = frags.size,
                 shareOfTotalPercent = if (currentAmount > 0) amount.toDouble() / currentAmount * 100 else 0.0,
@@ -125,7 +160,7 @@ class StatisticsRepository(private val db: AppDatabase) {
         val merchantBreakdownWithMax = merchantBreakdown.map { it.copy(relativeToMaxPercent = it.amount.toDouble() / maxMerchant * 100) }
 
         return CategoryDetailsData(
-            categoryName = currentData.categoryNames[categoryId] ?: "Uncategorized",
+            categoryName = currentData.categoryNames[categoryId] ?: labels.uncategorized,
             totalAmount = currentAmount,
             comparison = calculateComparison(currentAmount, previousAmount, state),
             merchantBreakdown = merchantBreakdownWithMax,
@@ -150,7 +185,7 @@ class StatisticsRepository(private val db: AppDatabase) {
         val previousAmount = prevFragments?.sumOf { it.amount }
 
         return TagDetailsData(
-            tagName = currentData.tagNames[tagId] ?: "Tag",
+            tagName = currentData.tagNames[tagId] ?: labels.tag,
             totalAmount = currentAmount,
             comparison = calculateComparison(currentAmount, previousAmount, state),
             fragments = run {
@@ -162,7 +197,7 @@ class StatisticsRepository(private val db: AppDatabase) {
                     val nodeLabel = frag.splitNodeId?.let { nodesById[it]?.label }
                     TagResultItem(
                         expenseId = frag.expenseId,
-                        label = nodeLabel ?: currentData.categoryNames[expense?.categoryId] ?: "Item",
+                        label = nodeLabel ?: currentData.categoryNames[expense?.categoryId] ?: labels.item,
                         amount = frag.amount,
                         date = expense?.createdAt ?: 0L,
                         merchantName = currentData.merchantNames[expense?.merchantId]
@@ -274,7 +309,12 @@ class StatisticsRepository(private val db: AppDatabase) {
         val from = StatisticsDateUtils.localDateToMillis(start)
         val to = StatisticsDateUtils.localDateToMillis(end, endOfDay = true)
         
-        val expenses = db.expenses().expensesInRange(from, to)
+        val currency = currencyProvider()
+        val expenses = if (currency != null) {
+            db.expenses().expensesInRangeForCurrency(from, to, currency)
+        } else {
+            db.expenses().expensesInRange(from, to)
+        }
         val expenseIds = expenses.map { it.id }
         
         val allSplitNodes = chunkedInQuery(expenseIds) { db.splitNodes().getByExpenseIds(it) }
@@ -372,7 +412,7 @@ class StatisticsRepository(private val db: AppDatabase) {
         val items = totals.map { (categoryId, amount) ->
             StatsBreakdownItem(
                 id = categoryId,
-                label = categoryNames[categoryId] ?: "Uncategorized",
+                label = categoryNames[categoryId] ?: labels.uncategorized,
                 amount = amount,
                 count = fragments.count { it.effectiveCategoryId == categoryId },
                 shareOfTotalPercent = amount.toDouble() / totalAmount * 100,
@@ -394,7 +434,7 @@ class StatisticsRepository(private val db: AppDatabase) {
         val items = totals.map { (merchantId, amount) ->
             StatsBreakdownItem(
                 id = merchantId ?: "unknown",
-                label = merchantId?.let { data.merchantNames[it] } ?: "Unknown merchant",
+                label = merchantId?.let { data.merchantNames[it] } ?: labels.unknownMerchant,
                 amount = amount,
                 count = data.expenses.count { it.merchantId == merchantId },
                 shareOfTotalPercent = amount.toDouble() / totalAmount * 100,
@@ -438,7 +478,7 @@ class StatisticsRepository(private val db: AppDatabase) {
         return totals.map { (tagId, amount) ->
             StatsBreakdownItem(
                 id = tagId,
-                label = data.tagNames[tagId] ?: "Tag",
+                label = data.tagNames[tagId] ?: labels.tag,
                 amount = amount,
                 count = fragments.count { it.tagId == tagId },
                 shareOfTotalPercent = 0.0, // Not applicable for overlapping tags

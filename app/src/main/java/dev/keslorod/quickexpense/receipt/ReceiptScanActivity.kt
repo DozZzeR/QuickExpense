@@ -8,7 +8,8 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Rational
 import android.view.Surface
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -44,12 +45,17 @@ import androidx.compose.ui.graphics.graphicsLayer
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.abs
 
-class ReceiptScanActivity : ComponentActivity() {
+class ReceiptScanActivity : AppCompatActivity() {
     private val cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+
+    // The camera may only be bound once this is true — binding it before the permission
+    // dialog is answered left the preview black even after the user granted access.
+    private var hasCameraPermission by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,18 +63,22 @@ class ReceiptScanActivity : ComponentActivity() {
         val permissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { granted ->
-            if (!granted) {
+            if (granted) {
+                hasCameraPermission = true
+            } else {
                 setResult(Activity.RESULT_CANCELED)
                 finish()
             }
         }
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+        hasCameraPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        if (!hasCameraPermission) {
             permissionLauncher.launch(Manifest.permission.CAMERA)
         }
 
         setContent {
             ReceiptScanScreen(
+                hasCameraPermission = hasCameraPermission,
                 onDone = { files ->
                     val data = intent.apply {
                         putStringArrayListExtra(EXTRA_RECEIPT_PATHS, ArrayList(files.map { it.absolutePath }))
@@ -93,6 +103,7 @@ class ReceiptScanActivity : ComponentActivity() {
 
 @Composable
 private fun ReceiptScanScreen(
+    hasCameraPermission: Boolean,
     onDone: (List<File>) -> Unit,
     onCancel: () -> Unit,
     cameraExecutor: ExecutorService
@@ -106,6 +117,14 @@ private fun ReceiptScanScreen(
     var currentDiff by remember { mutableStateOf<Double?>(null) }
     val capturedFiles = remember { mutableStateListOf<File>() }
 
+    // Leaving without "Done" discards this session's pages — nothing else will ever reference
+    // them, so they'd otherwise sit in the app's storage forever.
+    val discardAndCancel = {
+        capturedFiles.forEach { it.delete() }
+        onCancel()
+    }
+    BackHandler { discardAndCancel() }
+
     val previewView = remember {
         PreviewView(appContext).apply {
             scaleType = PreviewView.ScaleType.FILL_CENTER
@@ -113,54 +132,60 @@ private fun ReceiptScanScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(hasCameraPermission) {
+        if (!hasCameraPermission) return@LaunchedEffect
         previewView.post {
             val width = previewView.width
             val height = previewView.height
             if (width <= 0 || height <= 0) return@post
 
-            val cameraProvider = ProcessCameraProvider.getInstance(appContext).get()
-            val rotation = previewView.display?.rotation ?: Surface.ROTATION_0
-            val viewPort = ViewPort.Builder(Rational(width, height), rotation)
-                .setScaleType(ViewPort.FILL_CENTER)
-                .build()
+            // Wait for the provider asynchronously — get() on the main thread blocks the UI
+            // (and risks an ANR) for as long as CameraX takes to initialize.
+            val providerFuture = ProcessCameraProvider.getInstance(appContext)
+            providerFuture.addListener({
+                val cameraProvider = providerFuture.get()
+                val rotation = previewView.display?.rotation ?: Surface.ROTATION_0
+                val viewPort = ViewPort.Builder(Rational(width, height), rotation)
+                    .setScaleType(ViewPort.FILL_CENTER)
+                    .build()
 
-            val preview = Preview.Builder()
-                .setTargetRotation(rotation)
-                .build().also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
+                val preview = Preview.Builder()
+                    .setTargetRotation(rotation)
+                    .build().also {
+                        it.setSurfaceProvider(previewView.surfaceProvider)
+                    }
+                val capture = ImageCapture.Builder()
+                    .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                    .setTargetRotation(rotation)
+                    .build()
+                imageCapture = capture
+
+                val analysis = ImageAnalysis.Builder()
+                    .setTargetRotation(rotation)
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build()
+
+                analysis.setAnalyzer(cameraExecutor) { image ->
+                    val sig = computeSignatureFromImageProxy(image, OVERLAY_RATIO, SIG_COLS, SIG_ROWS)
+                    val diff = signatureDiff(lastSignature, sig)
+                    currentDiff = diff
+                    image.close()
                 }
-            val capture = ImageCapture.Builder()
-                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                .setTargetRotation(rotation)
-                .build()
-            imageCapture = capture
 
-            val analysis = ImageAnalysis.Builder()
-                .setTargetRotation(rotation)
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
+                val useCaseGroup = UseCaseGroup.Builder()
+                    .setViewPort(viewPort)
+                    .addUseCase(preview)
+                    .addUseCase(capture)
+                    .addUseCase(analysis)
+                    .build()
 
-            analysis.setAnalyzer(cameraExecutor) { image ->
-                val sig = computeSignatureFromImageProxy(image, OVERLAY_RATIO, SIG_COLS, SIG_ROWS)
-                val diff = signatureDiff(lastSignature, sig)
-                currentDiff = diff
-                image.close()
-            }
-
-            val useCaseGroup = UseCaseGroup.Builder()
-                .setViewPort(viewPort)
-                .addUseCase(preview)
-                .addUseCase(capture)
-                .addUseCase(analysis)
-                .build()
-
-            cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
-                context,
-                CameraSelector.DEFAULT_BACK_CAMERA,
-                useCaseGroup
-            )
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(
+                    context,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    useCaseGroup
+                )
+            }, ContextCompat.getMainExecutor(appContext))
         }
     }
 
@@ -229,13 +254,13 @@ private fun ReceiptScanScreen(
         ) {
             Column {
                 Text(
-                    text = "Align the next frame with the overlay (20% overlap)",
+                    text = stringResource(R.string.receipt_scan_align_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    text = "Pages: ${capturedFiles.size}",
+                    text = stringResource(R.string.receipt_scan_pages_fmt, capturedFiles.size),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White
                 )
@@ -246,7 +271,7 @@ private fun ReceiptScanScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 OutlinedButton(
-                    onClick = onCancel,
+                    onClick = discardAndCancel,
                     modifier = Modifier.weight(1f)
                 ) { Text(stringResource(R.string.cancel)) }
 
@@ -262,15 +287,18 @@ private fun ReceiptScanScreen(
                             cameraExecutor,
                             object : ImageCapture.OnImageSavedCallback {
                                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                                    // Still on cameraExecutor here: decode the photo for its
+                                    // signature now, off the main thread, then hand the result over.
+                                    val signature = computeSignatureFromBitmap(
+                                        file,
+                                        MATCH_RATIO,
+                                        SIG_COLS,
+                                        SIG_ROWS
+                                    )
                                     Handler(Looper.getMainLooper()).post {
                                         capturedFiles.add(file)
                                         lastFile = file
-                                        lastSignature = computeSignatureFromBitmap(
-                                            file,
-                                            MATCH_RATIO,
-                                            SIG_COLS,
-                                            SIG_ROWS
-                                        )
+                                        lastSignature = signature
                                     }
                                 }
 
@@ -310,8 +338,11 @@ private fun createReceiptPageFile(context: android.content.Context): File {
     // under storage pressure (which it can do at any time, silently) must not lose them.
     // Only removed on uninstall/"clear data" now, same as the rest of the app's data.
     val dir = File(context.filesDir, "receipts").apply { mkdirs() }
+    // A per-second timestamp alone collided when two pages were captured within the same
+    // second — the second shot overwrote the first. The random suffix keeps every page unique.
     val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(System.currentTimeMillis())
-    return File(dir, "receipt_page_$stamp.jpg")
+    val suffix = UUID.randomUUID().toString().take(8)
+    return File(dir, "receipt_page_${stamp}_$suffix.jpg")
 }
 
 private const val OVERLAY_RATIO = 0.20f
@@ -326,7 +357,12 @@ private fun computeSignatureFromBitmap(
     cols: Int,
     rows: Int
 ): IntArray? {
-    val bitmap = BitmapFactory.decodeFile(file.absolutePath) ?: return null
+    // Only a cols x rows thumbnail of one strip is needed — decoding the full-resolution photo
+    // just to shrink it again costs tens of MB per page.
+    val bitmap = BitmapFactory.decodeFile(
+        file.absolutePath,
+        BitmapFactory.Options().apply { inSampleSize = 8 }
+    ) ?: return null
     val stripHeight = (bitmap.height * overlapRatio).toInt().coerceAtLeast(1)
     val y = (bitmap.height - stripHeight).coerceAtLeast(0)
     val strip = android.graphics.Bitmap.createBitmap(bitmap, 0, y, bitmap.width, stripHeight)

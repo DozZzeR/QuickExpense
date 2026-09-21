@@ -4,7 +4,6 @@
     <!-- Widget -->
     <string name="widget_balance">Остатак</string>
     <string name="widget_expenses">Трошкови</string>
-    <string name="widget_all_time">укупно</string>
     <string name="widget_subtitle_day">по дану</string>
     <string name="widget_subtitle_week">по недељи</string>
     <string name="widget_subtitle_month">по месецу</string>
@@ -32,15 +31,8 @@
     <string name="optional">…</string>
     <string name="quick_choice_to_where">Брзи избор примаоца</string>
     <string name="templates_expense">Шаблони: трошак</string>
-    <string name="all_dots">Све…</string>
-    <string name="create_new">+ Направи</string>
-    <string name="manage_dots">Управљање…</string>
-    <string name="split_transaction">Подели трансакцију</string>
     <string name="split_action">Подели</string>
     <string name="split_action_count_fmt">Подела (%d)</string>
-    <string name="total_label">Укупно: %s</string>
-    <string name="remaining_label">Преостало: %s</string>
-    <string name="add_row">+ Додај ред</string>
     <string name="done">Готово</string>
     <string name="voice_add">Гласом</string>
     <string name="voice_help">Како ово ради</string>
@@ -53,17 +45,9 @@
     <string name="voice_unmatched_word_fmt">Није препознато: „%s"</string>
     <string name="ignore">Игнориши</string>
     <string name="merchant">Прималац</string>
-    <string name="tag">Ознака</string>
     <string name="select_source">Изабери извор</string>
     <string name="select_category">Изабери категорију</string>
     <string name="select_merchant">Изабери примаоца</string>
-    <string name="select_tag">Изабери ознаку</string>
-    <string name="all_sources">Сви извори</string>
-    <string name="all_categories">Све категорије</string>
-    <string name="select_item">Изабери…</string>
-    <string name="quick_pick_empty">Још нема омиљених. Додирните „Све” да изаберете или додате.</string>
-    <string name="all">Све</string>
-    <string name="ok_save">OK — сачувај</string>
     <string name="confirm">Потврди</string>
     <string name="search">Претрага…</string>
     <string name="add_item_named">Додај „%s“</string>
@@ -144,7 +128,6 @@
 
     <!-- Statistics -->
     <string name="statistics">Статистика</string>
-    <string name="analytics">Аналитика</string>
     <string name="this_month">Овај месец</string>
     <string name="this_week">Ова недеља</string>
     <string name="this_year">Ова година</string>
@@ -153,30 +136,23 @@
     <string name="custom_range">Прилагођени период</string>
     <string name="all_time">Укупно</string>
     <string name="total_spent">Укупно потрошено</string>
-    <string name="previous_period">Претходни период</string>
     <string name="vs_previous_period">у односу на претходни</string>
     <string name="new_spending">нова потрошња</string>
-    <string name="comparison_unavailable">Поређење недоступно</string>
     <string name="tag_totals_overlap_note">Суме по ознакама се могу преклапати</string>
     <string name="view_all">Види све</string>
-    <string name="items">Ставке</string>
     <string name="transactions">Трансакције</string>
     <string name="avg_transaction">Просечна трансакција</string>
     <string name="uncategorized">Без категорије</string>
     <string name="unknown_merchant">Непознат прималац</string>
-    <string name="no_tags">Без ознака</string>
     <string name="places_of_spending">Места потрошње</string>
     <string name="advanced_search">Напредна претрага</string>
     <string name="tag_match_mode_label">Начин поклапања ознака:</string>
     <string name="tag_match_all">СВЕ</string>
     <string name="tag_match_any">БИЛО КОЈА</string>
-    <string name="search_results">Резултати претраге</string>
     <string name="found">Пронађено</string>
     <string name="open_purchase">Отвори куповину</string>
     <string name="edit_purchase">Измени куповину</string>
-    <string name="edit_split">Измени поделу</string>
     <string name="no_data_period">Нема података за овај период</string>
-    <string name="no_data_period_hint">Покушајте са другим периодом или додајте први трошак.</string>
     <string name="chart_other">Остало</string>
     <string name="spending_trend">Трошкови по данима</string>
     <string name="change_filters">Промени филтере</string>
@@ -204,4 +180,18 @@
     <string name="discard_changes_title">Одбацити измене?</string>
     <string name="discard_changes_message">Измене још нису сачуване.</string>
     <string name="discard">Не чувај</string>
+    <string name="save_failed">Трошак није сачуван. Ништа није промењено — покушајте поново.</string>
+    <string name="split_exceeds_amount">Подела је већа од износа — исправите поделу или износ.</string>
+    <string name="error_cannot_delete_builtin">Уграђена ставка не може да се обрише</string>
+    <string name="receipt_scan_align_hint" formatted="false">Поравнајте следећи кадар са прекривањем (20% преклапања)</string>
+    <string name="receipt_scan_pages_fmt">Страница: %d</string>
+    <string name="unknown_source">Непознат извор</string>
+    <string name="unknown_tag">Ознака</string>
+    <string name="split_item_default">Ставка</string>
+    <string name="export_share_subject">QuickExpense извоз</string>
+    <plurals name="stats_items_count">
+        <item quantity="one">%d ставка</item>
+        <item quantity="few">%d ставке</item>
+        <item quantity="other">%d ставки</item>
+    </plurals>
 </resources>

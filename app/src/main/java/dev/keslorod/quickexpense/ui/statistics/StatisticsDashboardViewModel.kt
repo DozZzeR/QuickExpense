@@ -23,7 +23,7 @@ class StatisticsDashboardViewModel(
 ) : AndroidViewModel(application) {
     
     private val app = application as App
-    private val repository = StatisticsRepository(app.db)
+    private val repository = StatisticsRepository.forApp(app)
 
     private val _currency = MutableStateFlow("RSD")
     val currency: StateFlow<String> = _currency.asStateFlow()

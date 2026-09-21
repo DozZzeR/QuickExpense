@@ -26,7 +26,7 @@ class AdvancedSearchViewModel(
 ) : AndroidViewModel(application) {
 
     private val app = application as App
-    private val repository = StatisticsRepository(app.db)
+    private val repository = StatisticsRepository.forApp(app)
 
     private val _uiState = MutableStateFlow<SearchUiState>(SearchUiState.Idle)
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()

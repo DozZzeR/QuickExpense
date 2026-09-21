@@ -5,6 +5,8 @@ import androidx.compose.ui.res.stringResource
 import dev.keslorod.quickexpense.App
 import dev.keslorod.quickexpense.R
 import dev.keslorod.quickexpense.data.entities.Category
+import dev.keslorod.quickexpense.domain.deleteCategoryIfUnused
+import dev.keslorod.quickexpense.domain.isBuiltIn
 
 @Composable
 fun ManageCategoriesScreen(
@@ -27,12 +29,7 @@ fun ManageCategoriesScreen(
         addNew = { name -> app.db.categories().insert(Category(name = name, isFavorite = false)) },
         toggleFavorite = { c -> app.db.categories().update(c.copy(isFavorite = !c.isFavorite)) },
         rename = { c, newName -> app.db.categories().update(c.copy(name = newName)) },
-        deleteIfUnused = { c ->
-            val cnt = app.db.expenses().countByCategory(c.id)
-            if (cnt == 0L) {
-                app.db.categories().delete(c)
-                true
-            } else false
-        }
+        deleteIfUnused = { c -> app.deleteCategoryIfUnused(c) },
+        isBuiltIn = { it.isBuiltIn() }
     )
 }

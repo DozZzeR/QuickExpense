@@ -50,6 +50,9 @@ fun <T> ManageListScreen(
     toggleFavorite: suspend (item: T) -> Unit,
     rename: suspend (item: T, newName: String) -> Unit,
     deleteIfUnused: suspend (item: T) -> Boolean, // true — удалили; false — есть ссылки
+    // Built-ins the app relies on (e.g. the "unsorted" category) — deleteIfUnused refuses
+    // those too; this only picks the message explaining why.
+    isBuiltIn: (item: T) -> Boolean = { false },
 ) {
     val scope = rememberCoroutineScope()
     var items by remember { mutableStateOf<List<T>>(emptyList()) }
@@ -193,7 +196,9 @@ fun <T> ManageListScreen(
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f)
                         )
-                        val cannotDeleteMessage = stringResource(R.string.error_cannot_delete)
+                        val cannotDeleteMessage = stringResource(
+                            if (isBuiltIn(item)) R.string.error_cannot_delete_builtin else R.string.error_cannot_delete
+                        )
                         val onDeleteClick = {
                             if (!isSubmitting) {
                                 isSubmitting = true

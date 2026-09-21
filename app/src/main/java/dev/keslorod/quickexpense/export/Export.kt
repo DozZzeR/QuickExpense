@@ -6,11 +6,10 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.UUID
 
-fun enqueueExport(context: Context, from: Long, to: Long, includePhotos: Boolean = false): UUID {
+fun enqueueExport(context: Context, from: Long, to: Long): UUID {
     val data = Data.Builder()
         .putLong("from", from)
         .putLong("to", to)
-        .putBoolean("includePhotos", includePhotos)
         .build()
 
     val req = OneTimeWorkRequestBuilder<ExportWorker>()

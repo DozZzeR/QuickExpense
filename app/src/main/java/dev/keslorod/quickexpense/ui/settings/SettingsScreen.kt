@@ -268,11 +268,8 @@ fun WidgetControls(app: App) {
                     dev.keslorod.quickexpense.ui.widget.QuickExpenseWidgetReceiver::class.java
                 )
                 if (mgr.isRequestPinAppWidgetSupported) {
-                    val cb = android.app.PendingIntent.getActivity(
-                        ctx, 0, android.content.Intent(),
-                        android.app.PendingIntent.FLAG_IMMUTABLE
-                    )
-                    mgr.requestPinAppWidget(cn, null, cb)
+                    // No success callback needed: the widget's own onUpdate fills it in once pinned.
+                    mgr.requestPinAppWidget(cn, null, null)
                     // Сразу переключим состояние; окончательно подтвердится при следующем открытии
                     hasWidget = true
                 } else {

@@ -22,7 +22,7 @@ class TransactionDetailsViewModel(
 ) : AndroidViewModel(application) {
 
     private val app = application as App
-    private val repository = StatisticsRepository(app.db)
+    private val repository = StatisticsRepository.forApp(app)
 
     private val _uiState = MutableStateFlow<TransactionDetailsUiState>(TransactionDetailsUiState.Loading)
     val uiState: StateFlow<TransactionDetailsUiState> = _uiState.asStateFlow()

@@ -1,5 +1,6 @@
 package dev.keslorod.quickexpense.ui.quickinput
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,7 +39,9 @@ import dev.keslorod.quickexpense.receipt.LocalReceiptScanner
 import dev.keslorod.quickexpense.receipt.ReceiptScanResult
 import dev.keslorod.quickexpense.data.entities.SplitNode
 import dev.keslorod.quickexpense.data.entities.Tag
+import dev.keslorod.quickexpense.domain.deleteCategoryIfUnused
 import dev.keslorod.quickexpense.domain.formatCents
+import dev.keslorod.quickexpense.domain.isBuiltIn
 import dev.keslorod.quickexpense.ui.split.SplitEditorScreen
 import dev.keslorod.quickexpense.voice.VoiceExpenseParser
 import dev.keslorod.quickexpense.voice.VoiceParseConfidence
@@ -51,6 +54,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import java.util.TimeZone
 
 enum class OperationMode { EXPENSE, INCOME, TRANSFER }
 enum class QuickAddType { SOURCE, MERCHANT, CATEGORY, TEMPLATES }
@@ -70,10 +74,10 @@ fun QuickAddScreen(
     allMerchantOptions: List<Option> = emptyList(),
     allSourceOptions: List<Option> = emptyList(),
     languageCode: String = "",
-    // Non-null when editing an already-saved expense rather than creating a new one. Splitting
-    // then goes through the real, persisted split editor (onOpenSplitEditor) instead of this
-    // screen's own in-memory draft — an existing expense's splits already live in the DB, so
-    // there's nothing to hold as an unsaved draft the way a new expense's splits are.
+    // Non-null when editing an already-saved expense rather than creating a new one. Its
+    // persisted split is loaded into the same in-memory draft a new expense uses
+    // (initialSplitNodes/initialNodeTags) and only written back on Save — so cancelling the
+    // edit can't leave a split in the DB that was sized for an amount that was never saved.
     editingExpenseId: String? = null,
     initialAmountCents: Long? = null,
     initialSource: Option? = null,
@@ -81,7 +85,9 @@ fun QuickAddScreen(
     initialCategory: Option? = null,
     initialDateMillis: Long? = null,
     initialReceiptPaths: List<String> = emptyList(),
-    onOpenSplitEditor: (expenseId: String, currentAmountCents: Long) -> Unit = { _, _ -> },
+    initialSplitNodes: List<SplitNode> = emptyList(),
+    initialNodeTags: Map<String, List<Tag>> = emptyMap(),
+    initialSplitDiverged: Boolean = false,
     onConfirm: (cents: Long, sourceId: String, merchantId: String?, categoryId: String?, date: Long, receiptPaths: List<String>, splitNodes: List<SplitNode>, nodeTags: Map<String, List<Tag>>) -> Unit,
     onCancel: () -> Unit
 ) {
@@ -119,15 +125,15 @@ fun QuickAddScreen(
     
     // Split state
     var showSplitEditor by remember { mutableStateOf(false) }
-    var draftSplitNodes by remember { mutableStateOf<List<SplitNode>>(emptyList()) }
-    var draftNodeTags by remember { mutableStateOf<Map<String, List<Tag>>>(emptyMap()) }
+    var draftSplitNodes by remember { mutableStateOf(initialSplitNodes) }
+    var draftNodeTags by remember { mutableStateOf(initialNodeTags) }
 
     // While a split is uniform (every top-level row still carries the category picked
     // above), that top-level category keeps acting as the shared default for new rows.
     // The moment one row's category is changed away from it, the split has "diverged":
     // the shared category no longer means anything, so it's cleared and stops being
     // pre-filled into further rows (see SplitEditorScreen's onDivergedChange).
-    var splitCategoryDiverged by remember { mutableStateOf(false) }
+    var splitCategoryDiverged by remember { mutableStateOf(initialSplitDiverged) }
     LaunchedEffect(draftSplitNodes) {
         if (draftSplitNodes.isEmpty()) splitCategoryDiverged = false
     }
@@ -161,6 +167,15 @@ fun QuickAddScreen(
     val scannerHandle = scanner.rememberLauncher { result ->
         if (dev.keslorod.quickexpense.BuildConfig.DEBUG) {
             android.util.Log.d("ReceiptDebug", "scanner returned: $result, files=${result?.files?.map { it.absolutePath }}")
+        }
+        // A cancelled (or empty) re-scan must leave the receipt the form already has alone —
+        // clearing it here used to make the next Save delete an edited expense's persisted
+        // receipt files outright.
+        if (result == null) return@rememberLauncher
+        // A successful re-scan replaces the previous one; files scanned earlier in this same
+        // session would otherwise be orphaned in storage with nothing ever pointing at them.
+        lastScan?.files?.forEach {
+            if (it.absolutePath !in initialReceiptFilePaths && it !in result.files) it.delete()
         }
         lastScan = result
     }
@@ -198,6 +213,31 @@ fun QuickAddScreen(
         voiceLeftoverPhrases = result.leftoverPhrases
         if (result.confidence == VoiceParseConfidence.HIGH) {
             autoSaveSecondsLeft = 10
+        }
+    }
+
+    fun cancelAndDiscard() {
+        // A scanned-but-unsaved receipt shouldn't linger in persistent storage forever just
+        // because this screen was cancelled — nothing will ever reference it. Only ever deletes
+        // files scanned fresh this session: a pre-existing receipt loaded for editing (in
+        // initialReceiptFilePaths) must survive a cancelled edit.
+        lastScan?.files?.forEach { if (it.absolutePath !in initialReceiptFilePaths) it.delete() }
+        onCancel()
+    }
+
+    // System back steps out of whichever overlay is open first (they're all drawn inside this
+    // one screen, not as nav destinations), and only then cancels the form — same cleanup as
+    // the Cancel button. The split editor and dialogs register their own, later handlers,
+    // which take precedence over this one while they're showing.
+    BackHandler {
+        when {
+            resolvingVoicePhrase != null -> resolvingVoicePhrase = null
+            showManageType != null -> {
+                showManageType = null
+                coroutineScope.launch { refreshQuickPickOptions() }
+            }
+            activePanel != null -> activePanel = null
+            else -> cancelAndDiscard()
         }
     }
 
@@ -334,12 +374,7 @@ fun QuickAddScreen(
             run {
                 val cents = toCents(amountText)
                 OutlinedButton(
-                    onClick = {
-                        // Editing: an existing expense's splits already live in the DB — go
-                        // straight to the real split editor instead of this screen's own
-                        // in-memory draft, which only makes sense for a not-yet-saved expense.
-                        if (editingExpenseId != null) onOpenSplitEditor(editingExpenseId, cents) else showSplitEditor = true
-                    },
+                    onClick = { showSplitEditor = true },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = cents > 0,
                     shape = RoundedCornerShape(16.dp),
@@ -348,7 +383,7 @@ fun QuickAddScreen(
                     Icon(Icons.Default.CallSplit, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        if (editingExpenseId != null || draftSplitNodes.isEmpty()) stringResource(R.string.split_action)
+                        if (draftSplitNodes.isEmpty()) stringResource(R.string.split_action)
                         else stringResource(R.string.split_action_count_fmt, draftSplitNodes.size)
                     )
                 }
@@ -357,7 +392,19 @@ fun QuickAddScreen(
     Spacer(Modifier.height(24.dp))
 
     // Save/date buttons
-    val isFormValid = source != null && amountText.isNotEmpty() && toCents(amountText) > 0
+    // The amount can be lowered after splitting; a split whose top-level items then add up to
+    // more than the expense itself can't be saved as-is — it has to be fixed in the editor.
+    val splitExceedsAmount = draftSplitNodes.filter { it.parentId == null }.sumOf { it.amount } > toCents(amountText)
+    val isFormValid = source != null && amountText.isNotEmpty() && toCents(amountText) > 0 && !splitExceedsAmount
+    if (splitExceedsAmount) {
+        Text(
+            stringResource(R.string.split_exceeds_amount),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+        )
+    }
 
     // Yesterday/Today apply their offset to selectedDate, not to the real calendar day — so once
     // the user has picked a custom date, "Today" silently means "the picked date", not today.
@@ -480,11 +527,16 @@ fun QuickAddScreen(
     }
 
     if (showDatePicker) {
+        // DatePicker speaks in UTC-midnight millis for a calendar day, not in instants — feed
+        // it the local day as such, and map its answer back onto the local day (keeping the
+        // time of day) instead of reading the UTC midnight as a local instant, which lands on
+        // the previous day anywhere west of UTC.
+        val todayUtcMillis = remember { localDayToUtcMillis(Calendar.getInstance()) }
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = selectedDate.timeInMillis,
+            initialSelectedDateMillis = localDayToUtcMillis(selectedDate),
             selectableDates = object : SelectableDates {
                 override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                    return utcTimeMillis <= System.currentTimeMillis()
+                    return utcTimeMillis <= todayUtcMillis
                 }
             }
         )
@@ -492,8 +544,8 @@ fun QuickAddScreen(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let {
-                        selectedDate = Calendar.getInstance().apply { timeInMillis = it }
+                    datePickerState.selectedDateMillis?.let { utcMillis ->
+                        selectedDate = utcMillisToLocalDay(utcMillis, timeOfDayFrom = selectedDate)
                     }
                     showDatePicker = false
                 }) {
@@ -511,14 +563,7 @@ fun QuickAddScreen(
     }
             
             Spacer(Modifier.height(16.dp))
-            TextButton(onClick = {
-                // A scanned-but-unsaved receipt shouldn't linger in persistent storage forever
-                // just because this screen was cancelled — nothing will ever reference it. Only
-                // ever deletes files scanned fresh this session: a pre-existing receipt loaded
-                // for editing (in initialReceiptFilePaths) must survive a cancelled edit.
-                lastScan?.files?.forEach { if (it.absolutePath !in initialReceiptFilePaths) it.delete() }
-                onCancel()
-            }) {
+            TextButton(onClick = { cancelAndDiscard() }) {
                 Text(stringResource(R.string.cancel))
             }
         }
@@ -615,12 +660,8 @@ fun QuickAddScreen(
                             addNew = { app.db.categories().insert(dev.keslorod.quickexpense.data.entities.Category(name = it, isFavorite = false)) },
                             toggleFavorite = { app.db.categories().update(it.copy(isFavorite = !it.isFavorite)) },
                             rename = { item, newName -> app.db.categories().update(item.copy(name = newName)) },
-                            deleteIfUnused = { item ->
-                                if (app.db.expenses().countByCategory(item.id) == 0L) {
-                                    app.db.categories().delete(item)
-                                    true
-                                } else false
-                            }
+                            deleteIfUnused = { item -> app.deleteCategoryIfUnused(item) },
+                            isBuiltIn = { it.isBuiltIn() }
                         )
                     }
                     else -> {}
@@ -681,12 +722,8 @@ fun QuickAddScreen(
                             addNew = { app.db.categories().insert(dev.keslorod.quickexpense.data.entities.Category(name = it, isFavorite = false)) },
                             toggleFavorite = { app.db.categories().update(it.copy(isFavorite = !it.isFavorite)) },
                             rename = { item, newName -> app.db.categories().update(item.copy(name = newName)) },
-                            deleteIfUnused = { item ->
-                                if (app.db.expenses().countByCategory(item.id) == 0L) {
-                                    app.db.categories().delete(item)
-                                    true
-                                } else false
-                            }
+                            deleteIfUnused = { item -> app.deleteCategoryIfUnused(item) },
+                            isBuiltIn = { it.isBuiltIn() }
                         )
                     }
                     VoiceEntityRole.SOURCE -> {
@@ -715,8 +752,32 @@ fun QuickAddScreen(
             }
         }
 
-        if (showGallery && lastScan != null) {
-            // ... (existing dialog)
+        val scanToShow = lastScan
+        if (showGallery && scanToShow != null) {
+            AlertDialog(
+                onDismissRequest = { showGallery = false },
+                confirmButton = {
+                    TextButton(onClick = { showGallery = false }) {
+                        Text(stringResource(R.string.close))
+                    }
+                },
+                title = { Text(stringResource(R.string.receipt_gallery_title)) },
+                text = {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(scanToShow.files) { file ->
+                            AsyncImage(
+                                model = file,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.size(180.dp)
+                            )
+                        }
+                    }
+                }
+            )
         }
 
         if (showSplitEditor) {
@@ -1101,5 +1162,20 @@ fun ActionCard(title: String, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.primary
             )
         }
+    }
+}
+
+/** The local calendar day of [cal] as Material3 DatePicker represents a day: UTC midnight. */
+internal fun localDayToUtcMillis(cal: Calendar): Long =
+    Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+        clear()
+        set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH))
+    }.timeInMillis
+
+/** Inverse of [localDayToUtcMillis]: that day in the local zone, at [timeOfDayFrom]'s time. */
+internal fun utcMillisToLocalDay(utcMillis: Long, timeOfDayFrom: Calendar): Calendar {
+    val utc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = utcMillis }
+    return (timeOfDayFrom.clone() as Calendar).apply {
+        set(utc.get(Calendar.YEAR), utc.get(Calendar.MONTH), utc.get(Calendar.DAY_OF_MONTH))
     }
 }
