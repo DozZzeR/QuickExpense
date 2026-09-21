@@ -7,11 +7,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.keslorod.quickexpense.domain.statistics.StatsBreakdownItem
+import dev.keslorod.quickexpense.R
+import java.util.Locale
 
 @Composable
 fun StatsRelativeBarRow(
@@ -55,13 +58,14 @@ fun StatsRelativeBarRow(
                 )
                 if (showPercent && item.shareOfTotalPercent > 0) {
                     Text(
-                        text = "${String.format("%.1f", item.shareOfTotalPercent)}% • ${item.count} items",
+                        text = "${String.format(Locale.getDefault(), "%.1f", item.shareOfTotalPercent)}% • " +
+                            pluralStringResource(R.plurals.stats_items_count, item.count, item.count),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else {
                     Text(
-                        text = "${item.count} items",
+                        text = pluralStringResource(R.plurals.stats_items_count, item.count, item.count),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -10,6 +10,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.keslorod.quickexpense.R
+import java.util.Locale
 import dev.keslorod.quickexpense.domain.formatCents
 import dev.keslorod.quickexpense.domain.statistics.ComparisonDirection
 import dev.keslorod.quickexpense.domain.statistics.StatsAmountSummary
@@ -63,7 +64,7 @@ fun AmountSummaryCard(
                         } else ""
 
                         val percentText = if (comp.relativeDeltaPercent != null) {
-                            "${String.format("%.1f", Math.abs(comp.relativeDeltaPercent))}%"
+                            "${String.format(Locale.getDefault(), "%.1f", Math.abs(comp.relativeDeltaPercent))}%"
                         } else stringResource(R.string.new_spending)
 
                         Text(
