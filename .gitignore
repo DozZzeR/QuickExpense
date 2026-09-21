@@ -24,9 +24,10 @@ out/
 .idea/
 *.iml
 
-# Keystore files (for signing)
+# Keystore files (for signing) and their passwords — never commit the upload key
 *.jks
 *.keystore
+keystore.properties
 
 # Google Services (e.g., Firebase)
 google-services.json

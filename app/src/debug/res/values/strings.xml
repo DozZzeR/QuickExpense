@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Debug builds install next to the Play build (applicationIdSuffix ".debug") — make the
+         two launcher entries tell apart. -->
+    <string name="app_name" translatable="false">QuickExpense Dev</string>
+</resources>

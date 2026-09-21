@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">QuickExpense</string>
+    <string name="app_name" translatable="false">QuickExpense</string>
 
     <!-- Widget -->
     <string name="widget_balance">Balance</string>
