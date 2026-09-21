@@ -1,0 +1,28 @@
+QuickExpense is built around one idea: saving a purchase should take seconds. Enter the amount, pick where the money came from, tap "Today" — done. Sorting it into categories, splitting the receipt and tagging can wait until you have a minute.
+
+<b>Fast entry</b>
+• Big number pad, one-tap "Today" / "Yesterday", calendar for anything older
+• Home-screen widget that opens straight into a new expense and shows how much you've spent today, this week or this month — or how much is left of your limit
+• Voice input: say the amount and the shop or category, e.g. "250 coffee Lidl", and the form fills itself in from your own lists
+• Favourite sources, categories and recipients always one tap away
+
+<b>Receipts</b>
+• Scan long receipts page by page — an overlay of the previous page helps you line up the next one
+• Receipts are attached to the expense and easy to find later, e.g. for a warranty claim
+• Save any receipt photo to your gallery when you need it outside the app
+
+<b>Splits and categories</b>
+• Break one purchase into parts: groceries, household, a gift — each with its own category
+• Split parts further into sub-items; the unallocated rest is always shown
+• Tags for anything that cuts across categories: a trip, a renovation, "for work"
+
+<b>Statistics</b>
+• Dashboard with totals, spending by category, recipient and tag, and a daily trend
+• Comparison with the previous period
+• Detailed search by text, category, recipient and tags
+• Export to CSV (ZIP) and share it anywhere
+
+<b>Private by design</b>
+QuickExpense has no internet access at all. No account, no ads, no analytics, no cloud. Everything you enter stays on your phone.
+
+Available in English, Russian and Serbian.

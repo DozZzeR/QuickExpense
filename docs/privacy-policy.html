@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuickExpense Privacy Policy</title>
+<meta name="description" content="Privacy policy of the QuickExpense Android app: all data stays on your device.">
+<style>
+  :root {
+    --bg: #fbfbfa;
+    --fg: #1d1d1b;
+    --muted: #5d5d58;
+    --rule: #e2e1dc;
+    --accent: #2f6b4f;
+    --card: #f1f0ec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151514;
+      --fg: #ecebe6;
+      --muted: #a4a39c;
+      --rule: #2d2d2a;
+      --accent: #7cc4a0;
+      --card: #1e1e1c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+  nav.langs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 32px; }
+  nav.langs a {
+    padding: 4px 12px; border: 1px solid var(--rule); border-radius: 999px;
+    color: var(--fg); text-decoration: none; font-size: 14px;
+  }
+  nav.langs a:hover { border-color: var(--accent); color: var(--accent); }
+  h1 { font-size: 28px; line-height: 1.25; margin: 0 0 4px; }
+  h2 { font-size: 19px; margin: 32px 0 8px; }
+  .meta { color: var(--muted); font-size: 14px; margin: 0 0 24px; }
+  .summary {
+    background: var(--card); border-radius: 12px; padding: 16px 20px; margin: 0 0 8px;
+  }
+  .summary p { margin: 0; }
+  section.lang { padding-top: 16px; }
+  section.lang + section.lang { border-top: 1px solid var(--rule); margin-top: 48px; padding-top: 48px; }
+  ul { padding-left: 22px; }
+  li { margin: 4px 0; }
+  a { color: var(--accent); }
+  code { font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+
+<nav class="langs" aria-label="Language">
+  <a href="#en" hreflang="en">English</a>
+  <a href="#ru" hreflang="ru">Русский</a>
+  <a href="#sr" hreflang="sr">Српски</a>
+</nav>
+
+<!-- ============================ ENGLISH ============================ -->
+<section class="lang" id="en" lang="en">
+  <h1>QuickExpense Privacy Policy</h1>
+  <p class="meta">Effective date: 21 September 2026 · App: QuickExpense (<code>dev.keslorod.quickexpense</code>)</p>
+
+  <div class="summary">
+    <p><strong>In short:</strong> QuickExpense keeps everything you enter on your device. The app has no internet access, no accounts, no ads and no analytics. The developer never receives your data.</p>
+  </div>
+
+  <h2>Who we are</h2>
+  <p>QuickExpense is developed by an independent developer (“we”). Contact: <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>.</p>
+
+  <h2>What the app stores, and where</h2>
+  <ul>
+    <li><strong>Expenses and lists</strong> — amounts, dates, sources, categories, recipients, tags, notes and splits. These are saved in a database inside the app's private storage on your device.</li>
+    <li><strong>Receipt photos</strong> — photos you take with the in-app scanner are saved in the app's private storage and linked to the expense they belong to.</li>
+    <li><strong>Settings</strong> — currency, language, widget options and similar preferences, also saved on the device.</li>
+  </ul>
+  <p>None of this is sent to us or to any third party by the app. The app does not request the Android internet permission, so it cannot transmit data over the network. Automatic Android backup is turned off for the app, so its data is not copied to a cloud backup either.</p>
+
+  <h2>Permissions</h2>
+  <ul>
+    <li><strong>Camera</strong> — only used when you open the receipt scanner. Photos stay on your device.</li>
+    <li><strong>Background work, wake lock, start at boot, network state</strong> — added by Android's WorkManager library, which the app uses for exports and home-screen widget updates. They give the app no internet access.</li>
+  </ul>
+
+  <h2>Voice input</h2>
+  <p>When you tap <em>Voice</em>, QuickExpense asks your device's speech recognition service (for example Google's) to turn what you say into text. That service handles the audio under its own privacy policy. QuickExpense only receives the recognized text and uses it to fill in the form on your device.</p>
+
+  <h2>Data you choose to share</h2>
+  <ul>
+    <li><strong>Export</strong> — the CSV/ZIP export is created on your device and handed to the Android share sheet. It goes only where you send it (e-mail, cloud drive, messenger…). The recipient's privacy policy applies from then on.</li>
+    <li><strong>Save to gallery</strong> — you can copy a receipt photo to your device's shared Pictures folder. There, other apps allowed to read your photos can see it.</li>
+    <li><strong>Home-screen widget</strong> — if you add it, it shows your spending total on the home screen, where anyone looking at your phone can see it.</li>
+  </ul>
+
+  <h2>Deleting your data</h2>
+  <p>You can edit your data in the app at any time. Uninstalling the app, or clearing its storage in Android settings, permanently deletes all data it stores, including receipt photos. Exports and photos you saved or shared outside the app are not affected. Remove those where you put them. We hold no copy, so we cannot recover data for you.</p>
+
+  <h2>Children</h2>
+  <p>QuickExpense is not directed at children under 13 and does not knowingly collect any personal information from anyone.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If the app starts handling data differently, this page will be updated before that version is released. The effective date above will change.</p>
+</section>
+
+<!-- ============================ РУССКИЙ ============================ -->
+<section class="lang" id="ru" lang="ru">
+  <h1>Политика конфиденциальности QuickExpense</h1>
+  <p class="meta">Действует с 21 сентября 2026 г. · Приложение: QuickExpense (<code>dev.keslorod.quickexpense</code>)</p>
+
+  <div class="summary">
+    <p><strong>Коротко:</strong> всё, что вы вводите в QuickExpense, хранится только на вашем устройстве. У приложения нет доступа в интернет, нет аккаунтов, рекламы и аналитики. Разработчик не получает ваши данные.</p>
+  </div>
+
+  <h2>Кто мы</h2>
+  <p>QuickExpense разрабатывает независимый разработчик («мы»). Связь: <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>.</p>
+
+  <h2>Что хранит приложение и где</h2>
+  <ul>
+    <li><strong>Траты и справочники</strong> — суммы, даты, источники, категории, получатели, метки, заметки и разбивки. Они хранятся в базе данных в закрытом хранилище приложения на вашем устройстве.</li>
+    <li><strong>Фото чеков</strong> — снимки из встроенного сканера сохраняются в закрытом хранилище приложения и привязываются к своей трате.</li>
+    <li><strong>Настройки</strong> — валюта, язык, параметры виджета и т. п., тоже на устройстве.</li>
+  </ul>
+  <p>Приложение ничего из этого не отправляет ни нам, ни третьим лицам. Оно не запрашивает у Android разрешение на доступ в интернет, поэтому передать данные по сети не может. Автоматическое резервное копирование Android для приложения отключено, так что данные не попадают и в облачную резервную копию.</p>
+
+  <h2>Разрешения</h2>
+  <ul>
+    <li><strong>Камера</strong> — используется только при открытии сканера чеков. Фото остаются на устройстве.</li>
+    <li><strong>Фоновая работа, удержание процессора, запуск после перезагрузки, состояние сети</strong> — их добавляет библиотека Android WorkManager, через которую работают экспорт и обновление виджета. Доступа в интернет они приложению не дают.</li>
+  </ul>
+
+  <h2>Голосовой ввод</h2>
+  <p>Когда вы нажимаете <em>Голосом</em>, QuickExpense просит сервис распознавания речи на устройстве (например, от Google) превратить сказанное в текст. Звук обрабатывает этот сервис по своей политике конфиденциальности. QuickExpense получает только распознанный текст и заполняет им форму на устройстве.</p>
+
+  <h2>Данные, которыми вы делитесь сами</h2>
+  <ul>
+    <li><strong>Экспорт</strong> — файл CSV/ZIP создаётся на устройстве и передаётся в стандартное меню «Поделиться» Android. Он уходит только туда, куда вы его отправите (почта, облако, мессенджер…). Дальше действует политика получателя.</li>
+    <li><strong>Сохранение в галерею</strong> — фото чека можно скопировать в общую папку «Изображения». Там его видят другие приложения с доступом к вашим фото.</li>
+    <li><strong>Виджет</strong> — если вы его добавите, он показывает сумму трат на главном экране, и её видит любой, кто смотрит на ваш телефон.</li>
+  </ul>
+
+  <h2>Удаление данных</h2>
+  <p>Данные можно в любой момент изменить в приложении. Удаление приложения или очистка его хранилища в настройках Android безвозвратно удаляет все его данные, включая фото чеков. Экспорты и фото, которые вы сохранили или отправили за пределы приложения, это не затрагивает — удалите их там, куда вы их поместили. Копий у нас нет, поэтому восстановить данные мы не можем.</p>
+
+  <h2>Дети</h2>
+  <p>QuickExpense не предназначено для детей младше 13 лет и сознательно не собирает личную информацию ни о ком.</p>
+
+  <h2>Изменения политики</h2>
+  <p>Если приложение начнёт обращаться с данными иначе, эта страница обновится до выхода такой версии, и дата вступления в силу выше изменится.</p>
+</section>
+
+<!-- ============================ СРПСКИ ============================ -->
+<section class="lang" id="sr" lang="sr">
+  <h1>Политика приватности апликације QuickExpense</h1>
+  <p class="meta">Важи од 21. септембра 2026. · Апликација: QuickExpense (<code>dev.keslorod.quickexpense</code>)</p>
+
+  <div class="summary">
+    <p><strong>Укратко:</strong> све што унесете у QuickExpense остаје на вашем уређају. Апликација нема приступ интернету, налоге, рекламе ни аналитику. Програмер никада не добија ваше податке.</p>
+  </div>
+
+  <h2>Ко смо</h2>
+  <p>QuickExpense развија независни програмер („ми”). Контакт: <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>.</p>
+
+  <h2>Шта апликација чува и где</h2>
+  <ul>
+    <li><strong>Трошкови и листе</strong> — износи, датуми, извори, категорије, примаоци, ознаке, белешке и поделе. Чувају се у бази података у приватном складишту апликације на вашем уређају.</li>
+    <li><strong>Фотографије рачуна</strong> — снимци из уграђеног скенера чувају се у приватном складишту апликације и повезују са трошком коме припадају.</li>
+    <li><strong>Подешавања</strong> — валута, језик, опције виџета и слично, такође на уређају.</li>
+  </ul>
+  <p>Апликација ништа од овога не шаље нама ни трећим лицима. Не тражи Android дозволу за приступ интернету, па не може да шаље податке преко мреже. Аутоматска Android резервна копија је за апликацију искључена, тако да се подаци не копирају ни у облак.</p>
+
+  <h2>Дозволе</h2>
+  <ul>
+    <li><strong>Камера</strong> — користи се само када отворите скенер рачуна. Фотографије остају на уређају.</li>
+    <li><strong>Рад у позадини, спречавање спавања, покретање након укључивања, стање мреже</strong> — додаје их Android библиотека WorkManager, преко које раде извоз и ажурирање виџета. Не дају апликацији приступ интернету.</li>
+  </ul>
+
+  <h2>Гласовни унос</h2>
+  <p>Када додирнете <em>Гласом</em>, QuickExpense тражи од услуге за препознавање говора на уређају (нпр. Google-ове) да изговорено претвори у текст. Звук обрађује та услуга према својој политици приватности. QuickExpense добија само препознати текст и њиме попуњава образац на уређају.</p>
+
+  <h2>Подаци које сами делите</h2>
+  <ul>
+    <li><strong>Извоз</strong> — CSV/ZIP датотека се прави на уређају и прослеђује стандардном Android менију за дељење. Иде само тамо где је пошаљете (е-пошта, облак, месинџер…). Даље важи политика примаоца.</li>
+    <li><strong>Чување у галерију</strong> — фотографију рачуна можете копирати у дељену фасциклу „Слике”. Тамо је виде друге апликације које имају приступ вашим фотографијама.</li>
+    <li><strong>Виџет</strong> — ако га додате, приказује укупну потрошњу на почетном екрану, где је види свако ко гледа ваш телефон.</li>
+  </ul>
+
+  <h2>Брисање података</h2>
+  <p>Податке можете изменити у апликацији у било ком тренутку. Деинсталирање апликације или брисање њеног складишта у Android подешавањима трајно брише све њене податке, укључујући фотографије рачуна. Извози и фотографије које сте сачували или послали ван апликације остају — обришите их тамо где сте их ставили. Немамо копију, па не можемо да вратимо податке.</p>
+
+  <h2>Деца</h2>
+  <p>QuickExpense није намењен деци млађој од 13 година и свесно не прикупља личне податке ни о коме.</p>
+
+  <h2>Измене политике</h2>
+  <p>Ако апликација почне другачије да поступа са подацима, ова страница ће бити ажурирана пре објављивања те верзије, а датум почетка важења изнад ће се променити.</p>
+</section>
+
+</main>
+</body>
+</html>
