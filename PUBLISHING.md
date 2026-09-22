@@ -31,9 +31,27 @@ version that adds a backend/LLM/subscription:
 
 ## 1. Account (start first — it's mostly waiting)
 
-- 🧑 Identity verification in Play Console (ID, address proof, phone). Usually 2–5 business
-  days. While it runs you can create the app and upload builds, but not publish to any track.
-- 🧑 Verify access to a real Android device via the Play Console mobile app, if asked.
+Mandatory for every account, whatever its creation date — older accounts just had their own
+deadline. All pending tasks are listed on the Play Console **Home** page.
+
+- 🧑 **Name and address first:** Settings → Developer account → About you. They come from the
+  Google payments profile (payments.google.com) and must match the ID document *exactly*
+  (same Latin spelling as the passport) — the most common rejection reason.
+- 🧑 **Identity:** Home → "Verify your identity" → View details → valid government ID (passport or
+  ID card, full colour photo, all edges visible). A proof of address (bank statement, utility
+  bill in the same name and address) may be requested separately.
+- 🧑 **Contact e-mail and phone:** one-time codes, also from Home.
+- 🧑 **Android device** (new personal accounts): Home → "Verify that you have access to an Android
+  mobile device" → install the *Google Play Console* app on a non-rooted Android 10+ phone, sign in
+  with the developer Google account, follow the steps there.
+- Usually takes a few days; the result comes by e-mail. Until then you can upload builds and edit
+  the store listing, but can't publish to any track (closed testing included).
+- **How to tell it's done:** no verification tasks left on Home, Settings → Developer account
+  shows the identity as verified, and the confirmation e-mail has arrived. A rejection e-mail
+  names the reason — fix it and resubmit.
+- **Package registration (Android developer verification):** new apps are registered
+  automatically when created in Play Console, so the 30 Sep 2026 deadline for older apps doesn't
+  apply here. A Home banner would say otherwise.
 
 ## 2. Build and signing
 
@@ -95,6 +113,10 @@ as translations).
 | Government / Health / News / COVID | No |
 
 ## 7. Closed testing (new personal accounts only)
+
+Applies only to **personal accounts created after 13 Nov 2023**. Check: if the production track
+is locked and Dashboard shows "Apply for production access", it applies to you; if you can
+create a production release directly, skip this section.
 
 - Create a **closed testing** track, upload the AAB, add testers (Google Group or e-mail list),
   share the opt-in link.
