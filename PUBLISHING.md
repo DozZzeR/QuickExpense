@@ -11,8 +11,9 @@ September 2026). Items marked 🧑 need you; everything else is already in the r
 | 2026-09-22 | Android developer verification: package `dev.keslorod.quickexpense` **Registered** (3 Play-managed keys), identity taken from the developer account. Contact e-mail/phone verified. Account created May 2026 ⇒ closed test (§7) required. |
 | 2026-09-22 | Upload key created (`../quickexpense-upload.jks`, RSA 4096, valid to 2054; SHA-256 `2E:29:98:1D:…:C6:59`). First signed AAB built (versionCode 49) — not uploaded yet, waiting for the real launcher icon. |
 | 2026-09-22 | Launcher icon and 512×512 store icon made from the widget's money bag. |
+| 2026-09-22 | Feature graphics (en/ru/sr) and 6 phone screenshots in `fastlane/metadata/android/*/images/`. Screenshot pass surfaced and fixed edge-to-edge/layout bugs (status bar icons, insets, widget at 2×1, split category field, trend past today). |
 
-Next up: feature graphic + screenshots (§3), fresh signed AAB → closed testing; start recruiting 12 testers (§7).
+Next up: fill the store listing (§4), App content (§6), upload the signed AAB to closed testing and recruit 12 testers (§7).
 
 ### Plan for later: backend + LLM + subscription
 
@@ -71,7 +72,9 @@ deadline. All pending tasks are listed on the Play Console **Home** page.
 - Play App Signing is on by default for new apps: Google holds the app signing key, your
   key is only the upload key (a lost upload key can be reset through Play support).
 - Debug builds are `dev.keslorod.quickexpense.debug` ("QuickExpense Dev") and install next
-  to the Play build.
+  to the Play build. `-PlegacyDebugPackage` builds debug under the plain package — only to
+  update the old debug install on the owner's phone (it holds real data; there's no import yet,
+  so move off it before installing the Play build).
 - Target API 36 (required for new apps since 31 Aug 2026) ✅ · 16 KB page size ✅ ·
   R8 release build smoke-tested ✅
 
@@ -81,8 +84,11 @@ deadline. All pending tasks are listed on the Play Console **Home** page.
   themed-icon monochrome layer). Regenerate with `python tools/icon/icon_export.py` (needs Pillow).
   On strict circle masks (Pixel launcher) the tip of the "$" touches the edge — accepted trade-off.
 - ✅ Store icon 512×512: `fastlane/metadata/android/en-US/images/icon.png`.
-- 🧑 Feature graphic 1024×500, at least 2 phone screenshots
-  (per language, if the UI text on them should match).
+- ✅ Feature graphic 1024×500 per language: `fastlane/metadata/android/<locale>/images/featureGraphic.png`
+  (`python tools/icon/feature_graphic.py`).
+- ✅ 6 phone screenshots (English UI, 1080×2160 — Play rejects aspect ratios over 2:1):
+  `fastlane/metadata/android/en-US/images/phoneScreenshots/`. Upload the same set for ru/sr or
+  shoot localized ones later.
 
 ## 4. Store listing
 
