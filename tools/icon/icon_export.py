@@ -55,5 +55,5 @@ os.makedirs(STORE, exist_ok=True)
 full = g.full_icon(768, "A")
 u = 768 / 108
 store = full.crop((round(18 * u), round(18 * u), round(90 * u), round(90 * u))).resize((512, 512), Image.LANCZOS)
-store.convert("RGB").save(os.path.join(STORE, "icon.png"), optimize=True)
+store.convert("RGBA").save(os.path.join(STORE, "icon.png"), optimize=True)  # Play wants a 32-bit PNG
 print("wrote store icon", os.path.join(STORE, "icon.png"))
