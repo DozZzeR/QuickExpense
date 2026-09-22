@@ -9,8 +9,9 @@ September 2026). Items marked 🧑 need you; everything else is already in the r
 |---|---|
 | 2026-09-22 | App created in Play Console: package `dev.keslorod.quickexpense`, **Free** (can add subscriptions later; can never become paid). Accepted Developer Program Policies, Play App Signing ToS, US export laws. |
 | 2026-09-22 | Android developer verification: package `dev.keslorod.quickexpense` **Registered** (3 Play-managed keys), identity taken from the developer account. Contact e-mail/phone verified. Account created May 2026 ⇒ closed test (§7) required. |
+| 2026-09-22 | Upload key created (`../quickexpense-upload.jks`, RSA 4096, valid to 2054; SHA-256 `2E:29:98:1D:…:C6:59`). First signed AAB built (versionCode 49) — not uploaded yet, waiting for the real launcher icon. |
 
-Next up: confirm no device-verification task left on Home (§1), upload key (§2), icon and store graphics (§3), start recruiting 12 testers (§7).
+Next up: launcher icon and store graphics (§3), then upload to closed testing; start recruiting 12 testers (§7).
 
 ### Plan for later: backend + LLM + subscription
 
