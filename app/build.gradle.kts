@@ -53,11 +53,7 @@ android {
         debug {
             // Installs side by side with the Play build: same package + a different signing
             // key would otherwise block updating from the store until the debug APK is removed.
-            // -PlegacyDebugPackage builds under the plain package instead, to update the
-            // debug install made before this suffix existed (it holds the owner's real data).
-            if (!project.hasProperty("legacyDebugPackage")) {
-                applicationIdSuffix = ".debug"
-            }
+            applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }
         release {

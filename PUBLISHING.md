@@ -72,9 +72,7 @@ deadline. All pending tasks are listed on the Play Console **Home** page.
 - Play App Signing is on by default for new apps: Google holds the app signing key, your
   key is only the upload key (a lost upload key can be reset through Play support).
 - Debug builds are `dev.keslorod.quickexpense.debug` ("QuickExpense Dev") and install next
-  to the Play build. `-PlegacyDebugPackage` builds debug under the plain package — only to
-  update the old debug install on the owner's phone (it holds real data; there's no import yet,
-  so move off it before installing the Play build).
+  to the Play build.
 - Target API 36 (required for new apps since 31 Aug 2026) ✅ · 16 KB page size ✅ ·
   R8 release build smoke-tested ✅
 
