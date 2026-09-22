@@ -249,6 +249,9 @@ private fun ReceiptScanScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                // Camera preview stays full-bleed; only the hint and buttons keep clear of the
+                // status and navigation bars (the hint used to overlap the clock).
+                .safeDrawingPadding()
                 .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {

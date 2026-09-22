@@ -14,9 +14,11 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
@@ -45,6 +47,10 @@ class QuickExpenseWidget : GlanceAppWidget() {
 
     override val stateDefinition = PreferencesGlanceStateDefinition
 
+    // Lay out for the widget's actual size: at the minimum 2x1 cell a long total used to run
+    // into the bag and the period line got clipped at the bottom.
+    override val sizeMode = SizeMode.Exact
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         // Ничего тяжёлого — только рендер из уже записанного state
         provideContent { WidgetContent() }
@@ -67,6 +73,23 @@ class QuickExpenseWidget : GlanceAppWidget() {
 
         val labelRes = if (showRemainder) R.string.widget_balance else R.string.widget_expenses
         val label = ctx.getString(labelRes)
+        val amountText = "${format(sum)} $currency"
+
+        val size = LocalSize.current
+        val w = size.width.value
+        val h = size.height.value
+        val pad = if (h < 90f) 10f else 14f
+        // Bag scales with the height (it's 82x80 at full size) so it never crowds a short widget.
+        val bagH = minOf(80f, h * 0.9f)
+        val bagW = bagH * 82f / 80f
+        // Drop the period line when there's no room for three lines of text.
+        val showSubtitle = subtitle.isNotEmpty() && h >= 76f
+        // Amount font: as big as fits both vertically and beside the bag (text may overlap the
+        // bag's transparent top-left, hence only ~60% of its width is reserved). ~0.6em per char.
+        val textLinesHeight = 12f * 1.3f + (if (showSubtitle) 4f + 12f * 1.3f else 0f)
+        val byHeight = (h - 2 * pad - textLinesHeight) / 1.3f
+        val byWidth = (w - 2 * pad - bagW * 0.6f) / (amountText.length * 0.6f)
+        val amountSp = minOf(20f, byHeight, byWidth).coerceAtLeast(11f)
 
         // Mirrors res/layout/widget_expense.xml (the static placeholder Android draws before
         // this Glance content takes over) — background + money-bag watermark — so the widget
@@ -81,11 +104,11 @@ class QuickExpenseWidget : GlanceAppWidget() {
                 Image(
                     provider = ImageProvider(R.drawable.widget_bag),
                     contentDescription = null,
-                    modifier = GlanceModifier.size(width = 82.dp, height = 80.dp)
+                    modifier = GlanceModifier.size(width = bagW.dp, height = bagH.dp)
                 )
             }
             Box(
-                modifier = GlanceModifier.fillMaxSize().padding(14.dp),
+                modifier = GlanceModifier.fillMaxSize().padding(pad.dp),
                 contentAlignment = Alignment.TopStart
             ) {
                 Column {
@@ -94,14 +117,15 @@ class QuickExpenseWidget : GlanceAppWidget() {
                         style = TextStyle(color = ColorProvider(Color.White.copy(alpha = 0.8f)), fontSize = 12.sp)
                     )
                     Text(
-                        text = "${format(sum)} $currency",
+                        text = amountText,
+                        maxLines = 1,
                         style = TextStyle(
                             color = ColorProvider(Color.White),
-                            fontSize = 20.sp,
+                            fontSize = amountSp.sp,
                             fontWeight = FontWeight.Bold
                         )
                     )
-                    if (subtitle.isNotEmpty()) {
+                    if (showSubtitle) {
                         Spacer(modifier = GlanceModifier.height(4.dp))
                         Text(
                             text = subtitle,

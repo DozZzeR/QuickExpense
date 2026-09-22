@@ -2,6 +2,7 @@ package dev.keslorod.quickexpense.ui.split
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
@@ -566,18 +568,24 @@ fun SplitItemEditorScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            OutlinedCard(
-                onClick = { showCategoryPicker = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(stringResource(R.string.category), style = MaterialTheme.typography.bodyMedium)
-                    Text(categoryName ?: stringResource(R.string.uncategorized), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                }
+            // Same floating-label field as Amount/Name above: "Category" sits inside as a
+            // placeholder until one is picked, then moves up onto the outline. Read-only — the
+            // overlay opens the picker instead of the keyboard.
+            Box(Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = categoryName.orEmpty(),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.category)) },
+                    trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Box(
+                    Modifier
+                        .matchParentSize()
+                        .clickable { showCategoryPicker = true }
+                )
             }
 
             Spacer(Modifier.height(12.dp))

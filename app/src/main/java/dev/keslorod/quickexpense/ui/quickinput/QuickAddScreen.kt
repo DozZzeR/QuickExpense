@@ -253,6 +253,9 @@ fun QuickAddScreen(
         Column(
             Modifier
                 .fillMaxSize()
+                // targetSdk 35+ draws edge-to-edge: keep the form clear of the status bar and
+                // gesture/nav bar (the top buttons sat under the clock, Cancel under the nav bar).
+                .safeDrawingPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -1012,6 +1015,9 @@ fun SecondaryDateButton(text: String = "", icon: ImageVector? = null, enabled: B
         onClick = onClick,
         enabled = enabled,
         shape = RoundedCornerShape(16.dp),
+        // The default 24dp side padding left too little room in a third of the row: "Calendar"
+        // wrapped onto two lines.
+        contentPadding = PaddingValues(horizontal = 8.dp),
         modifier = modifier.height(56.dp)
     ) {
         if (icon != null) {
@@ -1019,7 +1025,7 @@ fun SecondaryDateButton(text: String = "", icon: ImageVector? = null, enabled: B
             if (text.isNotEmpty()) Spacer(Modifier.width(4.dp))
         }
         if (text.isNotEmpty()) {
-            Text(text)
+            Text(text, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

@@ -3,5 +3,9 @@
 
     <!-- An AppCompat theme: the activities are AppCompatActivity, which is what makes
          AppCompatDelegate.setApplicationLocales (in-app language on API < 33) take effect. -->
-    <style name="Theme.QuickExpense" parent="Theme.AppCompat.Light.NoActionBar" />
+    <style name="Theme.QuickExpense" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Light UI: dark status-bar icons. With targetSdk 35+ the status bar is transparent
+             over the app's own background, so light icons here were white on white. -->
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
 </resources>

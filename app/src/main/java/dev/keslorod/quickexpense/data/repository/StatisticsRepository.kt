@@ -455,8 +455,12 @@ class StatisticsRepository(
         start: LocalDate,
         end: LocalDate
     ): List<DailyTrendPoint> {
-        val dayCount = ChronoUnit.DAYS.between(start, end) + 1
-        if (dayCount !in 1..62) return emptyList()
+        if (ChronoUnit.DAYS.between(start, end) + 1 !in 1..62) return emptyList()
+        // Days that haven't happened yet (the rest of "This month") would plot as a flat run of
+        // zeros that reads like a spending drop — stop the line at today.
+        val lastDay = minOf(end, LocalDate.now())
+        if (lastDay < start) return emptyList()
+        val dayCount = ChronoUnit.DAYS.between(start, lastDay) + 1
 
         val totalsByDay = data.expenses
             .groupBy { StatisticsDateUtils.millisToLocalDate(it.createdAt) }
