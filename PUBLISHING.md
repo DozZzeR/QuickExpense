@@ -8,8 +8,9 @@ September 2026). Items marked 🧑 need you; everything else is already in the r
 | Date | Step |
 |---|---|
 | 2026-09-22 | App created in Play Console: package `dev.keslorod.quickexpense`, **Free** (can add subscriptions later; can never become paid). Accepted Developer Program Policies, Play App Signing ToS, US export laws. |
+| 2026-09-22 | Android developer verification: package `dev.keslorod.quickexpense` **Registered** (3 Play-managed keys), identity taken from the developer account. Contact e-mail/phone verified. Account created May 2026 ⇒ closed test (§7) required. |
 
-Next up: identity verification (§1), upload key (§2), icon and store graphics (§3).
+Next up: confirm no device-verification task left on Home (§1), upload key (§2), icon and store graphics (§3), start recruiting 12 testers (§7).
 
 ### Plan for later: backend + LLM + subscription
 
