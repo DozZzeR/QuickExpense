@@ -11,6 +11,7 @@ September 2026). Items marked 🧑 need you; everything else is already in the r
 | 2026-09-22 | Android developer verification: package `dev.keslorod.quickexpense` **Registered** (3 Play-managed keys), identity taken from the developer account. Contact e-mail/phone verified. Account created May 2026 ⇒ closed test (§7) required. |
 | 2026-09-22 | Upload key created (`../quickexpense-upload.jks`, RSA 4096, valid to 2054; SHA-256 `2E:29:98:1D:…:C6:59`). First signed AAB built (versionCode 49) — not uploaded yet, waiting for the real launcher icon. |
 | 2026-09-22 | Launcher icon and 512×512 store icon made from the widget's money bag. |
+| 2026-09-22 | Privacy policy contact filled in; `cleanup/audit-fixes` merged into `main` (fast-forward after merging main's CI commits). |
 | 2026-09-22 | Feature graphics (en/ru/sr) and 6 phone screenshots in `fastlane/metadata/android/*/images/`. Screenshot pass surfaced and fixed edge-to-edge/layout bugs (status bar icons, insets, widget at 2×1, split category field, trend past today). |
 
 Next up: fill the store listing (§4), App content (§6), upload the signed AAB to closed testing and recruit 12 testers (§7).
@@ -102,9 +103,10 @@ as translations).
 
 `docs/privacy-policy.html` (en/ru/sr in one page).
 
-- 🧑 Replace `{{CONTACT_EMAIL}}` (6 places) with the contact address.
-- 🧑 After this branch is merged to `main`: GitHub → Settings → Pages → Deploy from branch →
-  `main` / `/docs`. URL will be `https://dozzzer.github.io/QuickExpense/privacy-policy.html`.
+- ✅ Contact address: info.chevap.lover@gmail.com (the public developer e-mail).
+- ✅ Merged to `main` (2026-09-22).
+- 🧑 GitHub → Settings → Pages → Build and deployment → Source: *Deploy from a branch* →
+  `main` / `/docs` → Save. URL: `https://dozzzer.github.io/QuickExpense/privacy-policy.html`.
 - Update the policy **before** shipping any version that handles data differently
   (e.g. adds INTERNET, backup, sync, analytics).
 
