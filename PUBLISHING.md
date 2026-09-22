@@ -10,8 +10,9 @@ September 2026). Items marked 🧑 need you; everything else is already in the r
 | 2026-09-22 | App created in Play Console: package `dev.keslorod.quickexpense`, **Free** (can add subscriptions later; can never become paid). Accepted Developer Program Policies, Play App Signing ToS, US export laws. |
 | 2026-09-22 | Android developer verification: package `dev.keslorod.quickexpense` **Registered** (3 Play-managed keys), identity taken from the developer account. Contact e-mail/phone verified. Account created May 2026 ⇒ closed test (§7) required. |
 | 2026-09-22 | Upload key created (`../quickexpense-upload.jks`, RSA 4096, valid to 2054; SHA-256 `2E:29:98:1D:…:C6:59`). First signed AAB built (versionCode 49) — not uploaded yet, waiting for the real launcher icon. |
+| 2026-09-22 | Launcher icon and 512×512 store icon made from the widget's money bag. |
 
-Next up: launcher icon and store graphics (§3), then upload to closed testing; start recruiting 12 testers (§7).
+Next up: feature graphic + screenshots (§3), fresh signed AAB → closed testing; start recruiting 12 testers (§7).
 
 ### Plan for later: backend + LLM + subscription
 
@@ -76,9 +77,11 @@ deadline. All pending tasks are listed on the Play Console **Home** page.
 
 ## 3. Assets still missing
 
-- 🧑 **Launcher icon** — the app still uses the Android Studio template icon
-  (`res/drawable/ic_launcher_*`, `res/mipmap-*`). Replace it (Android Studio → New → Image Asset).
-- 🧑 Store icon 512×512 PNG, feature graphic 1024×500, at least 2 phone screenshots
+- ✅ **Launcher icon** — the widget's money bag peeking in from the bottom-right (adaptive icon +
+  themed-icon monochrome layer). Regenerate with `python tools/icon/icon_export.py` (needs Pillow).
+  On strict circle masks (Pixel launcher) the tip of the "$" touches the edge — accepted trade-off.
+- ✅ Store icon 512×512: `fastlane/metadata/android/en-US/images/icon.png`.
+- 🧑 Feature graphic 1024×500, at least 2 phone screenshots
   (per language, if the UI text on them should match).
 
 ## 4. Store listing
