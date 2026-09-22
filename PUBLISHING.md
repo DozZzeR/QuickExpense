@@ -3,6 +3,32 @@
 Checklist for the first release from a new **personal** Play Console account (state as of
 September 2026). Items marked 🧑 need you; everything else is already in the repo.
 
+## Progress log
+
+| Date | Step |
+|---|---|
+| 2026-09-22 | App created in Play Console: package `dev.keslorod.quickexpense`, **Free** (can add subscriptions later; can never become paid). Accepted Developer Program Policies, Play App Signing ToS, US export laws. |
+
+Next up: identity verification (§1), upload key (§2), icon and store graphics (§3).
+
+### Plan for later: backend + LLM + subscription
+
+Declarations describe the *current* version — nothing to pre-declare. Before shipping the
+version that adds a backend/LLM/subscription:
+
+- Payments profile + tax info (Serbia supports merchant registration); Google Play Billing only
+  for the subscription (15% fee); clear price/period/trial/cancel terms.
+- Rewrite the privacy policy (it currently promises "no internet access") and redo Data safety
+  (financial info, photos if receipts go to the server, account IDs; encrypted in transit; LLM
+  provider as a processor with a no-training agreement).
+- Accounts ⇒ in-app **and** web account deletion.
+- If an AI chat/generation is a central feature: in-app "report AI response". Personal
+  financial advice from the LLM may require the "Financial advice" financial-features entry.
+- Remove "offline / no account" claims from the store texts.
+- EU DSA trader status: monetizing ⇒ likely a trader ⇒ name, address, phone, e-mail shown
+  publicly in the EU. Consider a registered business + organization account first (apps can be
+  transferred between accounts, package name stays).
+
 ## 1. Account (start first — it's mostly waiting)
 
 - 🧑 Identity verification in Play Console (ID, address proof, phone). Usually 2–5 business
