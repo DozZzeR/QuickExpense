@@ -193,4 +193,5 @@
         <item quantity="many">%d позиций</item>
         <item quantity="other">%d позиции</item>
     </plurals>
+    <string name="widget_description">Сумма трат, по нажатию сразу новая трата</string>
 </resources>

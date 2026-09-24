@@ -11,6 +11,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -249,11 +253,24 @@ fun SettingsScreen(
 @Composable
 fun WidgetControls(app: App) {
     val ctx = LocalContext.current
+    val widgetScope = rememberCoroutineScope()
     var hasWidget by remember { mutableStateOf(false) }
     val widgetAddHint = stringResource(R.string.widget_add_hint)
     val updatingWidgetToast = stringResource(R.string.updating_widget_toast)
 
-    // при входе на экран проверяем наличие
+    // Re-check whenever this screen comes back into view, not just the first time: the pin
+    // request leaves the app, and on some launchers (MIUI) it is ignored outright — flipping the
+    // button to "widget added" optimistically claimed a widget that was never created.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                widgetScope.launch { hasWidget = hasAnyQuickExpenseWidget(ctx) }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     LaunchedEffect(Unit) {
         hasWidget = hasAnyQuickExpenseWidget(ctx)
     }
@@ -267,12 +284,10 @@ fun WidgetControls(app: App) {
                     ctx,
                     dev.keslorod.quickexpense.ui.widget.QuickExpenseWidgetReceiver::class.java
                 )
-                if (mgr.isRequestPinAppWidgetSupported) {
-                    // No success callback needed: the widget's own onUpdate fills it in once pinned.
-                    mgr.requestPinAppWidget(cn, null, null)
-                    // Сразу переключим состояние; окончательно подтвердится при следующем открытии
-                    hasWidget = true
-                } else {
+                // No success callback needed: the widget's own onUpdate fills it in once pinned.
+                // Whether it actually got pinned is re-checked on resume (above) — some launchers
+                // accept the request and quietly do nothing.
+                if (!mgr.isRequestPinAppWidgetSupported || !mgr.requestPinAppWidget(cn, null, null)) {
                     android.widget.Toast.makeText(
                         ctx,
                         widgetAddHint,

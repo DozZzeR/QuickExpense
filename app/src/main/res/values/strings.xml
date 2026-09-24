@@ -193,4 +193,5 @@
         <item quantity="one">%d item</item>
         <item quantity="other">%d items</item>
     </plurals>
+    <string name="widget_description">Spending total, opens a new expense in one tap</string>
 </resources>

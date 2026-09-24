@@ -193,4 +193,5 @@
         <item quantity="few">%d ставке</item>
         <item quantity="other">%d ставки</item>
     </plurals>
+    <string name="widget_description">Збир трошкова, један додир отвара нови трошак</string>
 </resources>
